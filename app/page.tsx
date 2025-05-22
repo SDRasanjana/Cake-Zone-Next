@@ -2,101 +2,151 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 ">
-      
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <>
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-black via-gray-900 to-black text-white min-h-screen flex items-center overflow-hidden">
+        {/* Background with Dark Overlay */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-black opacity-60 z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent opacity-80 z-20"></div>
         </div>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+
+        {/* Left Content */}
+        <div className="relative z-30 container mx-auto px-4 py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Text Content */}
+            <div className="max-w-2xl">
+              <h3 className="text-orange-500 text-3xl italic font-light mb-4">
+                Super Crispy
+              </h3>
+              <h1 className="text-6xl md:text-8xl font-bold mb-6 leading-tight">
+                CAKEZONE
+              </h1>
+              <h2 className="text-2xl md:text-3xl font-bold mb-8 text-gray-200">
+                THE BEST CAKE IN SRILANKA
+              </h2>
+
+              <div className="flex items-center gap-6">
+                <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded font-semibold transition duration-300 transform hover:scale-105">
+                  Read More
+                </button>
+
+                <button className="flex items-center gap-3 text-white hover:text-orange-400 transition duration-300 group">
+                  <div className="bg-white text-orange-500 rounded-full w-16 h-16 flex items-center justify-center shadow-lg group-hover:scale-110 transition duration-300">
+                    <svg
+                      className="w-6 h-6 ml-1"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                    </svg>
+                  </div>
+                  <span className="text-xl font-semibold">Play Video</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Cake Image with Effects */}
+            <div className="relative flex justify-center lg:justify-end">
+              <div className="relative">
+                {/* Glowing Background Circle */}
+                <div className="absolute -inset-8 bg-gradient-to-r from-orange-500/20 via-orange-400/30 to-yellow-400/20 rounded-full blur-3xl animate-pulse"></div>
+
+                {/* Main Cake Image */}
+                <div className="relative z-10 transform hover:scale-105 transition duration-500">
+                  <Image
+                    src="/cake-background.jpg" // Replace with your actual cake image path
+                    alt="Delicious chocolate cake with cherries and cream"
+                    width={500}
+                    height={500}
+                    className="rounded-lg shadow-2xl"
+                  />
+
+                  {/* Sparkle Effects */}
+                  <div className="absolute top-4 right-4 w-3 h-3 bg-yellow-300 rounded-full animate-ping"></div>
+                  <div className="absolute top-12 left-8 w-2 h-2 bg-orange-400 rounded-full animate-ping delay-300"></div>
+                  <div className="absolute bottom-16 right-12 w-4 h-4 bg-yellow-200 rounded-full animate-ping delay-700"></div>
+                  <div className="absolute bottom-8 left-4 w-2 h-2 bg-orange-300 rounded-full animate-ping delay-1000"></div>
+                </div>
+
+                {/* Floating Elements */}
+                <div className="absolute -top-6 -left-6 w-12 h-12 bg-orange-500/20 rounded-full animate-bounce delay-200"></div>
+                <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-yellow-400/30 rounded-full animate-bounce delay-500"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 right-10 w-48 h-48 bg-gradient-to-br from-yellow-400/10 to-transparent rounded-full blur-2xl"></div>
+      </section>
+
+      {/* About Us Section */}
+      <section className="bg-white text-center px-6 py-16">
+        {/* Section title */}
+        <h2 className="text-orange-500 font-bold text-lg mb-2 uppercase">
+          About Us
+        </h2>
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-gray-900">
+          WELCOME TO CAKEZONE
+        </h1>
+        <div className="w-24 h-1 bg-orange-500 mx-auto mb-8"></div>
+
+        {/* Description */}
+        <p className="max-w-3xl mx-auto text-gray-700 mb-4">
+          Tempor erat elitr reb um clita. Diam dolor diam ipsum erat lorem sed
+          stet labore lorem sit clita duo
+        </p>
+        <p className="max-w-3xl mx-auto text-gray-600 mb-12">
+          Tempor erat elitr at rebum at clita. Diam dolor diam ipsum et tempor
+          sit. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit.
+          Sanctus clita duo justo et tempor eirmod magna dolore erat amet magna
+        </p>
+
+        {/* Image + Features */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-10">
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src="/cake-banner.jpg"
+            alt="Cake Banner"
+            width={400}
+            height={300}
+            className="rounded-xl shadow-lg"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+          <div className="flex flex-col gap-6 text-left">
+            {/* Feature 1 */}
+            <div className="flex items-start gap-4">
+              <div className="bg-orange-400 p-3 rounded-md text-white text-2xl">
+                ❤️
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-gray-800">
+                  100% HEALTHY
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Labore justo vero ipsum sit clita erat lorem magna clita
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="flex items-start gap-4">
+              <div className="bg-orange-400 p-3 rounded-md text-white text-2xl">
+                🏆
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-gray-800">
+                  AWARD WINNING
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Labore justo vero ipsum sit clita erat lorem magna clita
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
