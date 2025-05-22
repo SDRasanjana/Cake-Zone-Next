@@ -1,3 +1,4 @@
+import Footer from "@/components/footer";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
@@ -16,6 +17,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground">
         <Navbar />
         <main>{children}</main>
+        <Footer />
       </body>
     </html>
   );
