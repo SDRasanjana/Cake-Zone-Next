@@ -40,25 +40,25 @@ const Footer = () => {
               <li>
                 <Link href="/" className="flex items-center hover:text-orange-500 transition-colors">
                   <FaHome className="text-orange-500 mr-3" />
-                  HOME - Discover our latest offerings and events
+                  HOME 
                 </Link>
               </li>
               <li>
                 <Link href="/about" className="flex items-center hover:text-orange-500 transition-colors">
                   <FaInfoCircle className="text-orange-500 mr-3" />
-                  ABOUT US - Learn our sweet story and passion
+                  ABOUT US 
                 </Link>
               </li>
               <li>
                 <Link href="/menu" className="flex items-center hover:text-orange-500 transition-colors">
                   <FaUtensils className="text-orange-500 mr-3" />
-                  MENU & PRICING - Explore our range of cakes and prices
+                  MENU & PRICING 
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="flex items-center hover:text-orange-500 transition-colors">
                   <FaAddressBook className="text-orange-500 mr-3" />
-                  CONTACT US - Get in touch for custom orders
+                  CONTACT US 
                 </Link>
               </li>
             </ul>
@@ -84,12 +84,7 @@ const Footer = () => {
                   +1 (123) 456-7890
                 </a>
               </li>
-              <li className="flex items-center">
-                <FaPhoneAlt className="text-orange-500 mr-3 flex-shrink-0" />
-                <a href="tel:+19876543210" className="hover:text-orange-500 transition-colors">
-                  +1 (987) 654-3210
-                </a>
-              </li>
+             
             </ul>
           </div>
 
@@ -120,7 +115,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-          <p>© 2025 CakeZone. All Rights Reserved. Designed with ❤️ by CakeZone Team</p>
+          <p>© 2025 CakeZone. All Rights Reserved. Designed by CakeZone Team</p>
         </div>
       </div>
     </footer>
