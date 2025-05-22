@@ -96,7 +96,7 @@ export default function Home() {
         {/* Description */}
         <p className="max-w-3xl mx-auto text-gray-700 mb-4">
           Tempor erat elitr reb um clita. Diam dolor diam ipsum erat lorem sed
-          stet labore lorem sit clita duo
+          stet labore lorem sit clita
         </p>
         <p className="max-w-3xl mx-auto text-gray-600 mb-12">
           Tempor erat elitr at rebum at clita. Diam dolor diam ipsum et tempor
