@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <nav className="bg-[#2B2B2B] text-white px-6 py-4 shadow-lg flex justify-between items-center">
+    <nav className="bg-[#2B2B2B] text-white px-6 py-4 shadow-lg flex justify-between items-center relative z-50">
       <div className="text-2xl font-bold text-orange-400">CakeZone</div>
       <div className="space-x-6 text-sm uppercase font-semibold">
         <Link href="/" className="hover:text-orange-400">
