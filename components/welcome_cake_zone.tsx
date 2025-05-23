@@ -46,7 +46,7 @@ const About = () => {
               <h5 className="font-bold text-lg mt-3">AI-Powered Cake Customization</h5>
               <p className="text-gray-600 mt-2">
               You can select your preferred flavors, layers, colors, and toppings and instantly see a 3D AI-generated cake preview.
-              We help you stay within budget without compromising style or taste.
+              
               </p>
             </div>
             <div className="text-center">
@@ -56,7 +56,7 @@ const About = () => {
               <h5 className="font-bold text-lg mt-3">Smart Budget Forecasting for Shop Owners</h5>
               <p className="text-gray-600 mt-2">
               CakeZone uses an AI-enabled budgeting system to forecast ingredient prices, helping bakery owners make smarter purchases,
-              cut costs, and minimize waste,keeping cakes fresh and businesses future-ready.
+              cut costs, and minimize waste.
               </p>
             </div>
           </div>
