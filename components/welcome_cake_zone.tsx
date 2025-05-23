@@ -17,7 +17,7 @@ const About = () => {
             src="/cake-banner.jpg"
             alt="CakeZone Cake"
             width={600}
-            height={500}
+            height={400}
             className="rounded-lg shadow-md"
           />
         </div>
@@ -25,10 +25,14 @@ const About = () => {
         {/* Text Section */}
         <div>
           <h3 className="text-2xl font-bold text-gray-800 mb-4">
-            Tempor erat elitr rebum clita. Diam dolor diam ipsum erat lorem sed stet labore lorem sit clita duo
+            At CakeZone, we blend the timeless joy of baking with the power of intelligent technology.
+
           </h3>
           <p className="text-gray-600 mb-8">
-            Tempor erat elitr at rebum at at clita. Diam dolor diam ipsum et tempor sit. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus clita duo justo et tempor eirmod magna dolore erat amet magna.
+             More than just 
+            a cake shop, we are a digital dessert destination that brings creativity, customization, and smart planning
+            to your fingertips. Our platform was built to serve both cake lovers and small-scale cake shop owners, combining beautiful design
+             with AI-powered tools that transform how cakes are ordered, created, and managed.
           </p>
 
           {/* Why Choose Us Title */}
@@ -39,18 +43,20 @@ const About = () => {
               <div className="bg-orange-500 inline-block p-4 rounded">
                 <FaHeartbeat className="text-white text-3xl" />
               </div>
-              <h5 className="font-bold text-lg mt-3">100% HEALTHY</h5>
+              <h5 className="font-bold text-lg mt-3">AI-Powered Cake Customization</h5>
               <p className="text-gray-600 mt-2">
-                Labore justo vero ipsum sit clita erat lorem magna clita nonumy dolor magna dolor vero
+              You can select your preferred flavors, layers, colors, and toppings and instantly see a 3D AI-generated cake preview.
+              We help you stay within budget without compromising style or taste.
               </p>
             </div>
             <div className="text-center">
               <div className="bg-orange-500 inline-block p-4 rounded">
                 <FaAward className="text-white text-3xl" />
               </div>
-              <h5 className="font-bold text-lg mt-3">AWARD WINNING</h5>
+              <h5 className="font-bold text-lg mt-3">Smart Budget Forecasting for Shop Owners</h5>
               <p className="text-gray-600 mt-2">
-                Labore justo vero ipsum sit clita erat lorem magna clita nonumy dolor magna dolor vero
+              CakeZone uses an AI-enabled budgeting system to forecast ingredient prices, helping bakery owners make smarter purchases,
+              cut costs, and minimize waste,keeping cakes fresh and businesses future-ready.
               </p>
             </div>
           </div>
