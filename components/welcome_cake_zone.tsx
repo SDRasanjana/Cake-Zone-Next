@@ -14,7 +14,7 @@ const About = () => {
         {/* Image Section */}
         <div>
           <Image 
-            src="/images/about-cake.png"
+            src="/cake-banner.jpg"
             alt="CakeZone Cake"
             width={600}
             height={500}
