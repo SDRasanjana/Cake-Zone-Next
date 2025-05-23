@@ -62,7 +62,7 @@ export default function Home() {
         <div className="absolute bottom-20 right-10 w-48 h-48 bg-gradient-to-br from-yellow-400/10 to-transparent rounded-full blur-2xl"></div>
       </section>
 
-      <About />//linked from the welcome_cake_zone.tsx file
+      <About />{/*linked from the welcome_cake_zone.tsx file*/}
     </>
   );
 }
