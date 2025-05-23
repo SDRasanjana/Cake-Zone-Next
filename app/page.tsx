@@ -1,12 +1,11 @@
 import About from "@/components/welcome_cake_zone";
 import Image from "next/image";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
     <>
-      {/* Hero Section with Full-Page Background */}
-      <section className="relative text-white min-h-screen flex items-center overflow-hidden">
-        {/* Full-Page Background Image with Overlays */}
+
         <div className="absolute inset-0 z-0">
           <Image
             src="/cake-background.jpg" // Your background image path
