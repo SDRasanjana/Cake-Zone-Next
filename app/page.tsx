@@ -1,3 +1,4 @@
+import About from "@/components/welcome_cake_zone";
 import Image from "next/image";
 
 export default function Home() {
@@ -61,71 +62,7 @@ export default function Home() {
         <div className="absolute bottom-20 right-10 w-48 h-48 bg-gradient-to-br from-yellow-400/10 to-transparent rounded-full blur-2xl"></div>
       </section>
 
-      {/* About Us Section */}
-      <section className="bg-white text-center px-6 py-16">
-        {/* Section title */}
-        <h2 className="text-orange-500 font-bold text-lg mb-2 uppercase">
-          About Us
-        </h2>
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-gray-900">
-          WELCOME TO CAKEZONE
-        </h1>
-        <div className="w-24 h-1 bg-orange-500 mx-auto mb-8"></div>
-
-        {/* Description */}
-        <p className="max-w-3xl mx-auto text-gray-700 mb-4">
-          Tempor erat elitr reb um clita. Diam dolor diam ipsum erat lorem sed
-          stet labore lorem sit clita
-        </p>
-        <p className="max-w-3xl mx-auto text-gray-600 mb-12">
-          Tempor erat elitr at rebum at clita. Diam dolor diam ipsum et tempor
-          sit. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit.
-          Sanctus clita duo justo et tempor eirmod magna dolore erat amet magna
-        </p>
-
-        {/* Image + Features */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-10">
-          <Image
-            src="/cake-banner.jpg"
-            alt="CakeZone products"
-            width={400}
-            height={300}
-            className="rounded-xl shadow-lg"
-          />
-
-          <div className="flex flex-col gap-6 text-left">
-            {/* Feature 1 */}
-            <div className="flex items-start gap-4">
-              <div className="bg-orange-400 p-3 rounded-md text-white text-2xl">
-                ❤️
-              </div>
-              <div>
-                <h3 className="font-bold text-lg text-gray-800">
-                  100% HEALTHY
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Labore justo vero ipsum sit clita erat lorem magna clita
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="flex items-start gap-4">
-              <div className="bg-orange-400 p-3 rounded-md text-white text-2xl">
-                🏆
-              </div>
-              <div>
-                <h3 className="font-bold text-lg text-gray-800">
-                  AWARD WINNING
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Labore justo vero ipsum sit clita erat lorem magna clita
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <About />//linked from the welcome_cake_zone.tsx file
     </>
   );
 }
