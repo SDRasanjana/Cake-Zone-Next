@@ -1,8 +1,10 @@
 import Image from "next/image";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
     <>
+      <Navbar />
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-black via-gray-900 to-black text-white min-h-screen flex items-center overflow-hidden">
         {/* Background with Dark Overlay */}
