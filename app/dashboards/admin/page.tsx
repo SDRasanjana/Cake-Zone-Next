@@ -151,7 +151,11 @@ export default function AdminDashboard() {
 
           <div className="flex items-center gap-4">
             <div className="relative">
-              <button className="p-2 rounded-full bg-[#F4C753] text-[#141C24] hover:bg-[#F59E0B] transition-colors">
+              <button
+                className="p-2 rounded-full bg-[#F4C753] text-[#141C24] hover:bg-[#F59E0B] transition-colors"
+                aria-label="View notifications"
+                title="View notifications"
+              >
                 <svg
                   width="20"
                   height="20"
@@ -441,7 +445,10 @@ export default function AdminDashboard() {
                   Order Management
                 </h2>
                 <div className="flex gap-2">
-                  <select className="px-4 py-2 border border-[#D4DBE8] rounded-lg bg-white text-[#141C24]">
+                  <select
+                    className="px-4 py-2 border border-[#D4DBE8] rounded-lg bg-white text-[#141C24]"
+                    aria-label="Filter orders by status"
+                  >
                     <option>All Orders</option>
                     <option>Pending</option>
                     <option>Processing</option>
