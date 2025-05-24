@@ -29,7 +29,7 @@ const About = () => {
 
           </h3>
           <p className="text-gray-600 mb-8">
-             More than just 
+            More than just 
             a cake shop, we are a digital dessert destination that brings creativity, customization, and smart planning
             to your fingertips. Our platform was built to serve both cake lovers and small-scale cake shop owners, combining beautiful design
              with AI-powered tools that transform how cakes are ordered, created, and managed.
