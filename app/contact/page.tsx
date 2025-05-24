@@ -13,7 +13,7 @@ const Contact = () => {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-extrabold mb-4">Contact Us</h2>
           <p className="text-gray-600 max-w-xl mx-auto">
-            Reach out to us for any queries, suggestions, or orders. We're here to bake your day better!
+            Reach out to us for any queries, suggestions, or orders. We&#39;re here to bake your day better!
           </p>
         </div>
 
