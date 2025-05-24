@@ -236,9 +236,7 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="text-center">
           <p className="text-xs text-gray-500">
-            By continuing, you agree to CakeZone's{' '}
-            <a href="#" className="text-orange-600 hover:text-orange-500">Terms of Service</a>
-            {' '}and{' '}
+
             <a href="#" className="text-orange-600 hover:text-orange-500">Privacy Policy</a>
           </p>
         </div>
