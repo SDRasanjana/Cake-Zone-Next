@@ -2,7 +2,6 @@
 
 import {
   BarChart3,
-  Users,
   Package,
   TrendingUp,
   DollarSign,
