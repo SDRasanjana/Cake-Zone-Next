@@ -87,7 +87,7 @@ export default function AboutPage() {
                 <blockquote className="relative bg-amber-50 p-8 rounded-lg">
                   <p className="text-lg sm:text-xl italic text-gray-700 leading-relaxed">
                     "To be the most loved neighborhood cake shop, delighting every customer with freshly baked creations that
-                    celebrate life's sweetest moments, while embracing innovation, sustainability, and a personal touch in every slice."
+                    celebrate life&apos;s sweetest moments, while embracing innovation, sustainability, and a personal touch in every slice."
                   </p>
                 </blockquote>
               </div>
