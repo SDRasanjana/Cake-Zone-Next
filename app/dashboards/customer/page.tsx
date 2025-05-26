@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import CakePreview3D from "@/components/CakePreview3D"; // Adjust path as needed
+import CakePreview3D from "@/components/CakePreview3D";
 import {
   ShoppingCart,
   Package,
@@ -9,14 +9,10 @@ import {
   Plus,
   Calendar,
   DollarSign,
-  Star,
-  Clock,
   Bell,
   User,
   Settings,
-  LogOut,
   ChefHat,
-  Palette,
   Layers,
   Sparkles,
 } from "lucide-react";
