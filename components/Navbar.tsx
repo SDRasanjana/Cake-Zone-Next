@@ -13,9 +13,6 @@ export default function Navbar() {
         <Link href="/about" className="hover:text-orange-400">
           About Us
         </Link>
-        <Link href="/menu" className="hover:text-orange-400">
-          Menu
-        </Link>
         <Link href="/contact" className="hover:text-orange-400">
           Contact Us
         </Link>
