@@ -23,8 +23,7 @@ export default function CakeGallery() {
       id: cake.id,
       name: cake.name,
       price: cake.price,
-      image: cake.image,
-      quantity: 1
+      image: cake.image
     });
   };
 
