@@ -3,7 +3,6 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { Light } from "three";
 
 export const metadata = {
   title: "CakeZone",
@@ -22,13 +21,13 @@ export default function RootLayout({
         variables: { colorPrimary: "#f97316", fontSize: "16px" },
       }}
     >
-    <html lang="en">
-      <body className="bg-gray-900 text-white">
-        <Navbar />
-        {children}
-        <Footer />
-      </body>
-    </html>
+      <html lang="en">
+        <body className="bg-gray-900 text-white">
+          <Navbar />
+          {children}
+          <Footer />
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
