@@ -46,13 +46,11 @@ export default function CakeGallery() {
         <div className="flex flex-col items-center mb-8">
           <h1 className="text-4xl font-bold text-orange-500 mb-4">Our Menu</h1>
          
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        </div>        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {cakes.map((cake) => (
             <div
               key={cake.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition w-full max-w-sm mx-auto"
             >
               <img
                 src={cake.image}
