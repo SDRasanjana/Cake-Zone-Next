@@ -1,15 +1,8 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
-import {
-  X,
-  RotateCcw,
-  ZoomIn,
-  ZoomOut,
-  ShoppingCart,
-  Move,
-  RotateCw,
-} from "lucide-react";
+import { X, ZoomIn, ZoomOut, ShoppingCart, Move, RotateCw } from "lucide-react";
 
 interface CakeConfig {
   flavor: string;
@@ -27,7 +20,7 @@ interface CakePreview3DProps {
   isOpen: boolean;
   onClose: () => void;
   cakeConfig: CakeConfig;
-  onAddToCart: (cake: any) => void;
+  onAddToCart: (cake: unknown) => void;
 }
 
 const CakePreview3D: React.FC<CakePreview3DProps> = ({
@@ -45,10 +38,10 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
   // Enhanced control states
   const [isAutoRotating, setIsAutoRotating] = useState(true);
   const [controlMode, setControlMode] = useState<"rotate" | "pan">("rotate");
-  const [isDragging, setIsDragging] = useState(false);
-  const [lastMousePosition, setLastMousePosition] = useState({ x: 0, y: 0 });
-  const [cameraPosition, setCameraPosition] = useState({ x: 0, y: 5, z: 8 });
-  const [targetPosition, setTargetPosition] = useState({ x: 0, y: 0, z: 0 });
+  const [, setIsDragging] = useState(false);
+  const [] = useState({ x: 0, y: 0 });
+  const [cameraPosition] = useState({ x: 0, y: 5, z: 8 });
+  const [targetPosition] = useState({ x: 0, y: 0, z: 0 });
   const [zoomLevel, setZoomLevel] = useState(1);
 
   // Mouse interaction refs
@@ -471,7 +464,7 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     const topY = (cakeConfig.layers - 1) * 1.2 + 0.5;
     const topRadius = 2.5 - (cakeConfig.layers - 1) * 0.4;
 
-    cakeConfig.toppings.forEach((topping, index) => {
+    cakeConfig.toppings.forEach((topping) => {
       const toppingCount = topping === "Sprinkles" ? 20 : 8;
 
       for (let i = 0; i < toppingCount; i++) {

@@ -4,7 +4,7 @@ import CakePreview3D from "@/components/CakePreview3D";
 import {
   ShoppingCart,
   Package,
-  CreditCard,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Heart,
   Plus,
   Calendar,
@@ -23,11 +23,11 @@ const CustomerDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedCake, setSelectedCake] = useState<number | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<BudgetKey>("1500");
-  const [notifications, setNotifications] = useState(3);
+  const [notifications] = useState(3);
 
   //preview
   const [showPreview, setShowPreview] = useState(false);
-  const [cart, setCart] = useState<any[]>([]);
+  const [cart, setCart] = useState<unknown[]>([]);
   const [customCakeConfig, setCustomCakeConfig] = useState({
     flavor: "Chocolate",
     layers: 1,
@@ -152,7 +152,7 @@ const CustomerDashboard = () => {
     ],
   };
 
-  const handleAddToCart = (cake: any) => {
+  const handleAddToCart = (cake: unknown) => {
     setCart((prev) => [...prev, cake]);
     // You can add notification or toast here
     console.log("Added to cart:", cake);
@@ -167,7 +167,7 @@ const CustomerDashboard = () => {
     }));
   };
 
-  const handleConfigChange = (key: string, value: any) => {
+  const handleConfigChange = (key: string, value: unknown) => {
     setCustomCakeConfig((prev) => ({
       ...prev,
       [key]: value,
@@ -605,7 +605,7 @@ const CustomerDashboard = () => {
                 <div>
                   <p className="font-medium text-gray-800">Reminder</p>
                   <p className="text-sm text-gray-600">
-                    Don't forget to rate your last order
+                    Don&apos;t forget to rate your last order
                   </p>
                   <p className="text-xs text-gray-500 mt-1">3 days ago</p>
                 </div>
