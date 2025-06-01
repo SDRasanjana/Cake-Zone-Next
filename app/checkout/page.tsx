@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 
 export default function CheckoutPage() {
   const [formData, setFormData] = useState({
@@ -26,342 +27,278 @@ export default function CheckoutPage() {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Handle form submission logic here
     console.log("Form submitted:", formData);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
-      {/* Header */}
-      <div className="bg-black border-b border-orange-400/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-white">
-            Secure <span className="text-orange-400">Checkout</span>
-          </h1>
-          <p className="text-gray-300 mt-2">
-            Complete your purchase safely and securely
-          </p>
-        </div>
-      </div>
+    <div
+      className="relative flex size-full min-h-screen flex-col bg-[#F8F9FB] group/design-root overflow-x-hidden"
+      style={{ fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif' }}
+    >
+      <div className="layout-container flex h-full grow flex-col">
+        {/* Main Content */}
+        <div className="gap-1 px-6 flex flex-1 justify-center py-5">
+          <div className="layout-content-container flex flex-col max-w-[920px] flex-1">
+            <h1 className="text-[#141C24] tracking-light text-[32px] font-bold leading-tight px-4 text-left pb-3 pt-6">
+              Checkout
+            </h1>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8">
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold text-black mb-2">
-                  Billing Information
-                </h2>
-                <div className="w-20 h-1 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-full"></div>
+            <form onSubmit={handleSubmit}>
+              {/* Name Fields */}
+              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    First Name
+                  </p>
+                  <input
+                    name="firstName"
+                    placeholder="Enter your first name"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                  />
+                </label>
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    Last Name
+                  </p>
+                  <input
+                    name="lastName"
+                    placeholder="Enter your last name"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                  />
+                </label>
               </div>
 
-              <form
-                className="space-y-6"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSubmit();
-                }}
-              >
-                {/* Name Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      First Name *
-                    </label>
-                    <input
-                      name="firstName"
-                      placeholder="Enter your first name"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      Last Name *
-                    </label>
-                    <input
-                      name="lastName"
-                      placeholder="Enter your last name"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div className="group">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Email Address *
-                  </label>
+              {/* Email */}
+              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    Email Address
+                  </p>
                   <input
                     name="email"
                     type="email"
                     placeholder="Enter your email address"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
                     value={formData.email}
                     onChange={handleInputChange}
-                    required
                   />
-                </div>
+                </label>
+              </div>
 
-                {/* Company Name */}
-                <div className="group">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Company Name{" "}
-                    <span className="text-gray-500">(Optional)</span>
-                  </label>
+              {/* Company Name */}
+              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    Company Name (Optional)
+                  </p>
                   <input
                     name="companyName"
                     placeholder="Enter your company name"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
                     value={formData.companyName}
                     onChange={handleInputChange}
                   />
-                </div>
+                </label>
+              </div>
 
-                {/* Billing Address */}
-                <div className="group">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Billing Address *
-                  </label>
+              {/* Billing Address */}
+              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    Billing Address
+                  </p>
                   <input
                     name="billingAddress"
                     placeholder="Enter your billing address"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
                     value={formData.billingAddress}
                     onChange={handleInputChange}
-                    required
                   />
-                </div>
+                </label>
+              </div>
 
-                {/* City and Country */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      City *
-                    </label>
-                    <input
-                      name="city"
-                      placeholder="Enter city"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      Country *
-                    </label>
-                    <input
-                      name="country"
-                      placeholder="Enter country"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                      value={formData.country}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
+              {/* City and Country */}
+              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    City
+                  </p>
+                  <input
+                    name="city"
+                    placeholder="Enter city"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                  />
+                </label>
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    Country
+                  </p>
+                  <input
+                    name="country"
+                    placeholder="Enter country"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
+                    value={formData.country}
+                    onChange={handleInputChange}
+                  />
+                </label>
+              </div>
 
-                {/* State and ZIP */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      State *
-                    </label>
-                    <input
-                      name="state"
-                      placeholder="Enter state"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                      value={formData.state}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      ZIP Code *
-                    </label>
-                    <input
-                      name="zipCode"
-                      placeholder="Enter ZIP code"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                      value={formData.zipCode}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
+              {/* State and ZIP */}
+              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    State
+                  </p>
+                  <input
+                    name="state"
+                    placeholder="Enter state"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                  />
+                </label>
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    ZIP Code
+                  </p>
+                  <input
+                    name="zipCode"
+                    placeholder="Enter ZIP code"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
+                    value={formData.zipCode}
+                    onChange={handleInputChange}
+                  />
+                </label>
+              </div>
 
-                {/* Payment Section */}
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                  <h3 className="text-xl font-bold text-black mb-6">
-                    Payment Information
-                  </h3>
-
-                  {/* Credit Card Number */}
-                  <div className="group mb-6">
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      Credit Card Number *
-                    </label>
-                    <div className="relative">
-                      <input
-                        name="creditCardNumber"
-                        placeholder="1234 5678 9012 3456"
-                        className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                        value={formData.creditCardNumber}
-                        onChange={handleInputChange}
-                        required
-                      />
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-orange-400">
-                        <svg
-                          width="24"
-                          height="24"
-                          fill="currentColor"
-                          viewBox="0 0 256 256"
-                        >
-                          <path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,16V88H32V64Zm0,128H32V104H224v88Zm-16-24a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h32A8,8,0,0,1,208,168Zm-64,0a8,8,0,0,1-8,8H120a8,8,0,0,1,0-16h16A8,8,0,0,1,144,168Z" />
-                        </svg>
-                      </div>
+              {/* Credit Card Number */}
+              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    Credit Card Number
+                  </p>
+                  <div className="flex w-full flex-1 items-stretch rounded-xl">
+                    <input
+                      name="creditCardNumber"
+                      placeholder="Enter your credit card number"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] rounded-r-none border-r-0 pr-2 text-base font-normal leading-normal"
+                      value={formData.creditCardNumber}
+                      onChange={handleInputChange}
+                    />
+                    <div className="text-[#3F5374] flex border border-[#D4DBE8] bg-[#F8F9FB] items-center justify-center pr-[15px] rounded-r-xl border-l-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24px"
+                        height="24px"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                      >
+                        <path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,16V88H32V64Zm0,128H32V104H224v88Zm-16-24a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h32A8,8,0,0,1,208,168Zm-64,0a8,8,0,0,1-8,8H120a8,8,0,0,1,0-16h16A8,8,0,0,1,144,168Z" />
+                      </svg>
                     </div>
                   </div>
+                </label>
+              </div>
 
-                  {/* Expiry Date and CVV */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="group">
-                      <label className="block text-sm font-semibold text-black mb-2">
-                        Expiry Date *
-                      </label>
-                      <input
-                        name="expiryDate"
-                        placeholder="MM/YY"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                        value={formData.expiryDate}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div className="group">
-                      <label className="block text-sm font-semibold text-black mb-2">
-                        CVV *
-                      </label>
-                      <input
-                        name="cvv"
-                        placeholder="123"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:outline-none transition-all duration-300 text-black placeholder-gray-500 bg-gray-50 focus:bg-white"
-                        value={formData.cvv}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
+              {/* Expiry Date and CVV */}
+              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    Expiry Date
+                  </p>
+                  <input
+                    name="expiryDate"
+                    placeholder="MM/YY"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
+                    value={formData.expiryDate}
+                    onChange={handleInputChange}
+                  />
+                </label>
+                <label className="flex flex-col min-w-40 flex-1">
+                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
+                    CVV
+                  </p>
+                  <input
+                    name="cvv"
+                    placeholder="Enter CVV"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
+                    value={formData.cvv}
+                    onChange={handleInputChange}
+                  />
+                </label>
+              </div>
 
-                {/* Submit Button */}
-                <div className="mt-8">
-                  <button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-black font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-lg"
-                  >
-                    Complete Purchase
-                  </button>
-                </div>
-              </form>
-            </div>
+              {/* Submit Button */}
+              <div className="flex px-4 py-3">
+                <button
+                  type="submit"
+                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-5 flex-1 bg-[#F4C753] text-[#141C24] text-base font-bold leading-normal tracking-[0.015em]"
+                >
+                  <span className="truncate">Checkout Now</span>
+                </button>
+              </div>
+            </form>
           </div>
 
-          {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-black rounded-2xl shadow-2xl p-6 sticky top-8">
-              <h2 className="text-xl font-bold text-white mb-6">
-                Order Summary
-              </h2>
-
-              {/* Product Image */}
-              <div className="mb-6">
-                <div className="aspect-video bg-gradient-to-br from-orange-400/20 to-yellow-500/20 rounded-xl flex items-center justify-center border border-orange-400/30">
-                  <div className="text-6xl">🎂</div>
+          {/* Sidebar */}
+          <div className="layout-content-container flex flex-col w-[360px]">
+            <div className="p-4">
+              <div className="flex flex-col items-stretch justify-start rounded-xl shadow-[0_0_4px_rgba(0,0,0,0.1)] bg-[#F8F9FB]">
+                <div className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl">
+                  <Image
+                    src="/api/placeholder/360/200"
+                    alt="Cake"
+                    width={360}
+                    height={200}
+                    className="rounded-xl object-cover w-full aspect-video"
+                  />
                 </div>
-              </div>
-
-              {/* Product Details */}
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-white font-semibold">Premium Cake</h3>
-                    <p className="text-gray-400 text-sm">Quantity: 1</p>
-                  </div>
-                  <button className="px-4 py-2 bg-orange-400 hover:bg-orange-500 text-black font-medium rounded-lg transition-colors duration-300 text-sm">
-                    Edit
-                  </button>
-                </div>
-              </div>
-
-              {/* Order Details */}
-              <div className="space-y-3 border-t border-gray-700 pt-6">
-                <div className="flex justify-between text-gray-300">
-                  <span>Subtotal</span>
-                  <span>$14.00</span>
-                </div>
-                <div className="flex justify-between text-gray-300">
-                  <span>Tax</span>
-                  <span>$1.12</span>
-                </div>
-                <div className="flex justify-between text-gray-300">
-                  <span>Shipping</span>
-                  <span className="text-orange-400">Free</span>
-                </div>
-                <div className="border-t border-gray-700 pt-3">
-                  <div className="flex justify-between text-white font-bold text-lg">
-                    <span>Total</span>
-                    <span>$15.12</span>
+                <div className="flex w-full min-w-72 grow flex-col items-stretch justify-center gap-1 py-4 px-4">
+                  <p className="text-[#141C24] text-lg font-bold leading-tight tracking-[-0.015em]">
+                    Purchase Details
+                  </p>
+                  <div className="flex items-end gap-3 justify-between">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-[#3F5374] text-base font-normal leading-normal">
+                        Cake
+                      </p>
+                      <p className="text-[#3F5374] text-base font-normal leading-normal">
+                        Quantity: 1
+                      </p>
+                    </div>
+                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 px-4 bg-[#F4C753] text-[#141C24] text-sm font-medium leading-normal">
+                      <span className="truncate">Edit Order</span>
+                    </button>
                   </div>
                 </div>
               </div>
-
-              {/* Features */}
-              <div className="mt-6 pt-6 border-t border-gray-700">
-                <h4 className="text-white font-semibold mb-3">
-                  What&apos;s Included:
-                </h4>
-                <ul className="space-y-2 text-gray-300 text-sm">
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-orange-400 rounded-full mr-3"></span>
-                    Exclusive flavors
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-orange-400 rounded-full mr-3"></span>
-                    Custom cake designs
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-orange-400 rounded-full mr-3"></span>
-                    Express delivery options
-                  </li>
-                </ul>
+            </div>
+            <div className="p-4">
+              <div className="flex justify-between gap-x-6 py-2">
+                <p className="text-[#3F5374] text-sm font-normal leading-normal">
+                  Order Total
+                </p>
+                <p className="text-[#141C24] text-sm font-normal leading-normal text-right">
+                  $14.00
+                </p>
               </div>
-
-              {/* Security Badge */}
-              <div className="mt-6 pt-6 border-t border-gray-700">
-                <div className="flex items-center justify-center text-gray-400 text-sm">
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Secured by SSL encryption
-                </div>
+              <div className="flex justify-between gap-x-6 py-2">
+                <p className="text-[#3F5374] text-sm font-normal leading-normal">
+                  Plan Details
+                </p>
+                <p className="text-[#141C24] text-sm font-normal leading-normal text-right">
+                  • Exclusive flavors • Custom cake designs • Express delivery
+                  options
+                </p>
               </div>
             </div>
           </div>

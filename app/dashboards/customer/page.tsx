@@ -1,8 +1,11 @@
 "use client";
 import React, { useState } from "react";
+import CakePreview3D from "@/components/CakePreview3D";
 import {
   ShoppingCart,
   Package,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  Heart,
   Plus,
   Calendar,
   DollarSign,
@@ -21,6 +24,16 @@ const CustomerDashboard = () => {
   const [selectedCake, setSelectedCake] = useState<number | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<BudgetKey>("1500");
   const [notifications] = useState(3);
+
+  //preview
+  const [showPreview, setShowPreview] = useState(false);
+  const [cart, setCart] = useState<unknown[]>([]);
+  const [customCakeConfig, setCustomCakeConfig] = useState({
+    flavor: "Chocolate",
+    layers: 1,
+    frostingColor: "bg-pink-400",
+    toppings: [] as string[],
+  });
 
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: Package },
@@ -139,6 +152,28 @@ const CustomerDashboard = () => {
     ],
   };
 
+  const handleAddToCart = (cake: unknown) => {
+    setCart((prev) => [...prev, cake]);
+    // You can add notification or toast here
+    console.log("Added to cart:", cake);
+  };
+
+  const handleToppingChange = (topping: string, checked: boolean) => {
+    setCustomCakeConfig((prev) => ({
+      ...prev,
+      toppings: checked
+        ? [...prev.toppings, topping]
+        : prev.toppings.filter((t) => t !== topping),
+    }));
+  };
+
+  const handleConfigChange = (key: string, value: unknown) => {
+    setCustomCakeConfig((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
   const renderOverview = () => (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -146,8 +181,8 @@ const CustomerDashboard = () => {
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-xl text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">Total Orders</p>
-              <p className="text-2xl font-bold">24</p>
+              <p className="text-blue-100 text-sm">Cart Items</p>
+              <p className="text-2xl font-bold">{cart.length}</p>
             </div>
             <ShoppingCart className="w-8 h-8 text-blue-200" />
           </div>
@@ -355,14 +390,9 @@ const CustomerDashboard = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Flavor
             </label>
-            <label
-              htmlFor="flavor-select"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Flavor
-            </label>
             <select
-              id="flavor-select"
+              value={customCakeConfig.flavor}
+              onChange={(e) => handleConfigChange("flavor", e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               aria-label="Flavor"
             >
@@ -378,21 +408,18 @@ const CustomerDashboard = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Layers
             </label>
-            <label
-              htmlFor="layers-select"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Layers
-            </label>
             <select
-              id="layers-select"
+              value={customCakeConfig.layers}
+              onChange={(e) =>
+                handleConfigChange("layers", parseInt(e.target.value))
+              }
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               aria-label="Layers"
             >
-              <option>1 Layer</option>
-              <option>2 Layers</option>
-              <option>3 Layers</option>
-              <option>4+ Layers</option>
+              <option value={1}>1 Layer</option>
+              <option value={2}>2 Layers</option>
+              <option value={3}>3 Layers</option>
+              <option value={4}>4+ Layers</option>
             </select>
           </div>
 
@@ -411,13 +438,18 @@ const CustomerDashboard = () => {
               ].map((color) => (
                 <button
                   key={color}
-                  className={`w-8 h-8 rounded-full ${color} border-2 border-gray-300 hover:scale-110 transition-transform`}
+                  onClick={() => handleConfigChange("frostingColor", color)}
+                  className={`w-8 h-8 rounded-full ${color} border-2 ${
+                    customCakeConfig.frostingColor === color
+                      ? "border-orange-500 scale-110"
+                      : "border-gray-300"
+                  } hover:scale-110 transition-transform`}
                   title={color
                     .replace("bg-", "")
                     .replace("-400", "")
                     .replace("-", " ")
                     .replace(/\b\w/g, (l) => l.toUpperCase())}
-                ></button>
+                />
               ))}
             </div>
           </div>
@@ -437,6 +469,10 @@ const CustomerDashboard = () => {
                 <label key={topping} className="flex items-center">
                   <input
                     type="checkbox"
+                    checked={customCakeConfig.toppings.includes(topping)}
+                    onChange={(e) =>
+                      handleToppingChange(topping, e.target.checked)
+                    }
                     className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                   />
                   <span className="ml-2 text-sm text-gray-700">{topping}</span>
@@ -447,10 +483,28 @@ const CustomerDashboard = () => {
         </div>
 
         <div className="mt-6 flex flex-col sm:flex-row gap-4">
-          <button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all">
+          <button
+            onClick={() => setShowPreview(true)}
+            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+          >
             Generate 3D Preview
           </button>
-          <button className="flex-1 bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors">
+          <button
+            onClick={() =>
+              handleAddToCart({
+                id: Date.now(),
+                name: `Custom ${customCakeConfig.flavor} Cake`,
+                ...customCakeConfig,
+                price:
+                  1000 +
+                  customCakeConfig.layers * 300 +
+                  customCakeConfig.toppings.length * 100,
+                image: "🎂",
+                isCustom: true,
+              })
+            }
+            className="flex-1 bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors"
+          >
             Add to Cart
           </button>
         </div>
@@ -684,6 +738,13 @@ const CustomerDashboard = () => {
           </div>
         </main>
       </div>
+      {/* 3D Preview Modal */}
+      <CakePreview3D
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        cakeConfig={customCakeConfig}
+        onAddToCart={handleAddToCart}
+      />
     </div>
   );
 };
