@@ -4,18 +4,21 @@ import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
 
-interface NavbarProps {
-  cartCount?: number;
-  onCartClick?: () => void;
-}
-
-export default function Navbar({ cartCount = 0, onCartClick }: NavbarProps) {
+export default function Navbar() {
   const [isClient, setIsClient] = useState(false);
+  const router = useRouter();
+  const { totalItems } = useCart();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleCartClick = () => {
+    router.push("/shopping-cart");
+  };
 
   return (
     <nav className="bg-[#2B2B2B] text-white px-6 py-4 shadow-lg flex justify-between items-center relative z-50">
@@ -35,13 +38,13 @@ export default function Navbar({ cartCount = 0, onCartClick }: NavbarProps) {
         </Link>
         <button
           className="relative bg-white text-orange-500 rounded-full p-2 shadow hover:bg-orange-100 transition ml-4"
-          onClick={onCartClick}
+          onClick={handleCartClick}
           aria-label="Shopping Cart"
         >
           <ShoppingCartIcon className="w-7 h-7" />
-          {cartCount > 0 && (
+          {totalItems > 0 && (
             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
-              {cartCount}
+              {totalItems}
             </span>
           )}
         </button>
