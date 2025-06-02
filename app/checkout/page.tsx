@@ -1,309 +1,271 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useState, useEffect, FormEvent } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation'; // To get orderId from URL
+import { loadStripe, StripeError } from '@stripe/stripe-js';
+import {
+  CardElement,
+  Elements,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
+import { useCart } from '../../contexts/CartContext'; // Assuming you might want to clear cart or get details
 
-export default function CheckoutPage() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    companyName: "",
-    billingAddress: "",
-    city: "",
-    country: "",
-    state: "",
-    zipCode: "",
-    creditCardNumber: "",
-    expiryDate: "",
-    cvv: "",
-  });
+// Ensure your Stripe publishable key is set in .env.local (or your environment variables)
+// NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ orderId, clientSecret }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const router = useRouter();
+  const { clearCart } = useCart(); // Get clearCart from context
+
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [succeeded, setSucceeded] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [cardHolderName, setCardHolderName] = useState('');
+
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setProcessing(true);
+
+    if (!stripe || !elements) {
+      // Stripe.js has not yet loaded.
+      // Make sure to disable form submission until Stripe.js has loaded.
+      setError("Stripe.js has not loaded yet. Please wait a moment and try again.");
+      setProcessing(false);
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      setError("Card details are missing. Please ensure the card element is loaded.");
+      setProcessing(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: cardHolderName || undefined, // Optional: Pass cardholder's name
+          },
+        },
+      });
+
+      if (paymentError) {
+        setError(paymentError.message || "An unexpected error occurred during payment.");
+        setSucceeded(false);
+        setProcessing(false);
+      } else if (paymentIntent?.status === 'succeeded') {
+        setError(null);
+        setSucceeded(true);
+        setProcessing(false);
+        console.log("Payment Succeeded:", paymentIntent);
+
+        // Optional: Call backend to confirm order update, though webhooks are more robust
+        // await fetch(`/api/orders/${orderId}/confirm-payment`, { method: 'POST', body: JSON.stringify({ paymentIntentId: paymentIntent.id }) });
+
+        clearCart(); // Clear the cart on successful payment
+        router.push(`/order-success?payment_intent_id=${paymentIntent.id}&order_id=${orderId}`);
+      } else {
+        // Handle other payment intent statuses like 'requires_capture', 'processing', etc.
+        setError(`Payment status: ${paymentIntent?.status || 'unknown'}. Please contact support.`);
+        setSucceeded(false);
+        setProcessing(false);
+      }
+    } catch (e: any) {
+        setError(e.message || "An unexpected error occurred.");
+        setSucceeded(false);
+        setProcessing(false);
+    } finally {
+        setLoading(false);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Handle form submission logic here
-    console.log("Form submitted:", formData);
+  const cardElementOptions = {
+    style: {
+      base: {
+        color: "#e5e7eb", // text-gray-200
+        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+        fontSmoothing: "antialiased",
+        fontSize: "16px",
+        "::placeholder": {
+          color: "#9ca3af", // text-gray-400
+        },
+      },
+      invalid: {
+        color: "#f87171", // text-red-400
+        iconColor: "#f87171", // text-red-400
+      },
+    },
+    hidePostalCode: true, // Optional: if you collect address separately
+  };
+
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 bg-gray-800 p-8 rounded-lg shadow-xl max-w-md mx-auto">
+      <div>
+        <label htmlFor="card-holder-name" className="block text-sm font-medium text-gray-300 mb-1">
+          Cardholder Name (Optional)
+        </label>
+        <input
+          id="card-holder-name"
+          type="text"
+          value={cardHolderName}
+          onChange={(e) => setCardHolderName(e.target.value)}
+          className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm text-gray-200"
+          placeholder="Jane Doe"
+        />
+      </div>
+      <div>
+        <label htmlFor="card-element" className="block text-sm font-medium text-gray-300 mb-1">
+          Card Details
+        </label>
+        <div className="mt-1 p-3 border border-gray-600 rounded-md bg-gray-700 shadow-sm">
+          <CardElement id="card-element" options={cardElementOptions} />
+        </div>
+      </div>
+
+      {error && (
+        <div id="card-errors" role="alert" className="text-red-400 text-sm p-3 bg-red-900/30 border border-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+      {succeeded && (
+        <div className="text-green-400 text-sm p-3 bg-green-900/30 border border-green-700 rounded-md">
+          Payment Succeeded! Redirecting...
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={!stripe || !elements || loading || processing || succeeded}
+        className="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {processing ? "Processing..." : succeeded ? "Paid" : `Pay Now`}
+      </button>
+    </form>
+  );
+};
+
+
+const CheckoutPage: React.FC = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [isLoadingIntent, setIsLoadingIntent] = useState(true);
+
+  useEffect(() => {
+    const currentOrderId = searchParams.get('order_id');
+    if (!currentOrderId) {
+      setLoadingError('No order ID found. Please initiate checkout from your cart or order summary.');
+      setIsLoadingIntent(false);
+      // Optional: redirect to cart or home after a delay
+      // setTimeout(() => router.push('/cart'), 3000);
+      return;
+    }
+    setOrderId(currentOrderId);
+
+    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+        setLoadingError('Stripe is not configured. Payment cannot be processed.');
+        setIsLoadingIntent(false);
+        return;
+    }
+
+    // Fetch the payment intent client secret from your backend
+    fetch('/api/payments/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: currentOrderId }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || `Failed to create payment intent: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setClientSecret(data.clientSecret);
+      })
+      .catch((error: any) => {
+        console.error("Error fetching client secret:", error);
+        setLoadingError(error.message || 'Failed to initialize payment. Please try again.');
+      })
+      .finally(() => {
+        setIsLoadingIntent(false);
+      });
+  }, [searchParams, router]);
+
+  if (!stripePromise) {
+    return (
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
+        <h1 className="text-2xl font-bold text-red-500">Stripe Configuration Error</h1>
+        <p>Stripe publishable key is missing. Payment processing is unavailable.</p>
+      </div>
+    );
+  }
+
+  if (isLoadingIntent) {
+    return (
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
+        <h1 className="text-2xl font-bold text-pink-500">Initializing Secure Payment</h1>
+        <p className="animate-pulse">Please wait while we prepare your checkout...</p>
+        {/* Basic spinner */}
+        <div className="mt-4 border-t-4 border-pink-500 border-solid rounded-full animate-spin h-12 w-12"></div>
+      </div>
+    );
+  }
+
+  if (loadingError) {
+    return (
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
+        <h1 className="text-2xl font-bold text-red-500 mb-4">Checkout Error</h1>
+        <p className="text-red-400 bg-red-900/30 p-4 rounded-md">{loadingError}</p>
+        <Link href={orderId ? `/cart` : '/'} className="mt-6 bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-lg">
+          {orderId ? 'Return to Cart' : 'Go to Homepage'}
+        </Link>
+      </div>
+    );
+  }
+
+  if (!clientSecret || !orderId) {
+     // This state should ideally be covered by isLoadingIntent or loadingError
+    return (
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
+        <h1 className="text-2xl font-bold text-orange-500">Preparing Checkout...</h1>
+        <p>If this message persists, please try refreshing or contact support.</p>
+      </div>
+    );
+  }
+
+  const options = {
+    clientSecret,
+    // appearance: { theme: 'stripe' }, // or 'night', 'flat', etc.
   };
 
   return (
-    <div
-      className="relative flex size-full min-h-screen flex-col bg-[#F8F9FB] group/design-root overflow-x-hidden"
-      style={{ fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif' }}
-    >
-      <div className="layout-container flex h-full grow flex-col">
-        {/* Main Content */}
-        <div className="gap-1 px-6 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col max-w-[920px] flex-1">
-            <h1 className="text-[#141C24] tracking-light text-[32px] font-bold leading-tight px-4 text-left pb-3 pt-6">
-              Checkout
-            </h1>
-
-            <form onSubmit={handleSubmit}>
-              {/* Name Fields */}
-              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    First Name
-                  </p>
-                  <input
-                    name="firstName"
-                    placeholder="Enter your first name"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                  />
-                </label>
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    Last Name
-                  </p>
-                  <input
-                    name="lastName"
-                    placeholder="Enter your last name"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-
-              {/* Email */}
-              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    Email Address
-                  </p>
-                  <input
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email address"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-
-              {/* Company Name */}
-              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    Company Name (Optional)
-                  </p>
-                  <input
-                    name="companyName"
-                    placeholder="Enter your company name"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.companyName}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-
-              {/* Billing Address */}
-              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    Billing Address
-                  </p>
-                  <input
-                    name="billingAddress"
-                    placeholder="Enter your billing address"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.billingAddress}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-
-              {/* City and Country */}
-              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    City
-                  </p>
-                  <input
-                    name="city"
-                    placeholder="Enter city"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                  />
-                </label>
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    Country
-                  </p>
-                  <input
-                    name="country"
-                    placeholder="Enter country"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-
-              {/* State and ZIP */}
-              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    State
-                  </p>
-                  <input
-                    name="state"
-                    placeholder="Enter state"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                  />
-                </label>
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    ZIP Code
-                  </p>
-                  <input
-                    name="zipCode"
-                    placeholder="Enter ZIP code"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.zipCode}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-
-              {/* Credit Card Number */}
-              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    Credit Card Number
-                  </p>
-                  <div className="flex w-full flex-1 items-stretch rounded-xl">
-                    <input
-                      name="creditCardNumber"
-                      placeholder="Enter your credit card number"
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] rounded-r-none border-r-0 pr-2 text-base font-normal leading-normal"
-                      value={formData.creditCardNumber}
-                      onChange={handleInputChange}
-                    />
-                    <div className="text-[#3F5374] flex border border-[#D4DBE8] bg-[#F8F9FB] items-center justify-center pr-[15px] rounded-r-xl border-l-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24px"
-                        height="24px"
-                        fill="currentColor"
-                        viewBox="0 0 256 256"
-                      >
-                        <path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,16V88H32V64Zm0,128H32V104H224v88Zm-16-24a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h32A8,8,0,0,1,208,168Zm-64,0a8,8,0,0,1-8,8H120a8,8,0,0,1,0-16h16A8,8,0,0,1,144,168Z" />
-                      </svg>
-                    </div>
-                  </div>
-                </label>
-              </div>
-
-              {/* Expiry Date and CVV */}
-              <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    Expiry Date
-                  </p>
-                  <input
-                    name="expiryDate"
-                    placeholder="MM/YY"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.expiryDate}
-                    onChange={handleInputChange}
-                  />
-                </label>
-                <label className="flex flex-col min-w-40 flex-1">
-                  <p className="text-[#141C24] text-base font-medium leading-normal pb-2">
-                    CVV
-                  </p>
-                  <input
-                    name="cvv"
-                    placeholder="Enter CVV"
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#141C24] focus:outline-0 focus:ring-0 border border-[#D4DBE8] bg-[#F8F9FB] focus:border-[#D4DBE8] h-14 placeholder:text-[#3F5374] p-[15px] text-base font-normal leading-normal"
-                    value={formData.cvv}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex px-4 py-3">
-                <button
-                  type="submit"
-                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-5 flex-1 bg-[#F4C753] text-[#141C24] text-base font-bold leading-normal tracking-[0.015em]"
-                >
-                  <span className="truncate">Checkout Now</span>
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Sidebar */}
-          <div className="layout-content-container flex flex-col w-[360px]">
-            <div className="p-4">
-              <div className="flex flex-col items-stretch justify-start rounded-xl shadow-[0_0_4px_rgba(0,0,0,0.1)] bg-[#F8F9FB]">
-                <div className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl">
-                  <Image
-                    src="/api/placeholder/360/200"
-                    alt="Cake"
-                    width={360}
-                    height={200}
-                    className="rounded-xl object-cover w-full aspect-video"
-                  />
-                </div>
-                <div className="flex w-full min-w-72 grow flex-col items-stretch justify-center gap-1 py-4 px-4">
-                  <p className="text-[#141C24] text-lg font-bold leading-tight tracking-[-0.015em]">
-                    Purchase Details
-                  </p>
-                  <div className="flex items-end gap-3 justify-between">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-[#3F5374] text-base font-normal leading-normal">
-                        Cake
-                      </p>
-                      <p className="text-[#3F5374] text-base font-normal leading-normal">
-                        Quantity: 1
-                      </p>
-                    </div>
-                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 px-4 bg-[#F4C753] text-[#141C24] text-sm font-medium leading-normal">
-                      <span className="truncate">Edit Order</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="flex justify-between gap-x-6 py-2">
-                <p className="text-[#3F5374] text-sm font-normal leading-normal">
-                  Order Total
-                </p>
-                <p className="text-[#141C24] text-sm font-normal leading-normal text-right">
-                  $14.00
-                </p>
-              </div>
-              <div className="flex justify-between gap-x-6 py-2">
-                <p className="text-[#3F5374] text-sm font-normal leading-normal">
-                  Plan Details
-                </p>
-                <p className="text-[#141C24] text-sm font-normal leading-normal text-right">
-                  • Exclusive flavors • Custom cake designs • Express delivery
-                  options
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-gray-900 text-gray-200">
+      <h1 className="text-3xl font-bold text-pink-500 mb-8">Complete Your Payment</h1>
+      <p className="text-gray-400 mb-2">Order ID: {orderId}</p>
+      {/* You can add more order summary details here if needed, fetched based on orderId */}
+      <Elements stripe={stripePromise} options={options}>
+        <CheckoutForm orderId={orderId} clientSecret={clientSecret} />
+      </Elements>
     </div>
   );
-}
+};
+
+export default CheckoutPage;
