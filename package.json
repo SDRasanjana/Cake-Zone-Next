@@ -23,16 +23,24 @@
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+<<<<<<< HEAD
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+=======
+    "framer-motion": "^12.15.0",
+>>>>>>> ac31e0919c998c74b07f27d407478064513f979e
     "lucide-react": "^0.511.0",
     "mongodb": "^6.16.0",
     "next": "15.3.2",
     "postcss-cli": "^11.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+<<<<<<< HEAD
     "react-error-boundary": "^6.0.0",
+=======
+    "react-hot-toast": "^2.5.2",
+>>>>>>> ac31e0919c998c74b07f27d407478064513f979e
     "react-icons": "^5.5.0",
     "react-model": "^4.3.1",
     "recharts": "^2.15.3",
