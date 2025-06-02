@@ -15,11 +15,9 @@ interface CartItem {
   image: string;
 }
 
-const CakeDetails = () => {
-  const [selectedImage, setSelectedImage] = useState(0);
+const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const { addToCart } = useCart();
-  const [selectedAge, setSelectedAge] = useState('all');
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
 
@@ -35,9 +33,7 @@ const CakeDetails = () => {
       "Vanilla Extract",
       "Mixed Berries",
       "Dark Chocolate Ganache"
-    ],
-    weight: "1.5 kg",
-    ageRecommendation: ["all", "kids", "adults", "elderly"],
+    ],    weight: "1.5 kg",
     images: [
       "/cake1.jpg", // Front view
       "/cake2.jpg", // Side view
@@ -69,31 +65,6 @@ const CakeDetails = () => {
     }
   };
 
-  const getAgeIcon = (age: string) => {
-    switch (age) {
-      case 'kids':
-        return '👶';
-      case 'adults':
-        return '👤';
-      case 'elderly':
-        return '👴';
-      default:
-        return '👨‍👩‍👧‍👦';
-    }
-  };
-
-  const getAgeLabel = (age: string) => {
-    switch (age) {
-      case 'kids':
-        return 'Suitable for kids';
-      case 'adults':
-        return 'Perfect for adults';
-      case 'elderly':
-        return 'Senior-friendly';
-      default:
-        return 'Suitable for all ages';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#FFF9F2] py-12">
@@ -191,33 +162,9 @@ const CakeDetails = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">              <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-[#3A2E26]">Weight</h3>
                 <p className="text-[#7A6A5F]">{cakeData.weight}</p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-[#3A2E26]">Age Recommendation</h3>
-                <div className="flex gap-2">
-                  {cakeData.ageRecommendation.map((age) => (                    <button
-                      key={age}
-                      onClick={() => setSelectedAge(age)}
-                      title={getAgeLabel(age)}
-                      aria-label={getAgeLabel(age)}
-                      role="radio"
-                      aria-checked={selectedAge === age ? true : false}
-                      className={`p-3 rounded-xl ${
-                        selectedAge === age
-                          ? 'bg-[#E67E5F] text-white shadow-lg scale-110'
-                          : 'bg-[#FFEDE5] text-[#E67E5F] hover:bg-[#FFE5D9]'
-                      } transition-all duration-300`}
-                    >
-                      <span className="text-2xl" role="img" aria-hidden="true">
-                        {getAgeIcon(age)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 
