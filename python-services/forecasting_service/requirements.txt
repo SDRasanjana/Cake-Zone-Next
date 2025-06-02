@@ -1,4 +1,0 @@
-Flask
-prophet
-pandas
-numpy
