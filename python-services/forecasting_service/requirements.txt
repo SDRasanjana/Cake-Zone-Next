@@ -1,0 +1,4 @@
+Flask
+prophet
+pandas
+numpy
