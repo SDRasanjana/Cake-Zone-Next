@@ -22,11 +22,11 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { useExpenses } from "@/lib/hooks/useExpenses";
+import { useExpense } from "@/lib/hooks/useExpense";
 
 // Define proper TypeScript interfaces
 interface Expense {
-  id: string | number;
+  _id: string;
   category: string;
   amount: number;
   description?: string;
@@ -39,17 +39,14 @@ interface NewExpense {
   description: string;
 }
 
-export default function Expenses() {
-  const {
+export default function Expenses() {  const {
     loading,
     error,
     fetchExpenses,
     addExpense,
     deleteExpense,
     getExpensesByMonth,
-    getTotalByCategory,
-    getTotalExpenses,
-  } = useExpenses();
+  } = useExpense();
 
   const [newExpense, setNewExpense] = useState<NewExpense>({
     category: "Labour",
@@ -118,9 +115,8 @@ export default function Expenses() {
       setIsSubmitting(false);
     }
   };
-
   // Handle delete expense - fixed typing
-  const handleDeleteExpense = async (expenseId: string | number) => {
+  const handleDeleteExpense = async (expenseId: string) => {
     if (!confirm("Are you sure you want to delete this expense?")) {
       return;
     }
@@ -133,18 +129,23 @@ export default function Expenses() {
       alert(`Error deleting expense: ${errorMessage}`);
     }
   };
-
   // Get current and previous month expenses
   const currentMonthExpenses: Expense[] =
-    getExpensesByMonth(currentMonth, currentYear) || [];
+    getExpensesByMonth(currentMonth - 1, currentYear) || [];
+  const previousMonthExpenses: Expense[] =
+    getExpensesByMonth(previousMonth - 1, previousYear) || [];
 
-  // Calculate totals
+  // Calculate totals for current month
   const getCurrentCategoryTotal = (category: string): number => {
-    return getTotalByCategory(category, currentMonth, currentYear) || 0;
+    return currentMonthExpenses
+      .filter((expense) => expense.category === category)
+      .reduce((total, expense) => total + expense.amount, 0);
   };
 
   const getPreviousCategoryTotal = (category: string): number => {
-    return getTotalByCategory(category, previousMonth, previousYear) || 0;
+    return previousMonthExpenses
+      .filter((expense) => expense.category === category)
+      .reduce((total, expense) => total + expense.amount, 0);
   };
 
   // Prepare data for charts
@@ -163,9 +164,14 @@ export default function Expenses() {
       color: categoryColors[category],
     }))
     .filter((item) => item.value > 0);
-
-  const totalCurrent = getTotalExpenses(currentMonth, currentYear) || 0;
-  const totalPrevious = getTotalExpenses(previousMonth, previousYear) || 0;
+  const totalCurrent = currentMonthExpenses.reduce(
+    (total, expense) => total + expense.amount,
+    0
+  );
+  const totalPrevious = previousMonthExpenses.reduce(
+    (total, expense) => total + expense.amount,
+    0
+  );
   const totalChange = totalCurrent - totalPrevious;
   const changePercentage =
     totalPrevious > 0 ? ((totalChange / totalPrevious) * 100).toFixed(1) : "0";
@@ -462,7 +468,7 @@ export default function Expenses() {
                   </tr>
                 ) : (
                   currentMonthExpenses.map((expense: Expense) => (
-                    <tr key={expense.id} className="border-b border-white/10">
+                    <tr key={expense._id} className="border-b border-white/10">
                       <td className="px-4 py-2">
                         {new Date(expense.date).toLocaleDateString()}
                       </td>
@@ -475,7 +481,7 @@ export default function Expenses() {
                       </td>
                       <td className="px-4 py-2">
                         <button
-                          onClick={() => handleDeleteExpense(expense.id)}
+                          onClick={() => handleDeleteExpense(expense._id)}
                           className="text-red-400 hover:text-red-600 transition-colors"
                           title="Delete"
                         >
