@@ -48,3 +48,6 @@ package-lock.json
 /.clerk/
 
 /lib/generated/prisma
+
+#next.config.ts was changed relavato to my setup
+next.config.ts

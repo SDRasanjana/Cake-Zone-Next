@@ -1,6 +1,9 @@
 "use client";
 import React, { useState } from 'react';
 import { Eye, EyeOff, User, Lock, Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+// @ts-ignore
+import jwt from 'jsonwebtoken';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +14,9 @@ export default function LoginPage() {
     confirmPassword: '',
     name: ''
   });
+  const router = useRouter();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -19,10 +25,62 @@ export default function LoginPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('Form submitted:', formData);
+    setError('');
+    setLoading(true);
+    try {
+      if (isLogin) {
+        // Login: Try MongoDB (owner/admin), else fallback to Clerk (customer)
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email, password: formData.password })
+        });
+        const result = await res.json();
+        if (result.success) {
+          // Redirect based on role
+          if (result.data.role === 'owner') router.push('/dashboards/owner');
+          else if (result.data.role === 'admin') router.push('/dashboards/admin');
+          else router.push('/'); // fallback
+        } else {
+          // If not found in MongoDB, fallback to Clerk (customer)
+          // You can integrate Clerk login here, or show error
+          setError(result.error || 'Login failed');
+        }
+
+        // Set JWT cookie for owner/admin after successful login
+        if (result.success && (result.data.role === 'owner' || result.data.role === 'admin')) {
+          // Create JWT
+          // Use a fallback secret if process.env.JWT_SECRET is undefined
+          const secret = process.env.JWT_SECRET || 'default_secret';
+          const token = jwt.sign({ email: result.data.email, role: result.data.role }, secret, { expiresIn: '1d' });
+          document.cookie = `auth_token=${token}; path=/; max-age=86400`;
+        }
+      } else {
+        // Registration (customer only)
+        if (formData.password !== formData.confirmPassword) {
+          setError('Passwords do not match');
+          setLoading(false);
+          return;
+        }
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email, password: formData.password, name: formData.name })
+        });
+        const result = await res.json();
+        if (result.success) {
+          // Optionally, auto-login or redirect
+          setIsLogin(true);
+        } else {
+          setError(result.error || 'Registration failed');
+        }
+      }
+    } catch (err) {
+      setError('Something went wrong');
+    }
+    setLoading(false);
   };
 
   return (
@@ -172,6 +230,11 @@ export default function LoginPage() {
                   </a>
                 </div>
               </div>
+            )}
+
+            {/* Error message */}
+            {error && (
+              <div className="text-red-500 text-center mb-2">{error}</div>
             )}
 
             {/* Submit button */}
