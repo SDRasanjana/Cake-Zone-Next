@@ -139,7 +139,7 @@ function generateForecast(ingredient, forecastDays) {
         unit: ingredient.unit,
         currentPrice,
         historicalData,
-        predictions,        statistics: {
+        predictions, statistics: {
             average: Math.round(avgPrice * 100) / 100,
             minimum: minPrice,
             maximum: maxPrice,
