@@ -10,6 +10,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { useCart } from '../../contexts/CartContext'; // Assuming you might want to clear cart or get details
+import { Link } from 'lucide-react';
 
 // Ensure your Stripe publishable key is set in .env.local (or your environment variables)
 // NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
