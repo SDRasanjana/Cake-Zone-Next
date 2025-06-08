@@ -1,16 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, FormEvent } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation'; // To get orderId from URL
-import { loadStripe, StripeError } from '@stripe/stripe-js';
+import React, { useState, useEffect, FormEvent } from "react";
+import { useSearchParams, useRouter } from "next/navigation"; // To get orderId from URL
+import { loadStripe } from "@stripe/stripe-js";
+
+// Force dynamic rendering to prevent prerender errors
+export const dynamic = "force-dynamic";
+
+// Add revalidate to ensure no caching
+export const revalidate = 0;
 import {
   CardElement,
   Elements,
   useStripe,
   useElements,
-} from '@stripe/react-stripe-js';
-import { useCart } from '../../contexts/CartContext'; // Assuming you might want to clear cart or get details
-import { Link } from 'lucide-react';
+} from "@stripe/react-stripe-js";
+import { useCart } from "../../contexts/CartContext"; // Assuming you might want to clear cart or get details
+import Link from "next/link";
 
 // Ensure your Stripe publishable key is set in .env.local (or your environment variables)
 // NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
@@ -18,7 +24,10 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ orderId, clientSecret }) => {
+const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({
+  orderId,
+  clientSecret,
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -28,8 +37,7 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ ord
   const [loading, setLoading] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [cardHolderName, setCardHolderName] = useState('');
-
+  const [cardHolderName, setCardHolderName] = useState("");
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -38,14 +46,18 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ ord
     if (!stripe || !elements) {
       // Stripe.js has not yet loaded.
       // Make sure to disable form submission until Stripe.js has loaded.
-      setError("Stripe.js has not loaded yet. Please wait a moment and try again.");
+      setError(
+        "Stripe.js has not loaded yet. Please wait a moment and try again."
+      );
       setProcessing(false);
       return;
     }
 
     const cardElement = elements.getElement(CardElement);
     if (!cardElement) {
-      setError("Card details are missing. Please ensure the card element is loaded.");
+      setError(
+        "Card details are missing. Please ensure the card element is loaded."
+      );
       setProcessing(false);
       return;
     }
@@ -54,20 +66,23 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ ord
     setError(null);
 
     try {
-      const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            name: cardHolderName || undefined, // Optional: Pass cardholder's name
+      const { error: paymentError, paymentIntent } =
+        await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              name: cardHolderName || undefined, // Optional: Pass cardholder's name
+            },
           },
-        },
-      });
+        });
 
       if (paymentError) {
-        setError(paymentError.message || "An unexpected error occurred during payment.");
+        setError(
+          paymentError.message || "An unexpected error occurred during payment."
+        );
         setSucceeded(false);
         setProcessing(false);
-      } else if (paymentIntent?.status === 'succeeded') {
+      } else if (paymentIntent?.status === "succeeded") {
         setError(null);
         setSucceeded(true);
         setProcessing(false);
@@ -77,19 +92,27 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ ord
         // await fetch(`/api/orders/${orderId}/confirm-payment`, { method: 'POST', body: JSON.stringify({ paymentIntentId: paymentIntent.id }) });
 
         clearCart(); // Clear the cart on successful payment
-        router.push(`/order-success?payment_intent_id=${paymentIntent.id}&order_id=${orderId}`);
+        router.push(
+          `/order-success?payment_intent_id=${paymentIntent.id}&order_id=${orderId}`
+        );
       } else {
         // Handle other payment intent statuses like 'requires_capture', 'processing', etc.
-        setError(`Payment status: ${paymentIntent?.status || 'unknown'}. Please contact support.`);
+        setError(
+          `Payment status: ${
+            paymentIntent?.status || "unknown"
+          }. Please contact support.`
+        );
         setSucceeded(false);
         setProcessing(false);
       }
-    } catch (e: any) {
-        setError(e.message || "An unexpected error occurred.");
-        setSucceeded(false);
-        setProcessing(false);
+    } catch (e: unknown) {
+      const errorMessage =
+        e instanceof Error ? e.message : "An unexpected error occurred.";
+      setError(errorMessage);
+      setSucceeded(false);
+      setProcessing(false);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -112,11 +135,16 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ ord
     hidePostalCode: true, // Optional: if you collect address separately
   };
 
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-gray-800 p-8 rounded-lg shadow-xl max-w-md mx-auto">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 bg-gray-800 p-8 rounded-lg shadow-xl max-w-md mx-auto"
+    >
       <div>
-        <label htmlFor="card-holder-name" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="card-holder-name"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Cardholder Name (Optional)
         </label>
         <input
@@ -129,7 +157,10 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ ord
         />
       </div>
       <div>
-        <label htmlFor="card-element" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="card-element"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Card Details
         </label>
         <div className="mt-1 p-3 border border-gray-600 rounded-md bg-gray-700 shadow-sm">
@@ -138,7 +169,11 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ ord
       </div>
 
       {error && (
-        <div id="card-errors" role="alert" className="text-red-400 text-sm p-3 bg-red-900/30 border border-red-700 rounded-md">
+        <div
+          id="card-errors"
+          role="alert"
+          className="text-red-400 text-sm p-3 bg-red-900/30 border border-red-700 rounded-md"
+        >
           {error}
         </div>
       )}
@@ -159,8 +194,29 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({ ord
   );
 };
 
-
 const CheckoutPage: React.FC = () => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Don't render client-specific components on server
+  if (!isClient) {
+    return (
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200 bg-gray-900">
+        <h1 className="text-3xl font-bold text-pink-500 mb-8">
+          Loading Checkout...
+        </h1>
+        <div className="mt-4 border-t-4 border-pink-500 border-solid rounded-full animate-spin h-12 w-12"></div>
+      </div>
+    );
+  }
+
+  return <CheckoutPageClient />;
+};
+
+const CheckoutPageClient: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -169,61 +225,75 @@ const CheckoutPage: React.FC = () => {
   const [isLoadingIntent, setIsLoadingIntent] = useState(true);
 
   useEffect(() => {
-    const currentOrderId = searchParams.get('order_id');
+    const currentOrderId = searchParams.get("order_id");
     if (!currentOrderId) {
-      setLoadingError('No order ID found. Please initiate checkout from your cart or order summary.');
+      setLoadingError(
+        "No order ID found. Please initiate checkout from your cart or order summary."
+      );
       setIsLoadingIntent(false);
-      // Optional: redirect to cart or home after a delay
-      // setTimeout(() => router.push('/cart'), 3000);
       return;
     }
     setOrderId(currentOrderId);
 
     if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-        setLoadingError('Stripe is not configured. Payment cannot be processed.');
-        setIsLoadingIntent(false);
-        return;
+      setLoadingError("Stripe is not configured. Payment cannot be processed.");
+      setIsLoadingIntent(false);
+      return;
     }
 
     // Fetch the payment intent client secret from your backend
-    fetch('/api/payments/create-payment-intent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("/api/payments/create-payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId: currentOrderId }),
     })
       .then(async (res) => {
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.error || `Failed to create payment intent: ${res.status}`);
+          throw new Error(
+            errorData.error || `Failed to create payment intent: ${res.status}`
+          );
         }
         return res.json();
       })
       .then((data) => {
         setClientSecret(data.clientSecret);
       })
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         console.error("Error fetching client secret:", error);
-        setLoadingError(error.message || 'Failed to initialize payment. Please try again.');
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to initialize payment. Please try again.";
+        setLoadingError(errorMessage);
       })
       .finally(() => {
         setIsLoadingIntent(false);
       });
   }, [searchParams, router]);
-
+  // Don't render anything until mounted on client side
   if (!stripePromise) {
     return (
-      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
-        <h1 className="text-2xl font-bold text-red-500">Stripe Configuration Error</h1>
-        <p>Stripe publishable key is missing. Payment processing is unavailable.</p>
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200 bg-gray-900">
+        <h1 className="text-2xl font-bold text-red-500">
+          Stripe Configuration Error
+        </h1>
+        <p>
+          Stripe publishable key is missing. Payment processing is unavailable.
+        </p>
       </div>
     );
   }
 
   if (isLoadingIntent) {
     return (
-      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
-        <h1 className="text-2xl font-bold text-pink-500">Initializing Secure Payment</h1>
-        <p className="animate-pulse">Please wait while we prepare your checkout...</p>
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200 bg-gray-900">
+        <h1 className="text-2xl font-bold text-pink-500">
+          Initializing Secure Payment
+        </h1>
+        <p className="animate-pulse">
+          Please wait while we prepare your checkout...
+        </p>
         {/* Basic spinner */}
         <div className="mt-4 border-t-4 border-pink-500 border-solid rounded-full animate-spin h-12 w-12"></div>
       </div>
@@ -232,22 +302,31 @@ const CheckoutPage: React.FC = () => {
 
   if (loadingError) {
     return (
-      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200 bg-gray-900">
         <h1 className="text-2xl font-bold text-red-500 mb-4">Checkout Error</h1>
-        <p className="text-red-400 bg-red-900/30 p-4 rounded-md">{loadingError}</p>
-        <Link href={orderId ? `/cart` : '/'} className="mt-6 bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-lg">
-          {orderId ? 'Return to Cart' : 'Go to Homepage'}
+        <p className="text-red-400 bg-red-900/30 p-4 rounded-md">
+          {loadingError}
+        </p>
+        <Link
+          href={orderId ? `/cart` : "/"}
+          className="mt-6 bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-lg"
+        >
+          {orderId ? "Return to Cart" : "Go to Homepage"}
         </Link>
       </div>
     );
   }
 
   if (!clientSecret || !orderId) {
-     // This state should ideally be covered by isLoadingIntent or loadingError
+    // This state should ideally be covered by isLoadingIntent or loadingError
     return (
-      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
-        <h1 className="text-2xl font-bold text-orange-500">Preparing Checkout...</h1>
-        <p>If this message persists, please try refreshing or contact support.</p>
+      <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200 bg-gray-900">
+        <h1 className="text-2xl font-bold text-orange-500">
+          Preparing Checkout...
+        </h1>
+        <p>
+          If this message persists, please try refreshing or contact support.
+        </p>
       </div>
     );
   }
@@ -259,7 +338,9 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-gray-900 text-gray-200">
-      <h1 className="text-3xl font-bold text-pink-500 mb-8">Complete Your Payment</h1>
+      <h1 className="text-3xl font-bold text-pink-500 mb-8">
+        Complete Your Payment
+      </h1>
       <p className="text-gray-400 mb-2">Order ID: {orderId}</p>
       {/* You can add more order summary details here if needed, fetched based on orderId */}
       <Elements stripe={stripePromise} options={options}>

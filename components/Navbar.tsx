@@ -5,12 +5,12 @@ import Link from "next/link";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/contexts/CartContext";
 
 export default function Navbar() {
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
-  const { totalItems } = useCart();
+  const { getItemCount } = useCart();
 
   useEffect(() => {
     setIsClient(true);
@@ -41,10 +41,11 @@ export default function Navbar() {
           onClick={handleCartClick}
           aria-label="Shopping Cart"
         >
+          {" "}
           <ShoppingCartIcon className="w-7 h-7" />
-          {totalItems > 0 && (
+          {getItemCount() > 0 && (
             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
-              {totalItems}
+              {getItemCount()}
             </span>
           )}
         </button>

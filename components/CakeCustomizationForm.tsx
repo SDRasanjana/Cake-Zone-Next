@@ -192,11 +192,11 @@ const CakeCustomizationForm: React.FC = () => {
     setToppings(suggestedToppings);
     let appliedColorClass = frostingColorsList[5].class; // Default white
     if (suggestion.availableColors && suggestion.availableColors.length > 0) {
-      const suggestedColorName = suggestion.availableColors[0]?.name;
+      const suggestedColorName = suggestion.availableColors[0].name;
       const matchedColor = frostingColorsList.find(
         (fc) =>
-          fc.name.toLowerCase() === (suggestedColorName?.toLowerCase() || "") ||
-          (suggestion.availableColors?.[0]?.class &&
+          fc.name.toLowerCase() === suggestedColorName.toLowerCase() ||
+          (suggestion.availableColors?.[0] &&
             fc.class === suggestion.availableColors[0].class)
       );
       if (matchedColor) appliedColorClass = matchedColor.class;

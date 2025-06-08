@@ -1,21 +1,18 @@
 "use client";
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { useCart } from '@/context/CartContext';
-import { HeartIcon } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
+import React, { useState } from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { useCart } from "@/contexts/CartContext";
+import { HeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
+import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
 
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-}
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
-const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(0);
+const CakeDetails = () => {
+  const [selectedImage, setSelectedImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
@@ -26,34 +23,43 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
     id: 1,
     name: "Chocolate Fantasy Cake",
     price: 49.99,
-    description: "A delightful chocolate cake with rich ganache and fresh berries. Perfect for special occasions and celebrations. Made with premium ingredients and expert craftsmanship.",
+    description:
+      "A delightful chocolate cake with rich ganache and fresh berries. Perfect for special occasions and celebrations. Made with premium ingredients and expert craftsmanship.",
     ingredients: [
       "Belgian Chocolate",
       "Fresh Cream",
       "Vanilla Extract",
       "Mixed Berries",
-      "Dark Chocolate Ganache"
-    ],    weight: "1.5 kg",
+      "Dark Chocolate Ganache",
+    ],
+    weight: "1.5 kg",
     images: [
       "/cake1.jpg", // Front view
       "/cake2.jpg", // Side view
       "/cake3.jpg", // Back view
-      "/cake4.jpg"  // Top view
+      "/cake4.jpg", // Top view
     ],
     relatedCakes: [
       { id: 2, name: "Vanilla Dream", image: "/cake2.jpg", price: 39.99 },
       { id: 3, name: "Berry Bliss", image: "/cake3.jpg", price: 44.99 },
       { id: 4, name: "Caramel Delight", image: "/cake4.jpg", price: 42.99 },
-      { id: 5, name: "Red Velvet", image: "/cake5.jpg", price: 45.99 }
-    ]
+      { id: 5, name: "Red Velvet", image: "/cake5.jpg", price: 45.99 },
+    ],
   };
-
   const handleAddToCart = () => {
     const item = {
-      id: cakeData.id,
+      productId: cakeData.id.toString(),
       name: cakeData.name,
       price: cakeData.price,
-      image: cakeData.images[0]
+      quantity: quantity,
+      layers: 2, // Default value
+      flavor: "Chocolate", // Default value from cake data
+      toppings: ["Belgian Chocolate", "Fresh Berries"], // Default from ingredients
+      frostingColor: "#8B4513", // Default brown color
+      decorations: [], // Default empty array
+      specialInstructions: "", // Default empty
+      deliveryDate: "", // Default empty
+      imageUri: cakeData.images[0], // Use first image
     };
     addToCart(item);
   };
@@ -65,14 +71,13 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
     }
   };
 
-
   return (
     <div className="min-h-screen bg-[#FFF9F2] py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Image Gallery Section */}
           <div className="space-y-6">
-            <motion.div 
+            <motion.div
               layoutId={`cake-image-${cakeData.id}`}
               className="relative aspect-square rounded-3xl overflow-hidden bg-white shadow-xl"
               whileHover={{ scale: isZoomed ? 1 : 1.02 }}
@@ -83,7 +88,9 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
                 alt={cakeData.name}
                 fill
                 className={`object-cover transform transition-transform duration-500 ${
-                  isZoomed ? 'scale-150 cursor-zoom-out' : 'hover:scale-110 cursor-zoom-in'
+                  isZoomed
+                    ? "scale-150 cursor-zoom-out"
+                    : "hover:scale-110 cursor-zoom-in"
                 }`}
                 quality={100}
               />
@@ -98,16 +105,34 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
                 <motion.button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  title={`View ${index === 0 ? 'front' : index === 1 ? 'side' : index === 2 ? 'back' : 'top'} of the cake`}
+                  title={`View ${
+                    index === 0
+                      ? "front"
+                      : index === 1
+                      ? "side"
+                      : index === 2
+                      ? "back"
+                      : "top"
+                  } of the cake`}
                   className={`relative aspect-square rounded-xl overflow-hidden border-2 ${
-                    selectedImage === index ? 'border-[#E67E5F]' : 'border-transparent'
+                    selectedImage === index
+                      ? "border-[#E67E5F]"
+                      : "border-transparent"
                   }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <Image
                     src={image}
-                    alt={`${cakeData.name} ${index === 0 ? 'front view' : index === 1 ? 'side view' : index === 2 ? 'back view' : 'top view'}`}
+                    alt={`${cakeData.name} ${
+                      index === 0
+                        ? "front view"
+                        : index === 1
+                        ? "side view"
+                        : index === 2
+                        ? "back view"
+                        : "top view"
+                    }`}
                     fill
                     className="object-cover"
                   />
@@ -133,7 +158,9 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
                 whileTap={{ scale: 0.9 }}
                 className="p-3 rounded-full bg-white shadow-md"
                 title={isLiked ? "Remove from favorites" : "Add to favorites"}
-                aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
+                aria-label={
+                  isLiked ? "Remove from favorites" : "Add to favorites"
+                }
               >
                 {isLiked ? (
                   <HeartSolidIcon className="w-6 h-6 text-red-500" />
@@ -144,12 +171,16 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#3A2E26]">Description</h3>
+              <h3 className="text-lg font-semibold text-[#3A2E26]">
+                Description
+              </h3>
               <p className="text-[#7A6A5F]">{cakeData.description}</p>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#3A2E26]">Ingredients</h3>
+              <h3 className="text-lg font-semibold text-[#3A2E26]">
+                Ingredients
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {cakeData.ingredients.map((ingredient, index) => (
                   <span
@@ -162,7 +193,9 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              {" "}
+              <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-[#3A2E26]">Weight</h3>
                 <p className="text-[#7A6A5F]">{cakeData.weight}</p>
               </div>
@@ -209,7 +242,9 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
 
         {/* Related Cakes Section */}
         <div className="mt-24">
-          <h2 className="text-3xl font-bold text-[#3A2E26] font-serif mb-8">You May Also Like</h2>
+          <h2 className="text-3xl font-bold text-[#3A2E26] font-serif mb-8">
+            You May Also Like
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {cakeData.relatedCakes.map((cake) => (
               <motion.div
@@ -226,8 +261,12 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-[#3A2E26] text-lg mb-2">{cake.name}</h3>
-                  <p className="text-[#E67E5F] font-bold">${cake.price.toFixed(2)}</p>
+                  <h3 className="font-semibold text-[#3A2E26] text-lg mb-2">
+                    {cake.name}
+                  </h3>
+                  <p className="text-[#E67E5F] font-bold">
+                    ${cake.price.toFixed(2)}
+                  </p>
                 </div>
               </motion.div>
             ))}
