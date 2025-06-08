@@ -5,9 +5,6 @@ import { useCart } from "../../contexts/CartContext"; // Adjust path as necessar
 import Link from "next/link";
 import Image from "next/image"; // If you have imageUris for cart items
 
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
-
 const CartPage: React.FC = () => {
   const {
     state,
@@ -17,7 +14,7 @@ const CartPage: React.FC = () => {
     clearCart,
     getCartTotal,
   } = useCart();
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [] = useState(false);
 
   const handleQuantityChange = (
     itemId: string,
@@ -60,7 +57,7 @@ const CartPage: React.FC = () => {
           Your Cart is Empty
         </h1>
         <p className="text-gray-400 mb-8">
-          Looks like you haven't added any delicious cakes yet!
+          Looks like you haven&apos;t added any delicious cakes yet!
         </p>
         <Link
           href="/customize"

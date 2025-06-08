@@ -7,9 +7,6 @@ import { useCart } from "@/contexts/CartContext";
 import { MinusIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
-
 const ShoppingCartPage = () => {
   const router = useRouter();
   const { state, updateQuantity, removeFromCart, getCartTotal } = useCart();

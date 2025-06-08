@@ -6,9 +6,6 @@ import { motion } from "framer-motion";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useCart } from "@/contexts/CartContext";
 
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
-
 interface Cake {
   id: number;
   name: string;

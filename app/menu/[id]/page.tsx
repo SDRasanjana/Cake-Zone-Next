@@ -8,9 +8,6 @@ import { HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
 
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
-
 const CakeDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
