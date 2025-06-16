@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import { useUser } from "@clerk/nextjs";
 
 interface CartItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -16,12 +16,12 @@ interface CartItem {
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (item: Omit<CartItem, "quantity">) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeFromCart: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
-  isInCart: (id: number) => boolean;
+  isInCart: (id: string) => boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -81,7 +81,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     toast.success(message);
   };
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string) => {
     setCartItems((prevItems) => {
       const itemToRemove = prevItems.find((item) => item.id === id);
       if (itemToRemove) {
@@ -91,7 +91,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(id);
       return;
@@ -113,7 +113,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     0
   );
 
-  const isInCart = (id: number) => cartItems.some((item) => item.id === id);
+  const isInCart = (id: string) => cartItems.some((item) => item.id === id);
 
   return (
     <CartContext.Provider

@@ -9,7 +9,7 @@ import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 interface CartItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;
@@ -50,7 +50,7 @@ const CakeDetails = () => {  const [selectedImage, setSelectedImage] = useState(
 
   const handleAddToCart = () => {
     const item = {
-      id: cakeData.id,
+      id: cakeData.id.toString(),
       name: cakeData.name,
       price: cakeData.price,
       image: cakeData.images[0]

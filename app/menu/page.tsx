@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -9,7 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 
 interface Cake {
-  id: number;
+  _id: string;
   name: string;
   price: number;
   image: string;
@@ -20,24 +20,37 @@ interface Cake {
 export default function CakeGallery() {
   const { addToCart, totalItems } = useCart();
   const router = useRouter();
+  const [cakes, setCakes] = useState<Cake[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCakes() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/cakes");
+        const data = await res.json();
+        setCakes(data);
+      } catch (err) {
+        setCakes([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCakes();
+  }, []);
 
   const handleAddToCart = (cake: Cake) => {
     addToCart({
-      id: cake.id,
+      id: cake._id,
       name: cake.name,
       price: cake.price,
       image: cake.image
     });
   };
 
-  const cakes: Cake[] = [
-    { id: 1, name: "Butterscotch Fudge Cake", price: 95.00, image: "/Butterscoch-Fudge.jpg", rating: 4.8, description: "Rich butterscotch layered with creamy fudge" },
-    { id: 2, name: "Marble Cake", price: 95.00, image: "/marbel.jpg", rating: 4.5, description: "Classic vanilla and chocolate swirl" },
-    { id: 3, name: "Mocha Chocolate Cake", price: 95.00, image: "/mocha-chocolate.jpg", rating: 4.9, description: "Coffee-infused dark chocolate delight" },
-    { id: 4, name: "Pineapple Gateau", price: 105.00, image: "/pineapple.jpg", rating: 4.7, description: "Cream cheese frosted classic" },
-    { id: 5, name: "Ultimate Chocolate Cake", price: 89.00, image: "/ultimate.jpg", rating: 4.6, description: "Zesty lemon with fresh blueberries" },
-    { id: 6, name: "Red Velvet Cake", price: 99.00, image: "/red-velvet.jpg", rating: 4.8, description: "Sweet and salty perfection" },
-  ];
+  if (loading) {
+    return <div className="text-center py-20">Loading cakes...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF9F2] py-12">
@@ -69,9 +82,9 @@ export default function CakeGallery() {
           animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {cakes.map((cake, index) => (
+          {cakes.map((cake) => (
             <motion.div
-              key={cake.id}
+              key={cake._id}
               variants={{
                 hidden: { y: 20, opacity: 0 },
                 show: { y: 0, opacity: 1 }
@@ -80,7 +93,7 @@ export default function CakeGallery() {
               whileHover={{ y: -5 }}
               transition={{ duration: 0.3 }}
             >
-              <Link href={`/menu/${cake.id}`} className="block">
+              <Link href={`/menu/${cake._id}`} className="block">
                 <div className="relative aspect-square">
                   <Image
                     src={cake.image}
