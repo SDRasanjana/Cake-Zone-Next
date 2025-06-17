@@ -1,8 +1,12 @@
 "use client";
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState("overview");
   const [notifications] = useState([
     {
@@ -122,6 +126,12 @@ export default function AdminDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (isLoaded && (!isSignedIn || user?.publicMetadata?.role !== "admin")) {
+      router.replace("/unauthorized");
+    }
+  }, [isLoaded, isSignedIn, user, router]);
+
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-[#F8F9FB] to-[#E8F4FD]"
@@ -173,13 +183,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm font-medium text-[#141C24]">Admin User</p>
-                <p className="text-xs text-[#3F5374]">System Administrator</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#F4C753] to-[#F59E0B] flex items-center justify-center">
-                <span className="text-[#141C24] font-bold">A</span>
-              </div>
+              <UserButton afterSignOutUrl="/" />
             </div>
           </div>
         </div>

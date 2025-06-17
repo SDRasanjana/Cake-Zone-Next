@@ -1,12 +1,7 @@
-// app/layout.tsx
-
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/footer";
-import { CartProvider } from "@/contexts/CartContext";
-import { Toaster } from "react-hot-toast";
+import AppShell from "@/components/AppShell";
 
 export const metadata = {
   title: "CakeZone",
@@ -27,17 +22,13 @@ export default function RootLayout({
             variables: { colorPrimary: "#f97316", fontSize: "16px" },
           }}
         >
-          <CartProvider>
-            <Navbar />
-            {children}
-            <Footer />
-            <Toaster position="bottom-right" />
-          </CartProvider>
+          <AppShell>{children}</AppShell>
         </ClerkProvider>
       </body>
     </html>
   );
 }
+
 export const config = {
   runtime: "edge",
 };

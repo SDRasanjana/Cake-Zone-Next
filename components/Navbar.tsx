@@ -1,6 +1,6 @@
 "use client";
 
-import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { UserButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
@@ -18,6 +18,7 @@ export default function Navbar() {
   const router = useRouter();
   const { getItemCount } = useCart();
   const totalItems = getItemCount();
+  const { isSignedIn, user } = useUser();
 
   useEffect(() => {
     setIsClient(true);
@@ -31,9 +32,16 @@ export default function Navbar() {
     <nav className="bg-[#2B2B2B] text-white px-6 py-4 shadow-lg flex justify-between items-center relative z-50">
       <div className="text-2xl font-bold text-orange-400">CakeZone</div>
       <div className="flex gap-4 text-sm uppercase font-semibold items-center">
-        {isClient && (
-          <>
-            <SignedIn>
+        {isClient &&
+          isSignedIn &&
+          (() => {
+            let dashboardHref = "/dashboards/customer";
+            if (user?.publicMetadata?.role === "admin") {
+              dashboardHref = "/dashboards/admin";
+            } else if (user?.publicMetadata?.role === "owner") {
+              dashboardHref = "/dashboards/Owner";
+            }
+            return (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -41,15 +49,14 @@ export default function Navbar() {
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <Link
-                  href="/dashboards/customer"
+                  href={dashboardHref}
                   className="hover:text-orange-400 transition-colors duration-200 px-3 py-2 rounded-md"
                 >
                   Dashboard
                 </Link>
               </motion.div>
-            </SignedIn>
-          </>
-        )}
+            );
+          })()}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}

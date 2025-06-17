@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Cake from "@/lib/models/Cake";
+import clientPromise from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
 export async function GET(request, { params }) {
-  await dbConnect();
   const { id } = params;
   try {
-    const cake = await Cake.findById(id);
+    const client = await clientPromise;
+    const db = client.db(); // uses default DB from URI
+    // Find the cake by _id (convert to ObjectId)
+    const cake = await db.collection("cakes").findOne({ _id: new ObjectId(id) });
     if (!cake) {
       return NextResponse.json({ message: "Cake not found" }, { status: 404 });
     }
