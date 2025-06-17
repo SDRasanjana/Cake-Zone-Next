@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
 
 interface Cake {
@@ -18,7 +18,8 @@ interface Cake {
 }
 
 export default function CakeGallery() {
-  const { addToCart, totalItems } = useCart();
+  const { addToCart, getItemCount } = useCart();
+  const totalItems = getItemCount();
   const router = useRouter();
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,12 +40,18 @@ export default function CakeGallery() {
     fetchCakes();
   }, []);
 
+  // Add a cake to the cart, mapping Cake fields to CartItem fields and providing defaults for required fields
   const handleAddToCart = (cake: Cake) => {
     addToCart({
-      id: cake._id,
-      name: cake.name,
-      price: cake.price,
-      image: cake.image
+      name: cake.name, // Cake name
+      price: cake.price, // Cake price
+      layers: 1, // Default to 1 layer for menu cakes
+      flavor: "Vanilla", // Default flavor
+      toppings: [], // No toppings by default
+      frostingColor: "bg-pink-400", // Default frosting color
+      productId: cake._id, // Use cake's _id as productId
+      imageUri: cake.image, // Use cake image
+      quantity: 1, // Default quantity
     });
   };
 

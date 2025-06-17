@@ -5,7 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
-import { CartProvider } from "@/context/CartContext";
+import { CartProvider } from "@/contexts/CartContext";
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {

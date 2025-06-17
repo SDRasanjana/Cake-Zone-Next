@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import { HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
@@ -64,13 +64,18 @@ const CakeDetails = () => {
 
   const handleAddToCart = () => {
     if (!cakeData) return;
-    const item = {
-      id: cakeData._id?.toString() || "",
+    // Add all required fields for CartItem, with sensible defaults for a normal cake
+    addToCart({
       name: cakeData.name,
       price: cakeData.price,
-      image: cakeData.images?.[0] || cakeData.image || "",
-    };
-    addToCart(item);
+      layers: 1, // Default to 1 layer
+      flavor: "Vanilla", // Default flavor
+      toppings: [], // No toppings by default
+      frostingColor: "bg-pink-400", // Default frosting color
+      productId: cakeData._id?.toString() || "",
+      imageUri: cakeData.images?.[0] || cakeData.image || "",
+      quantity: quantity, // Use selected quantity
+    });
   };
 
   const handleQuantityChange = (change: number) => {

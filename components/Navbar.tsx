@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
 
 const navLinkVariants = {
@@ -16,7 +16,8 @@ const navLinkVariants = {
 export default function Navbar() {
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
-  const { totalItems } = useCart();
+  const { getItemCount } = useCart();
+  const totalItems = getItemCount();
 
   useEffect(() => {
     setIsClient(true);
