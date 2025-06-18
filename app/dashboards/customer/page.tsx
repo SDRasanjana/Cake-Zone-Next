@@ -16,6 +16,7 @@ import {
   Layers,
   Sparkles,
 } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 type BudgetKey = "1500" | "2000" | "2000+";
 
@@ -27,7 +28,7 @@ const CustomerDashboard = () => {
 
   //preview
   const [showPreview, setShowPreview] = useState(false);
-  const [cart, setCart] = useState<unknown[]>([]);
+  const { addToCart } = useCart(); // Use global cart context
   const [customCakeConfig, setCustomCakeConfig] = useState({
     flavor: "Chocolate",
     layers: 1,
@@ -152,10 +153,22 @@ const CustomerDashboard = () => {
     ],
   };
 
-  const handleAddToCart = (cake: unknown) => {
-    setCart((prev) => [...prev, cake]);
-    // You can add notification or toast here
-    console.log("Added to cart:", cake);
+  // Updated handler to add custom cake to global cart
+  const handleAddToCart = (cake: any) => {
+    // Ensure toppings is always an array to avoid runtime errors
+    addToCart({
+      name: cake.name,
+      price: cake.price,
+      layers: cake.layers ?? 1,
+      flavor: cake.flavor ?? "Vanilla",
+      toppings: Array.isArray(cake.toppings) ? cake.toppings : [], // Always an array
+      frostingColor: cake.frostingColor ?? "bg-pink-400",
+      // Optionally add more fields: frostingHexColor, imageUri, etc.
+      quantity: 1, // Default to 1 for custom cakes
+      productId: "custom", // Mark as custom
+      imageUri: cake.image, // Use emoji or preview image
+    });
+    // Optionally show a toast/notification here
   };
 
   const handleToppingChange = (topping: string, checked: boolean) => {
@@ -182,7 +195,7 @@ const CustomerDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-sm">Cart Items</p>
-              <p className="text-2xl font-bold">{cart.length}</p>
+              <p className="text-2xl font-bold">{0}</p>
             </div>
             <ShoppingCart className="w-8 h-8 text-blue-200" />
           </div>

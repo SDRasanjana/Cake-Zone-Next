@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 
 interface TopHeaderProps {
   activeTab: string;
@@ -8,10 +9,6 @@ interface TopHeaderProps {
 }
 
 export default function TopHeader({ activeTab, userType }: TopHeaderProps) {
-  const getUserInitial = () => (userType === "Owner" ? "O" : "A");
-  const getUserTitle = () =>
-    userType === "Owner" ? "System Owner" : "System Administrator";
-
   return (
     <div className="bg-white border-b px-6 py-4">
       <div className="flex items-center justify-between">
@@ -37,18 +34,8 @@ export default function TopHeader({ activeTab, userType }: TopHeaderProps) {
             </span>
           </div>
 
-          {/* User Profile */}
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
-              <p className="font-semibold text-gray-900">{userType} User</p>
-              <p className="text-sm text-gray-500">{getUserTitle()}</p>
-            </div>
-            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center">
-              <span className="font-bold text-gray-900">
-                {getUserInitial()}
-              </span>
-            </div>
-          </div>
+          {/* User Profile (Clerk UserButton) */}
+          <UserButton afterSignOutUrl="/" />
         </div>
       </div>
     </div>

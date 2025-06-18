@@ -1,11 +1,11 @@
-// app/login/page.tsx
+"use client";
+
 import { SignIn } from "@clerk/nextjs";
 
-const SignInPage = () => {
+export default function SignInPage() {
   return (
     <main className="flex justify-center items-center h-screen">
-      <SignIn />
+      <SignIn redirectUrl="/post-signin-redirect" />
     </main>
   );
-};
-export default SignInPage;
+}

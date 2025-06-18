@@ -9,7 +9,9 @@ import { motion } from "framer-motion";
 
 const ShoppingCartPage = () => {
   const router = useRouter();
+  // Use the global cart context for all cart operations, including custom cakes
   const { state, updateQuantity, removeFromCart, getCartTotal } = useCart();
+  // state.items contains all cart items (normal + custom)
 
   const handleCheckout = () => {
     router.push("/checkout");
@@ -63,6 +65,7 @@ const ShoppingCartPage = () => {
             Your <span className="text-[#E67E5F]">Sweet</span> Cart
           </h1>
         </motion.div>
+
         {/* Cart Content */}
         <div className="space-y-8">
           {state.items.length === 0 ? (
@@ -103,10 +106,10 @@ const ShoppingCartPage = () => {
                 </motion.div>
                 <h2 className="text-3xl font-semibold text-[#3A2E26] mb-6">
                   Your cart is empty
-                </h2>{" "}
+                </h2>
                 <p className="text-lg text-[#7A6A5F] mb-8 max-w-md mx-auto">
-                  Looks like you haven&apos;t added any delicious cakes yet.
-                  Let&apos;s fix that!
+                  Looks like you haven't added any delicious cakes yet. Let's
+                  fix that!
                 </p>
                 <Link
                   href="/menu"
@@ -142,7 +145,7 @@ const ShoppingCartPage = () => {
                   animate="visible"
                   className="bg-white rounded-3xl shadow-2xl overflow-hidden"
                 >
-                  {state.items.map((item) => (
+                  {state.items.map((item, index) => (
                     <motion.div
                       layout
                       key={item.id}
@@ -158,9 +161,9 @@ const ShoppingCartPage = () => {
 
                       <div className="flex items-start gap-6">
                         <div className="relative flex-shrink-0 w-36 h-36 rounded-2xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-300">
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#FFEDE5]/50 to-transparent z-0" />{" "}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#FFEDE5]/50 to-transparent z-0" />
                           <img
-                            src={item.imageUri}
+                            src={item.imageUri || "/default-cake.png"} // Use imageUri from CartItem, fallback to a default image
                             alt={item.name}
                             className="w-full h-full object-cover object-center relative z-10"
                           />
@@ -251,7 +254,6 @@ const ShoppingCartPage = () => {
                     </h2>
 
                     <div className="space-y-4 mb-6">
-                      {" "}
                       <div className="flex justify-between items-center pb-3 border-b border-[#FFE5D9]">
                         <span className="text-[#7A6A5F]">Subtotal</span>
                         <span className="text-[#3A2E26] font-medium">

@@ -51,3 +51,12 @@ package-lock.json
 
 #next.config.ts was changed relavato to my setup
 next.config.ts
+
+#seedCakes
+/scripts/seedCakes.js
+
+#loadEnv.js
+/loadEnv.js
+
+#testenv
+/testenv.js

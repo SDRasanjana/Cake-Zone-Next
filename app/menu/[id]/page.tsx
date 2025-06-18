@@ -1,64 +1,81 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { useParams } from "next/navigation";
+
+interface Cake {
+  _id: string;
+  name: string;
+  price: number;
+  description: string;
+  image: string;
+  rating?: number;
+  category?: string;
+  stock?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  ingredients?: string[];
+  weight?: string;
+  images?: string[];
+  relatedCakes?: Array<{
+    id: string | number;
+    name: string;
+    image: string;
+    price: number;
+  }>;
+}
 
 const CakeDetails = () => {
+  const params = useParams();
+  const id = params?.id;
+  const [cakeData, setCakeData] = useState<Cake | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - replace with actual data fetching
-  const cakeData = {
-    id: 1,
-    name: "Chocolate Fantasy Cake",
-    price: 49.99,
-    description:
-      "A delightful chocolate cake with rich ganache and fresh berries. Perfect for special occasions and celebrations. Made with premium ingredients and expert craftsmanship.",
-    ingredients: [
-      "Belgian Chocolate",
-      "Fresh Cream",
-      "Vanilla Extract",
-      "Mixed Berries",
-      "Dark Chocolate Ganache",
-    ],
-    weight: "1.5 kg",
-    images: [
-      "/cake1.jpg", // Front view
-      "/cake2.jpg", // Side view
-      "/cake3.jpg", // Back view
-      "/cake4.jpg", // Top view
-    ],
-    relatedCakes: [
-      { id: 2, name: "Vanilla Dream", image: "/cake2.jpg", price: 39.99 },
-      { id: 3, name: "Berry Bliss", image: "/cake3.jpg", price: 44.99 },
-      { id: 4, name: "Caramel Delight", image: "/cake4.jpg", price: 42.99 },
-      { id: 5, name: "Red Velvet", image: "/cake5.jpg", price: 45.99 },
-    ],
-  };
+  // Fetch cake data from API
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    fetch(`/api/cakes/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Cake not found");
+        return res.json();
+      })
+      .then((data) => {
+        setCakeData(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [id]);
+
   const handleAddToCart = () => {
-    const item = {
-      productId: cakeData.id.toString(),
+    if (!cakeData) return;
+    // Add all required fields for CartItem, with sensible defaults for a normal cake
+    addToCart({
       name: cakeData.name,
       price: cakeData.price,
-      quantity: quantity,
-      layers: 2, // Default value
-      flavor: "Chocolate", // Default value from cake data
-      toppings: ["Belgian Chocolate", "Fresh Berries"], // Default from ingredients
-      frostingColor: "#8B4513", // Default brown color
-      decorations: [], // Default empty array
-      specialInstructions: "", // Default empty
-      deliveryDate: "", // Default empty
-      imageUri: cakeData.images[0], // Use first image
-    };
-    addToCart(item);
+      layers: 1, // Default to 1 layer
+      flavor: "Vanilla", // Default flavor
+      toppings: [], // No toppings by default
+      frostingColor: "bg-pink-400", // Default frosting color
+      productId: cakeData._id?.toString() || "",
+      imageUri: cakeData.images?.[0] || cakeData.image || "",
+      quantity: quantity, // Use selected quantity
+    });
   };
 
   const handleQuantityChange = (change: number) => {
@@ -68,6 +85,20 @@ const CakeDetails = () => {
     }
   };
 
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        {error}
+      </div>
+    );
+  if (!cakeData) return null;
+
   return (
     <div className="min-h-screen bg-[#FFF9F2] py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,13 +106,15 @@ const CakeDetails = () => {
           {/* Image Gallery Section */}
           <div className="space-y-6">
             <motion.div
-              layoutId={`cake-image-${cakeData.id}`}
+              layoutId={`cake-image-${cakeData._id}`}
               className="relative aspect-square rounded-3xl overflow-hidden bg-white shadow-xl"
               whileHover={{ scale: isZoomed ? 1 : 1.02 }}
               onClick={() => setIsZoomed(!isZoomed)}
             >
               <Image
-                src={cakeData.images[selectedImage]}
+                src={
+                  (cakeData.images?.[selectedImage] || cakeData.image) as string
+                }
                 alt={cakeData.name}
                 fill
                 className={`object-cover transform transition-transform duration-500 ${
@@ -98,7 +131,10 @@ const CakeDetails = () => {
               )}
             </motion.div>
             <div className="grid grid-cols-4 gap-4">
-              {cakeData.images.map((image, index) => (
+              {(cakeData.images && cakeData.images.length > 0
+                ? cakeData.images
+                : [cakeData.image]
+              ).map((image, index) => (
                 <motion.button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -179,7 +215,7 @@ const CakeDetails = () => {
                 Ingredients
               </h3>
               <div className="flex flex-wrap gap-2">
-                {cakeData.ingredients.map((ingredient, index) => (
+                {cakeData.ingredients?.map((ingredient, index) => (
                   <span
                     key={index}
                     className="px-4 py-2 rounded-full bg-[#FFEDE5] text-[#E67E5F] text-sm font-medium"
@@ -243,7 +279,7 @@ const CakeDetails = () => {
             You May Also Like
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {cakeData.relatedCakes.map((cake) => (
+            {cakeData.relatedCakes?.map((cake) => (
               <motion.div
                 key={cake.id}
                 whileHover={{ y: -10 }}

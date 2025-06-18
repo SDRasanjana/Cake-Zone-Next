@@ -7,6 +7,8 @@ import React, {
   ReactNode,
   Dispatch,
 } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useEffect } from "react";
 
 // 1. Define Interfaces
 export interface CartItem {
@@ -49,11 +51,21 @@ type CartAction =
   | { type: "REMOVE_FROM_CART"; payload: { id: string } }
   | { type: "UPDATE_QUANTITY"; payload: { id: string; quantity: number } }
   | { type: "SET_DELIVERY_DATE"; payload: { date: string | null } }
-  | { type: "CLEAR_CART" };
+  | { type: "CLEAR_CART" }
+  | {
+      type: "BATCH_SET_CART";
+      payload: { items: CartItem[]; deliveryDate: string | null };
+    }; // New action for batch setting cart items
 
 // 3. Create Reducer Function
-const cartReducer = (state: CartState, action: CartAction): CartState => {
+const cartReducer = (state: CartState, action: CartAction | any): CartState => {
   switch (action.type) {
+    case "BATCH_SET_CART":
+      // Efficiently set the entire cart state at once
+      return {
+        items: action.payload.items || [],
+        deliveryDate: action.payload.deliveryDate || null,
+      };
     case "ADD_TO_CART": {
       const existingItemIndex = state.items.findIndex(
         (item) =>
@@ -115,21 +127,63 @@ interface CartProviderProps {
 }
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  const initialState: CartState = {
+  // Get the current user from Clerk
+  const { user } = useUser();
+
+  // Helper to get a unique cart key for each user (or guest)
+  const getCartKey = () => (user?.id ? `cart_${user.id}` : "cart_guest");
+
+  // Set up reducer for cart state
+  const [state, dispatch] = useReducer(cartReducer, {
     items: [],
     deliveryDate: null,
-  };
-  const [state, dispatch] = useReducer(cartReducer, initialState);
+  });
+
+  // Efficiently load cart from localStorage ONCE per user (batch set state)
+  useEffect(() => {
+    const cartKey = getCartKey();
+    const savedCart = localStorage.getItem(cartKey);
+    if (savedCart) {
+      try {
+        const parsed = JSON.parse(savedCart);
+        if (parsed && Array.isArray(parsed.items)) {
+          // Instead of dispatching for each item, batch set the state
+          dispatch({
+            type: "BATCH_SET_CART",
+            payload: {
+              items: parsed.items,
+              deliveryDate: parsed.deliveryDate || null,
+            },
+          });
+        }
+      } catch {}
+    } else {
+      dispatch({ type: "CLEAR_CART" });
+    }
+  }, [user?.id]);
+
+  // Save cart to localStorage whenever it changes (debounced for performance)
+  useEffect(() => {
+    const cartKey = getCartKey();
+    const timeout = setTimeout(() => {
+      localStorage.setItem(cartKey, JSON.stringify(state));
+    }, 200); // Debounce writes
+    return () => clearTimeout(timeout);
+  }, [state, user?.id]);
+
+  // Prevent guests from adding to cart
   const addToCart = (
     itemData: Omit<CartItem, "id" | "quantity"> & { quantity?: number }
   ) => {
-    // Create a unique ID for the cart item based on its properties for exact match checking
-    // This is a simplified approach. A more robust way would be a stable hash of configuration.
+    if (!user?.id) {
+      alert("You must be logged in to add items to the cart.");
+      return;
+    }
     const newItem: CartItem = {
-      id: Date.now().toString() + Math.random().toString(36).substring(2, 9), // More unique ID
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
       ...itemData,
-      productId: itemData.productId || "custom", // Default product ID if not provided
-      quantity: itemData.quantity || 1, // Default to 1 if quantity not provided
+      productId: itemData.productId || "custom",
+      quantity: itemData.quantity || 1,
     };
     dispatch({ type: "ADD_TO_CART", payload: newItem });
   };

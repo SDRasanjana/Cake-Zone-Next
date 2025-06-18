@@ -1,5 +1,7 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import SidebarNav from "@/components/SidebarNav";
 import TopHeader from "@/components/TopHeader";
 
@@ -61,8 +63,16 @@ const ErrorFallback = ({
 );
 
 export default function OwnerDashboard() {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("Overview");
   const [componentError, setComponentError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isLoaded && (!isSignedIn || user?.publicMetadata?.role !== "owner")) {
+      router.replace("/unauthorized");
+    }
+  }, [isLoaded, isSignedIn, user, router]);
 
   const renderTab = () => {
     try {
