@@ -1,10 +1,15 @@
 "use client";
 import React, { useState } from "react";
-import CakePreview3D from "@/components/CakePreview3D";
+import CakePreview3D from "@/components/dashboard/customer/CakePreview3D";
+import SidebarNavigation from "@/components/dashboard/customer/SidebarNavigation";
+import MobileNavigation from "@/components/dashboard/customer/MobileNavigation";
+import OverviewTab from "@/components/dashboard/customer/OverviewTab";
+import CustomizeTab from "@/components/dashboard/customer/CustomizeTab";
+import OrdersTab from "@/components/dashboard/customer/OrdersTab";
+import NotificationsTab from "@/components/dashboard/customer/NotificationsTab";
 import {
   ShoppingCart,
   Package,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Heart,
   Plus,
   Calendar,
@@ -13,8 +18,6 @@ import {
   User,
   Settings,
   ChefHat,
-  Layers,
-  Sparkles,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 
@@ -155,20 +158,17 @@ const CustomerDashboard = () => {
 
   // Updated handler to add custom cake to global cart
   const handleAddToCart = (cake: any) => {
-    // Ensure toppings is always an array to avoid runtime errors
     addToCart({
       name: cake.name,
       price: cake.price,
       layers: cake.layers ?? 1,
       flavor: cake.flavor ?? "Vanilla",
-      toppings: Array.isArray(cake.toppings) ? cake.toppings : [], // Always an array
+      toppings: Array.isArray(cake.toppings) ? cake.toppings : [],
       frostingColor: cake.frostingColor ?? "bg-pink-400",
-      // Optionally add more fields: frostingHexColor, imageUri, etc.
-      quantity: 1, // Default to 1 for custom cakes
-      productId: "custom", // Mark as custom
-      imageUri: cake.image, // Use emoji or preview image
+      quantity: 1,
+      productId: "custom",
+      imageUri: cake.image,
     });
-    // Optionally show a toast/notification here
   };
 
   const handleToppingChange = (topping: string, checked: boolean) => {
@@ -187,445 +187,34 @@ const CustomerDashboard = () => {
     }));
   };
 
-  const renderOverview = () => (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-xl text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm">Cart Items</p>
-              <p className="text-2xl font-bold">{0}</p>
-            </div>
-            <ShoppingCart className="w-8 h-8 text-blue-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-xl text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-100 text-sm">Completed</p>
-              <p className="text-2xl font-bold">18</p>
-            </div>
-            <Package className="w-8 h-8 text-green-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-xl text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm">Total Spent</p>
-              <p className="text-2xl font-bold">₹1,245</p>
-            </div>
-            <DollarSign className="w-8 h-8 text-purple-200" />
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            onClick={() => setActiveTab("customize")}
-            className="flex items-center p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border-2 border-dashed border-pink-200 hover:border-pink-300 transition-colors group"
-          >
-            <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center group-hover:bg-pink-200">
-              <Plus className="w-6 h-6 text-pink-600" />
-            </div>
-            <div className="ml-3">
-              <p className="font-medium text-gray-800">Design New Cake</p>
-              <p className="text-sm text-gray-500">Create custom cake</p>
-            </div>
-          </button>
-
-          <button className="flex items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors group">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200">
-              <Calendar className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-3">
-              <p className="font-medium text-gray-800">Schedule Order</p>
-              <p className="text-sm text-gray-500">Plan ahead</p>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Orders */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Recent Orders</h3>
-          <button
-            onClick={() => setActiveTab("orders")}
-            className="text-orange-600 hover:text-orange-700 font-medium text-sm"
-          >
-            View All
-          </button>
-        </div>
-        <div className="space-y-4">
-          {recentOrders.map((order) => (
-            <div
-              key={order.id}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-2xl">
-                  {order.image}
-                </div>
-                <div className="ml-4">
-                  <p className="font-medium text-gray-800">{order.name}</p>
-                  <p className="text-sm text-gray-500">
-                    Ordered on {order.date}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-gray-800">₹{order.price}</p>
-                <span
-                  className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                    order.status === "delivered"
-                      ? "bg-green-100 text-green-800"
-                      : order.status === "processing"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {order.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderCustomize = () => (
-    <div className="space-y-6">
-      {/* Budget Categories */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Choose Budget Category
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button
-            onClick={() => setSelectedBudget("1500")}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              selectedBudget === "1500"
-                ? "border-orange-500 bg-orange-50 text-orange-700"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="text-center">
-              <p className="text-2xl font-bold">₹1,500</p>
-              <p className="text-sm text-gray-600">Budget Category</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedBudget("2000")}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              selectedBudget === "2000"
-                ? "border-orange-500 bg-orange-50 text-orange-700"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="text-center">
-              <p className="text-2xl font-bold">₹2,000</p>
-              <p className="text-sm text-gray-600">Budget Category</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedBudget("2000+")}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              selectedBudget === "2000+"
-                ? "border-orange-500 bg-orange-50 text-orange-700"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="text-center">
-              <p className="text-2xl font-bold">₹2,000+</p>
-              <p className="text-sm text-gray-600">Premium Category</p>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* AI Suggestions */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex items-center mb-4">
-          <Sparkles className="w-5 h-5 text-purple-600 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-800">
-            AI Budget Suggestions for ₹{selectedBudget}
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {budgetSuggestions[selectedBudget].map((cake) => (
-            <div
-              key={cake.id}
-              className={`border rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${
-                selectedCake === cake.id
-                  ? "border-orange-500 bg-orange-50"
-                  : "border-gray-200"
-              }`}
-              onClick={() => setSelectedCake(cake.id)}
-            >
-              <div className="text-4xl mb-3 text-center">{cake.image}</div>
-              <h4 className="font-semibold text-gray-800 mb-2">{cake.name}</h4>
-              <p className="text-sm text-gray-600 mb-3">{cake.description}</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-sm text-gray-500">
-                  <Layers className="w-4 h-4 mr-1" />
-                  {cake.layers} layers
-                </div>
-                <span className="font-bold text-orange-600">₹{cake.price}</span>
-              </div>
-              {selectedCake === cake.id && (
-                <button className="w-full mt-3 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors">
-                  Customize Further
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Customization Form */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Customize Your Cake
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Flavor
-            </label>
-            <select
-              value={customCakeConfig.flavor}
-              onChange={(e) => handleConfigChange("flavor", e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-              aria-label="Flavor"
-            >
-              <option>Chocolate</option>
-              <option>Vanilla</option>
-              <option>Strawberry</option>
-              <option>Red Velvet</option>
-              <option>Lemon</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Layers
-            </label>
-            <select
-              value={customCakeConfig.layers}
-              onChange={(e) =>
-                handleConfigChange("layers", parseInt(e.target.value))
-              }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-              aria-label="Layers"
-            >
-              <option value={1}>1 Layer</option>
-              <option value={2}>2 Layers</option>
-              <option value={3}>3 Layers</option>
-              <option value={4}>4+ Layers</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Frosting Color
-            </label>
-            <div className="flex space-x-2">
-              {[
-                "bg-pink-400",
-                "bg-blue-400",
-                "bg-green-400",
-                "bg-yellow-400",
-                "bg-purple-400",
-                "bg-white",
-              ].map((color) => (
-                <button
-                  key={color}
-                  onClick={() => handleConfigChange("frostingColor", color)}
-                  className={`w-8 h-8 rounded-full ${color} border-2 ${
-                    customCakeConfig.frostingColor === color
-                      ? "border-orange-500 scale-110"
-                      : "border-gray-300"
-                  } hover:scale-110 transition-transform`}
-                  title={color
-                    .replace("bg-", "")
-                    .replace("-400", "")
-                    .replace("-", " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase())}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Toppings
-            </label>
-            <div className="space-y-2">
-              {[
-                "Fresh Berries",
-                "Chocolate Chips",
-                "Sprinkles",
-                "Nuts",
-                "Edible Flowers",
-              ].map((topping) => (
-                <label key={topping} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={customCakeConfig.toppings.includes(topping)}
-                    onChange={(e) =>
-                      handleToppingChange(topping, e.target.checked)
-                    }
-                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">{topping}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col sm:flex-row gap-4">
-          <button
-            onClick={() => setShowPreview(true)}
-            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
-          >
-            Generate 3D Preview
-          </button>
-          <button
-            onClick={() =>
-              handleAddToCart({
-                id: Date.now(),
-                name: `Custom ${customCakeConfig.flavor} Cake`,
-                ...customCakeConfig,
-                price:
-                  1000 +
-                  customCakeConfig.layers * 300 +
-                  customCakeConfig.toppings.length * 100,
-                image: "🎂",
-                isCustom: true,
-              })
-            }
-            className="flex-1 bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors"
-          >
-            Add to Cart
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderOrders = () => (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-6">My Orders</h3>
-      <div className="space-y-4">
-        {recentOrders.map((order) => (
-          <div key={order.id} className="border border-gray-200 rounded-lg p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-              <div className="flex items-center mb-4 sm:mb-0">
-                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-3xl mr-4">
-                  {order.image}
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-800">{order.name}</h4>
-                  <p className="text-sm text-gray-500">Order #CK00{order.id}</p>
-                  <p className="text-sm text-gray-500">
-                    Ordered on {order.date}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xl font-bold text-gray-800">
-                  ₹{order.price}
-                </p>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                    order.status === "delivered"
-                      ? "bg-green-100 text-green-800"
-                      : order.status === "processing"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {order.status}
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-700 transition-colors">
-                Track Order
-              </button>
-              <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">
-                Reorder
-              </button>
-              <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">
-                Rate & Review
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
-        return renderOverview();
-      case "customize":
-        return renderCustomize();
-      case "orders":
-        return renderOrders();
-      case "notifications":
         return (
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Notifications
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-start p-4 bg-blue-50 rounded-lg">
-                <Bell className="w-5 h-5 text-blue-600 mt-1 mr-3" />
-                <div>
-                  <p className="font-medium text-gray-800">Order Update</p>
-                  <p className="text-sm text-gray-600">
-                    Your Chocolate Birthday Cake has been delivered!
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-start p-4 bg-green-50 rounded-lg">
-                <Bell className="w-5 h-5 text-green-600 mt-1 mr-3" />
-                <div>
-                  <p className="font-medium text-gray-800">Special Offer</p>
-                  <p className="text-sm text-gray-600">
-                    Get 20% off on your next order above ₹2000
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">1 day ago</p>
-                </div>
-              </div>
-              <div className="flex items-start p-4 bg-yellow-50 rounded-lg">
-                <Bell className="w-5 h-5 text-yellow-600 mt-1 mr-3" />
-                <div>
-                  <p className="font-medium text-gray-800">Reminder</p>
-                  <p className="text-sm text-gray-600">
-                    Don&apos;t forget to rate your last order
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">3 days ago</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <OverviewTab
+            recentOrders={recentOrders}
+            setActiveTab={setActiveTab}
+          />
         );
+      case "customize":
+        return (
+          <CustomizeTab
+            selectedBudget={selectedBudget}
+            setSelectedBudget={setSelectedBudget}
+            budgetSuggestions={budgetSuggestions}
+            selectedCake={selectedCake}
+            setSelectedCake={setSelectedCake}
+            customCakeConfig={customCakeConfig}
+            handleConfigChange={handleConfigChange}
+            handleToppingChange={handleToppingChange}
+            setShowPreview={setShowPreview}
+            handleAddToCart={handleAddToCart}
+          />
+        );
+      case "orders":
+        return <OrdersTab recentOrders={recentOrders} />;
+      case "notifications":
+        return <NotificationsTab />;
       default:
         return (
           <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -674,62 +263,20 @@ const CustomerDashboard = () => {
           </div>
         </div>
       </header>
-
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r min-h-screen hidden lg:block">
-          <nav className="mt-8 px-4">
-            <ul className="space-y-2">
-              {sidebarItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.id}>
-                    <button
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
-                        activeTab === item.id
-                          ? "bg-orange-100 text-orange-700 border-r-2 border-orange-600"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
-                    >
-                      <Icon className="w-5 h-5 mr-3" />
-                      {item.label}
-                      {item.id === "notifications" && notifications > 0 && (
-                        <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {notifications}
-                        </span>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </aside>
-
+        <SidebarNavigation
+          items={sidebarItems}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          notifications={notifications}
+        />
         {/* Mobile Navigation */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-10">
-          <div className="flex justify-around py-2">
-            {sidebarItems.slice(0, 4).map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex flex-col items-center p-2 ${
-                    activeTab === item.id ? "text-orange-600" : "text-gray-600"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-xs mt-1">
-                    {item.label.split(" ")[0]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
+        <MobileNavigation
+          items={sidebarItems}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           <div className="max-w-7xl mx-auto">
