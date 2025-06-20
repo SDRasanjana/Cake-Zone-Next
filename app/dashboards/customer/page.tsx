@@ -32,11 +32,18 @@ const CustomerDashboard = () => {
   //preview
   const [showPreview, setShowPreview] = useState(false);
   const { addToCart } = useCart(); // Use global cart context
-  const [customCakeConfig, setCustomCakeConfig] = useState({
+  const [customCakeConfig, setCustomCakeConfig] = useState<{
+    shape: "round" | "square";
+    flavor: string;
+    layers: number;
+    frostingColor: string;
+    toppings: string[];
+  }>({
+    shape: "round",
     flavor: "Chocolate",
     layers: 1,
     frostingColor: "bg-pink-400",
-    toppings: [] as string[],
+    toppings: [],
   });
 
   const sidebarItems = [
@@ -201,7 +208,6 @@ const CustomerDashboard = () => {
           <CustomizeTab
             selectedBudget={selectedBudget}
             setSelectedBudget={setSelectedBudget}
-            budgetSuggestions={budgetSuggestions}
             selectedCake={selectedCake}
             setSelectedCake={setSelectedCake}
             customCakeConfig={customCakeConfig}

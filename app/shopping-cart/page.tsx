@@ -14,7 +14,9 @@ const ShoppingCartPage = () => {
   // state.items contains all cart items (normal + custom)
 
   const handleCheckout = () => {
-    router.push("/checkout");
+    // Generate a unique order_id (timestamp + random string)
+    const orderId = `${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    router.push(`/checkout?order_id=${orderId}`);
   };
   // Animation variants
   const containerVariants = {
@@ -185,7 +187,36 @@ const ShoppingCartPage = () => {
                                 {item.flavor}
                               </span>
                             )}
+                            {item.shape && (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F0F9FF] text-[#2563EB] font-medium border border-[#BFDBFE]">
+                                {item.shape.charAt(0).toUpperCase() + item.shape.slice(1)}
+                              </span>
+                            )}
+                            {item.layers && (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FEF9C3] text-[#CA8A04] font-medium border border-[#FDE68A]">
+                                {item.layers} Layer{item.layers > 1 ? 's' : ''}
+                              </span>
+                            )}
+                            {item.frostingColor && (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F3E8FF] text-[#7C3AED] font-medium border border-[#DDD6FE]">
+                                Frosting
+                              </span>
+                            )}
+                            {item.toppings && item.toppings.length > 0 && (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#DCFCE7] text-[#16A34A] font-medium border border-[#BBF7D0]">
+                                {item.toppings.join(", ")}
+                              </span>
+                            )}
                           </div>
+                          {/* For custom cakes, show a View 3D button */}
+                          {item.isCustom && (
+                            <button
+                              className="mt-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all text-sm font-semibold"
+                              onClick={() => alert('Show 3D preview modal for this custom cake config')}
+                            >
+                              View 3D
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between sm:justify-end gap-6">

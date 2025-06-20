@@ -17,13 +17,13 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  // Cake specific details
-  layers: number;
-  flavor: string;
-  toppings: string[];
-  frostingColor: string; // Tailwind class
-  frostingHexColor?: string; // Actual hex for display/3D model
-  imageUri?: string; // Optional
+  imageUri?: string;
+  flavor?: string;
+  shape?: string;
+  layers?: number;
+  frostingColor?: string;
+  toppings?: string[];
+  isCustom?: boolean;
 }
 
 export interface CartState {
@@ -73,8 +73,8 @@ const cartReducer = (state: CartState, action: CartAction | any): CartState => {
           item.layers === action.payload.layers &&
           item.flavor === action.payload.flavor &&
           item.frostingColor === action.payload.frostingColor &&
-          JSON.stringify(item.toppings.sort()) ===
-            JSON.stringify(action.payload.toppings.sort())
+          JSON.stringify((item.toppings ?? []).sort()) ===
+            JSON.stringify((action.payload.toppings ?? []).sort())
       );
 
       if (existingItemIndex > -1) {
