@@ -164,7 +164,14 @@ const CustomerDashboard = () => {
   };
 
   // Updated handler to add custom cake to global cart
+  // Add custom cake to global cart, using imageUri if present (from 3D snapshot)
   const handleAddToCart = (cake: any) => {
+    console.log("[Dashboard] handleAddToCart called with:", cake);
+    // Extra debug: log all keys and values
+    Object.keys(cake).forEach((key) => {
+      console.log(`[Dashboard] cake property: ${key} =`, cake[key]);
+    });
+    // Pass imageUri directly, do not fallback to cake.image
     addToCart({
       name: cake.name,
       price: cake.price,
@@ -174,7 +181,8 @@ const CustomerDashboard = () => {
       frostingColor: cake.frostingColor ?? "bg-pink-400",
       quantity: 1,
       productId: "custom",
-      imageUri: cake.image,
+      imageUri: cake.imageUri, // Only use imageUri
+      isCustom: true,
     });
   };
 

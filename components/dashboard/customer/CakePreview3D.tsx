@@ -577,7 +577,27 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     panRef.current = { x: 0, y: 0, z: 0 };
   };
 
+  // Capture a snapshot of the 3D canvas and add to cart
   const handleAddToCart = () => {
+    let imageUri = undefined;
+    if (rendererRef.current) {
+      try {
+        // Debug: check renderer and domElement
+        console.log('[CakePreview3D] rendererRef.current:', rendererRef.current);
+        console.log('[CakePreview3D] rendererRef.current.domElement:', rendererRef.current.domElement);
+        // Force a render before snapshot
+        if (sceneRef.current && cameraRef.current) {
+          rendererRef.current.render(sceneRef.current, cameraRef.current);
+        }
+        // Get the data URL of the current canvas
+        imageUri = rendererRef.current.domElement.toDataURL("image/png");
+        console.log("[CakePreview3D] Captured snapshot URI:", imageUri);
+      } catch (err) {
+        console.error("[CakePreview3D] Failed to capture snapshot:", err);
+      }
+    } else {
+      console.warn("[CakePreview3D] Renderer not available for snapshot.");
+    }
     const customCake = {
       id: Date.now(),
       name: `Custom ${cakeConfig.flavor} Cake`,
@@ -586,9 +606,10 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
       frostingColor: cakeConfig.frostingColor,
       toppings: cakeConfig.toppings,
       price: calculatePrice(),
-      image: "🎂",
+      imageUri, // Pass the snapshot URI for the cart
       isCustom: true,
     };
+    console.log("[CakePreview3D] Adding custom cake to cart:", customCake);
     onAddToCart(customCake);
     onClose();
   };
