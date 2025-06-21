@@ -1,15 +1,16 @@
 import React from "react";
+import { DashboardTab } from "@/contexts/DashboardTabContext";
 
 interface SidebarItem {
-  id: string;
+  id: DashboardTab;
   label: string;
   icon: React.ElementType;
 }
 
 interface MobileNavigationProps {
   items: SidebarItem[];
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: DashboardTab;
+  setActiveTab: (tab: DashboardTab) => void;
 }
 
 const MobileNavigation: React.FC<MobileNavigationProps> = ({
@@ -30,9 +31,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             }`}
           >
             <Icon className="w-5 h-5" />
-            <span className="text-xs mt-1">
-              {item.label.split(" ")[0]}
-            </span>
+            <span className="text-xs mt-1">{item.label.split(" ")[0]}</span>
           </button>
         );
       })}

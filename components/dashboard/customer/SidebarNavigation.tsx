@@ -1,15 +1,16 @@
 import React from "react";
+import { DashboardTab } from "@/contexts/DashboardTabContext";
 
 interface SidebarItem {
-  id: string;
+  id: DashboardTab;
   label: string;
   icon: React.ElementType;
 }
 
 interface SidebarNavigationProps {
   items: SidebarItem[];
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: DashboardTab;
+  setActiveTab: (tab: DashboardTab) => void;
   notifications?: number;
 }
 

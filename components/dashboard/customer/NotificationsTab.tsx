@@ -1,11 +1,16 @@
 import React from "react";
 import { Bell } from "lucide-react";
+import { DashboardTab } from "@/contexts/DashboardTabContext";
 
-const NotificationsTab: React.FC = () => (
+interface NotificationsTabProps {
+  setActiveTab?: (tab: DashboardTab) => void;
+}
+
+const NotificationsTab: React.FC<NotificationsTabProps> = ({
+  setActiveTab,
+}) => (
   <div className="bg-white rounded-xl shadow-sm border p-6">
-    <h3 className="text-lg font-semibold text-gray-800 mb-4">
-      Notifications
-    </h3>
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Notifications</h3>
     <div className="space-y-4">
       <div className="flex items-start p-4 bg-blue-50 rounded-lg">
         <Bell className="w-5 h-5 text-blue-600 mt-1 mr-3" />

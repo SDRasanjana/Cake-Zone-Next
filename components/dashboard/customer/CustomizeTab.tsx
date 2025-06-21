@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Sparkles, Layers } from "lucide-react";
+import { DashboardTab } from "@/contexts/DashboardTabContext";
 
 type BudgetKey = "1500" | "2000" | "2000+";
 
@@ -23,7 +24,6 @@ interface CakeSuggestion {
 interface CustomizeTabProps {
   selectedBudget: BudgetKey;
   setSelectedBudget: (b: BudgetKey) => void;
-  // budgetSuggestions: Record<BudgetKey, CakeSuggestion[]>; // No longer needed
   selectedCake: number | null;
   setSelectedCake: (id: number | null) => void;
   customCakeConfig: CakeConfig;
@@ -31,12 +31,12 @@ interface CustomizeTabProps {
   handleToppingChange: (topping: string, checked: boolean) => void;
   setShowPreview: (show: boolean) => void;
   handleAddToCart: (cake: any) => void;
+  setActiveTab?: (tab: DashboardTab) => void;
 }
 
 const CustomizeTab: React.FC<CustomizeTabProps> = ({
   selectedBudget,
   setSelectedBudget,
-  // budgetSuggestions,
   selectedCake,
   setSelectedCake,
   customCakeConfig,

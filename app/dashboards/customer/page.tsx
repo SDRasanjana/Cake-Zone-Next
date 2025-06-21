@@ -20,11 +20,16 @@ import {
   ChefHat,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import {
+  useDashboardTab,
+  DashboardTabProvider,
+  DashboardTab,
+} from "@/contexts/DashboardTabContext";
+import { useSearchParams, useRouter } from "next/navigation";
 
 type BudgetKey = "1500" | "2000" | "2000+";
 
-const CustomerDashboard = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+const CustomerDashboardContent = () => {
   const [selectedCake, setSelectedCake] = useState<number | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<BudgetKey>("1500");
   const [notifications] = useState(3);
@@ -46,6 +51,25 @@ const CustomerDashboard = () => {
     toppings: [],
   });
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { activeTab, setActiveTab } = useDashboardTab();
+
+  // Helper to switch tab and update URL
+  const handleTabChange = (tab: DashboardTab) => {
+    setActiveTab(tab);
+    router.replace(`/dashboards/customer?tab=${tab}`);
+  };
+
+  // Set initial tab from query param if present
+  React.useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab as any);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: Package },
     { id: "customize", label: "Customize Cake", icon: ChefHat },
@@ -53,7 +77,7 @@ const CustomerDashboard = () => {
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "profile", label: "Profile", icon: User },
     { id: "settings", label: "Settings", icon: Settings },
-  ];
+  ] as const;
 
   const recentOrders = [
     {
@@ -208,7 +232,7 @@ const CustomerDashboard = () => {
         return (
           <OverviewTab
             recentOrders={recentOrders}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleTabChange}
           />
         );
       case "customize":
@@ -223,12 +247,18 @@ const CustomerDashboard = () => {
             handleToppingChange={handleToppingChange}
             setShowPreview={setShowPreview}
             handleAddToCart={handleAddToCart}
+            setActiveTab={handleTabChange}
           />
         );
       case "orders":
-        return <OrdersTab recentOrders={recentOrders} />;
+        return (
+          <OrdersTab
+            recentOrders={recentOrders}
+            setActiveTab={handleTabChange}
+          />
+        );
       case "notifications":
-        return <NotificationsTab />;
+        return <NotificationsTab setActiveTab={handleTabChange} />;
       default:
         return (
           <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -240,60 +270,27 @@ const CustomerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">🍰</span>
-              </div>
-              <div className="ml-3">
-                <h1 className="text-xl font-bold text-gray-900">
-                  Cake Delight
-                </h1>
-                <p className="text-sm text-gray-500">Customer Dashboard</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-orange-600" />
-                {notifications > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {notifications}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">JD</span>
-                </div>
-                <div className="hidden sm:block">
-                  <p className="text-sm font-medium text-gray-900">John Doe</p>
-                  <p className="text-xs text-gray-500">Premium Customer</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar - only visible on large screens */}
+        <div className="hidden lg:block">
+          <SidebarNavigation
+            items={sidebarItems as any}
+            activeTab={activeTab}
+            setActiveTab={handleTabChange}
+            notifications={notifications}
+          />
         </div>
-      </header>
-      <div className="flex">
-        {/* Sidebar */}
-        <SidebarNavigation
-          items={sidebarItems}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          notifications={notifications}
-        />
-        {/* Mobile Navigation */}
-        <MobileNavigation
-          items={sidebarItems}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        {/* Mobile Navigation - only visible on small/medium screens */}
+        <div className="block lg:hidden w-full">
+          <MobileNavigation
+            items={sidebarItems as any}
+            activeTab={activeTab}
+            setActiveTab={handleTabChange}
+          />
+        </div>
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 p-2 sm:p-4 lg:p-8 pb-20 lg:pb-8 w-full max-w-7xl mx-auto">
+          <div className="mx-auto">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900 capitalize">
                 {activeTab === "customize" ? "Cake Customization" : activeTab}
@@ -322,5 +319,11 @@ const CustomerDashboard = () => {
     </div>
   );
 };
+
+const CustomerDashboard = () => (
+  <DashboardTabProvider>
+    <CustomerDashboardContent />
+  </DashboardTabProvider>
+);
 
 export default CustomerDashboard;
