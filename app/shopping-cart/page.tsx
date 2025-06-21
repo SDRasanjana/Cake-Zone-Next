@@ -175,6 +175,11 @@ const ShoppingCartPage = () => {
                           <h3 className="text-2xl font-bold text-[#3A2E26] font-serif tracking-tight">
                             {item.name}
                           </h3>
+                          {/*
+                            Conditionally render details based on cake type.
+                            - Predefined cakes: show only database fields.
+                            - Custom cakes: show only custom fields.
+                          */}
                           <div className="mt-3 flex flex-wrap gap-3">
                             <span className="text-xl text-[#E67E5F] font-bold">
                               ${item.price.toFixed(2)}
@@ -182,30 +187,65 @@ const ShoppingCartPage = () => {
                                 each
                               </span>
                             </span>
-                            {item.flavor && (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FFEDE5] text-[#D45D3E] font-medium border border-[#FFD4C2]">
-                                {item.flavor}
-                              </span>
-                            )}
-                            {item.shape && (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F0F9FF] text-[#2563EB] font-medium border border-[#BFDBFE]">
-                                {item.shape.charAt(0).toUpperCase() + item.shape.slice(1)}
-                              </span>
-                            )}
-                            {item.layers && (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FEF9C3] text-[#CA8A04] font-medium border border-[#FDE68A]">
-                                {item.layers} Layer{item.layers > 1 ? 's' : ''}
-                              </span>
-                            )}
-                            {item.frostingColor && (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F3E8FF] text-[#7C3AED] font-medium border border-[#DDD6FE]">
-                                Frosting
-                              </span>
-                            )}
-                            {item.toppings && item.toppings.length > 0 && (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#DCFCE7] text-[#16A34A] font-medium border border-[#BBF7D0]">
-                                {item.toppings.join(", ")}
-                              </span>
+                            {/* Custom Cake Details */}
+                            {item.isCustom ? (
+                              <>
+                                {item.flavor && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FFEDE5] text-[#D45D3E] font-medium border border-[#FFD4C2]">
+                                    {item.flavor}
+                                  </span>
+                                )}
+                                {item.shape && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F0F9FF] text-[#2563EB] font-medium border border-[#BFDBFE]">
+                                    {item.shape.charAt(0).toUpperCase() + item.shape.slice(1)}
+                                  </span>
+                                )}
+                                {item.layers && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FEF9C3] text-[#CA8A04] font-medium border border-[#FDE68A]">
+                                    {item.layers} Layer{item.layers > 1 ? 's' : ''}
+                                  </span>
+                                )}
+                                {item.frostingColor && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F3E8FF] text-[#7C3AED] font-medium border border-[#DDD6FE]">
+                                    Frosting: {item.frostingColor}
+                                  </span>
+                                )}
+                                {item.toppings && item.toppings.length > 0 && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#DCFCE7] text-[#16A34A] font-medium border border-[#BBF7D0]">
+                                    {item.toppings.join(", ")}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              // Predefined Cake Details (add more fields as needed)
+                              <>
+                                {/* Example: show category, weight, ingredients, etc. if available */}
+                                {item.category && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#E0F2FE] text-[#0284C7] font-medium border border-[#BAE6FD]">
+                                    {item.category}
+                                  </span>
+                                )}
+                                {item.weight && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FDE68A] text-[#CA8A04] font-medium border border-[#FDE68A]">
+                                    {item.weight}g
+                                  </span>
+                                )}
+                                {item.ingredients && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F3F4F6] text-[#6B7280] font-medium border border-[#E5E7EB]">
+                                    {Array.isArray(item.ingredients) ? item.ingredients.join(", ") : item.ingredients}
+                                  </span>
+                                )}
+                                {item.rating && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FFF7ED] text-[#F59E42] font-medium border border-[#FED7AA]">
+                                    ⭐ {item.rating}
+                                  </span>
+                                )}
+                                {item.stock !== undefined && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#DCFCE7] text-[#16A34A] font-medium border border-[#BBF7D0]">
+                                    In Stock: {item.stock}
+                                  </span>
+                                )}
+                              </>
                             )}
                           </div>
                           {/* For custom cakes, show a View 3D button */}

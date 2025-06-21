@@ -18,12 +18,19 @@ export interface CartItem {
   price: number;
   quantity: number;
   imageUri?: string;
+  // Custom cake fields
   flavor?: string;
   shape?: string;
   layers?: number;
   frostingColor?: string;
   toppings?: string[];
   isCustom?: boolean;
+  // Predefined cake fields (from database)
+  category?: string;
+  weight?: number;
+  ingredients?: string[] | string;
+  rating?: number;
+  stock?: number;
 }
 
 export interface CartState {
