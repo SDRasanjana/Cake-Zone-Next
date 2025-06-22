@@ -61,15 +61,6 @@ const CustomerDashboardContent = () => {
     router.replace(`/dashboards/customer?tab=${tab}`);
   };
 
-  // Set initial tab from query param if present
-  React.useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab && tab !== activeTab) {
-      setActiveTab(tab as any);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: Package },
     { id: "customize", label: "Customize Cake", icon: ChefHat },
@@ -78,33 +69,6 @@ const CustomerDashboardContent = () => {
     { id: "profile", label: "Profile", icon: User },
     { id: "settings", label: "Settings", icon: Settings },
   ] as const;
-
-  const recentOrders = [
-    {
-      id: 1,
-      name: "Chocolate Birthday Cake",
-      status: "delivered",
-      date: "2025-05-20",
-      price: 1450,
-      image: "🎂",
-    },
-    {
-      id: 2,
-      name: "Vanilla Wedding Cake",
-      status: "processing",
-      date: "2025-05-22",
-      price: 2200,
-      image: "🍰",
-    },
-    {
-      id: 3,
-      name: "Red Velvet Anniversary",
-      status: "pending",
-      date: "2025-05-25",
-      price: 1650,
-      image: "❤️",
-    },
-  ];
 
   const budgetSuggestions = {
     "1500": [
@@ -229,12 +193,7 @@ const CustomerDashboardContent = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
-        return (
-          <OverviewTab
-            recentOrders={recentOrders}
-            setActiveTab={handleTabChange}
-          />
-        );
+        return <OverviewTab setActiveTab={handleTabChange} />;
       case "customize":
         return (
           <CustomizeTab
@@ -251,12 +210,7 @@ const CustomerDashboardContent = () => {
           />
         );
       case "orders":
-        return (
-          <OrdersTab
-            recentOrders={recentOrders}
-            setActiveTab={handleTabChange}
-          />
-        );
+        return <OrdersTab setActiveTab={handleTabChange} />;
       case "notifications":
         return <NotificationsTab setActiveTab={handleTabChange} />;
       default:

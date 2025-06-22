@@ -13,7 +13,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { isSignedIn, user } = useUser();
   const hideNav =
     pathname.startsWith("/dashboards/admin") ||
-    pathname.startsWith("/dashboards/Owner");
+    pathname.startsWith("/dashboards/Owner") ||
+    pathname.startsWith("/checkout"); // Hide Navbar on checkout
+  const hideFooter = pathname.startsWith("/dashboards/customer") || hideNav; // Hide Footer on customer dashboard and admin/owner pages
 
   // Client-side redirect for admin/owner users on customer/public pages
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <CartProvider>
       {!hideNav && <Navbar />}
       {children}
-      {!hideNav && <Footer />}
+      {!hideFooter && <Footer />}
       <Toaster position="bottom-right" />
     </CartProvider>
   );

@@ -35,7 +35,7 @@ export default function Navbar() {
   const { getItemCount } = useCart();
   const totalItems = getItemCount();
   const { isSignedIn, user } = useUser();
-  const { openUserProfile } = useClerk();
+  const { openUserProfile, signOut } = useClerk();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { setActiveTab } = useDashboardTab();
 
@@ -247,6 +247,21 @@ export default function Navbar() {
             <Link href="/menu" className="block px-4 py-2 hover:bg-gray-100">
               MENU
             </Link>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                router.push("/shopping-cart");
+              }}
+              className="flex items-center w-full px-4 py-2 hover:bg-gray-100"
+            >
+              <ShoppingCartIcon className="w-5 h-5 mr-2 text-orange-500" />
+              Cart
+              {totalItems > 0 && (
+                <span className="ml-auto bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </button>
             <div className="px-4 py-2 text-xs text-gray-500 font-semibold border-t mt-2">
               DASHBOARD
             </div>
@@ -285,12 +300,10 @@ export default function Navbar() {
             <div className="border-t mt-2">
               <SignedIn>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     setMobileMenuOpen(false);
-                    // Clerk handles sign out
-                    if (typeof window !== "undefined") {
-                      window.location.href = "/sign-out";
-                    }
+                    await signOut();
+                    router.push("/sign-in");
                   }}
                   className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
                 >

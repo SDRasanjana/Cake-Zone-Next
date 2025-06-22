@@ -11,6 +11,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useCart } from "../../contexts/CartContext"; // Assuming you might want to clear cart or get details
 import { Link } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 // Ensure your Stripe publishable key is set in .env.local (or your environment variables)
 // NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
@@ -82,13 +83,21 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({
         setProcessing(false);
         console.log("Payment Succeeded:", paymentIntent);
 
-        // Optional: Call backend to confirm order update, though webhooks are more robust
-        // await fetch(`/api/orders/${orderId}/confirm-payment`, { method: 'POST', body: JSON.stringify({ paymentIntentId: paymentIntent.id }) });
+        // Call backend to confirm order update after payment
+        try {
+          await fetch(`/api/orders/${orderId}/confirm-payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
+          });
+        } catch (err) {
+          // Optionally handle error, but don't block user
+          console.error("Order payment confirmation failed:", err);
+        }
 
         clearCart(); // Clear the cart on successful payment
-        router.push(
-          `/order-success?payment_intent_id=${paymentIntent.id}&order_id=${orderId}`
-        );
+        // Redirect to customer dashboard after payment
+        router.push("/dashboards/customer");
       } else {
         // Handle other payment intent statuses like 'requires_capture', 'processing', etc.
         setError(
@@ -186,41 +195,91 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({
   );
 };
 
+// --- ENHANCED CHECKOUT PAGE ---
+// This checkout page is fully responsive, step-based, and well-commented for maintainability.
+// It collects shipping details, reviews the order, and processes payment with Stripe.
+
 const CheckoutPage: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { state: cartState } = useCart();
+  const { state: cartState, removeFromCart } = useCart();
+  const { user } = useUser(); // Get user from Clerk
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
-  const [isLoadingIntent, setIsLoadingIntent] = useState(true);
+  const [isLoadingIntent, setIsLoadingIntent] = useState(false); // Only true during payment intent creation
 
+  // --- Step state: 1 = Shipping, 2 = Review, 3 = Payment ---
+  const [step, setStep] = useState(1);
+  // Shipping details state
+  const [shipping, setShipping] = useState({
+    fullName: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: "",
+    phone: "",
+    email: "",
+  });
+  // Save shipping details to localStorage for persistence
   useEffect(() => {
-    const currentOrderId = searchParams.get("order_id");
-    if (!currentOrderId) {
+    const saved = localStorage.getItem("checkout_shipping");
+    if (saved) setShipping(JSON.parse(saved));
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("checkout_shipping", JSON.stringify(shipping));
+  }, [shipping]);
+
+  // Create order in DB after shipping step
+  const handleShippingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoadingIntent(true);
+    setLoadingError(null);
+    try {
+      // Create order in DB
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cartItems: cartState.items,
+          shipping,
+          userId: user?.id || "guest",
+          total: cartState.items.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+          ),
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(
+          errorData.error || `Failed to create order: ${res.status}`
+        );
+      }
+      const data = await res.json();
+      setOrderId(data.orderId);
+      setStep(2);
+    } catch (err: any) {
       setLoadingError(
-        "No order ID found. Please initiate checkout from your cart or order summary."
+        err.message || "Failed to create order. Please try again."
       );
+    } finally {
       setIsLoadingIntent(false);
-      return;
     }
-    setOrderId(currentOrderId);
+  };
 
-    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-      setLoadingError("Stripe is not configured. Payment cannot be processed.");
-      setIsLoadingIntent(false);
-      return;
-    }
-
-    // Send full cart/order data to backend for PaymentIntent creation
+  // Create payment intent after order is created and step is 3
+  useEffect(() => {
+    if (step !== 3 || !orderId) return;
+    setIsLoadingIntent(true);
+    setLoadingError(null);
     fetch("/api/payments/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        orderId: currentOrderId,
+        orderId,
         cartItems: cartState.items,
         deliveryDate: cartState.deliveryDate,
-        // Optionally add userId if you have authentication
       }),
     })
       .then(async (res) => {
@@ -244,7 +303,14 @@ const CheckoutPage: React.FC = () => {
       .finally(() => {
         setIsLoadingIntent(false);
       });
-  }, [searchParams, router, cartState]);
+  }, [step, orderId, cartState]);
+
+  // Block checkout if cart is empty
+  useEffect(() => {
+    if (cartState.items.length === 0) {
+      router.replace("/shopping-cart"); // Redirect to cart if empty
+    }
+  }, [cartState.items, router]);
 
   if (!stripePromise) {
     return (
@@ -291,8 +357,8 @@ const CheckoutPage: React.FC = () => {
     );
   }
 
-  if (!clientSecret || !orderId) {
-    // This state should ideally be covered by isLoadingIntent or loadingError
+  // Only block on payment step if clientSecret/orderId are missing
+  if (step === 3 && (!clientSecret || !orderId)) {
     return (
       <div className="container mx-auto p-4 text-center min-h-screen flex flex-col justify-center items-center text-gray-200">
         <h1 className="text-2xl font-bold text-orange-500">
@@ -310,74 +376,265 @@ const CheckoutPage: React.FC = () => {
     // appearance: { theme: 'stripe' }, // or 'night', 'flat', etc.
   };
 
+  // --- Responsive, step-based UI ---
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-gray-900 text-gray-200">
-      <div className="w-full max-w-2xl bg-gray-800 rounded-xl shadow-2xl p-8 flex flex-col md:flex-row gap-8 animate-fade-in">
-        {/* Order Summary Section */}
-        <div className="flex-1 mb-8 md:mb-0 md:mr-8">
-          <h2 className="text-2xl font-bold text-pink-400 mb-4 flex items-center gap-2">
-            <svg
-              className="w-6 h-6 text-pink-400"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 7h18M3 12h18M3 17h18"
-              />
-            </svg>
-            Order Summary
-          </h2>
-          <div className="bg-gray-700 rounded-lg p-4 mb-4">
-            <p className="text-gray-300 mb-2">
-              Order ID:{" "}
-              <span className="font-mono text-pink-300">{orderId}</span>
-            </p>
-            {/* TODO: Replace with real order details */}
-            <ul className="text-gray-400 text-sm space-y-1">
-              <li>
-                🎂 Cake: <span className="font-semibold">Chocolate Fudge</span>
-              </li>
-              <li>
-                🍰 Size: <span className="font-semibold">Medium</span>
-              </li>
-              <li>
-                🧁 Quantity: <span className="font-semibold">1</span>
-              </li>
-              <li>
-                💵 Total:{" "}
-                <span className="font-semibold text-green-400">$29.99</span>
-              </li>
-            </ul>
-          </div>
-          <div className="text-xs text-gray-500 italic">
-            * Please review your order before proceeding to payment.
+      <div className="w-full max-w-2xl bg-gray-800 rounded-xl shadow-2xl p-4 sm:p-8 flex flex-col md:flex-row gap-8 animate-fade-in">
+        {/* Stepper Navigation */}
+        <div className="w-full flex justify-center mb-6 md:hidden">
+          <div className="flex gap-2">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className={`w-8 h-2 rounded-full transition-all duration-300 ${
+                  step === s ? "bg-pink-500 w-12" : "bg-gray-600"
+                }`}
+              ></div>
+            ))}
           </div>
         </div>
-        {/* Payment Section */}
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-pink-400 mb-4 flex items-center gap-2">
-            <svg
-              className="w-6 h-6 text-pink-400"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            Payment Details
-          </h2>
-          <Elements stripe={stripePromise} options={options}>
-            <CheckoutForm orderId={orderId} clientSecret={clientSecret} />
-          </Elements>
+        {/* Left: Shipping/Review/Order Summary */}
+        <div className="flex-1 mb-8 md:mb-0 md:mr-8 w-full">
+          {step === 1 && (
+            <form onSubmit={handleShippingSubmit} className="space-y-4">
+              <h2 className="text-2xl font-bold text-pink-400 mb-2">
+                Shipping Details
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={shipping.fullName}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, fullName: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={shipping.email}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, email: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={shipping.phone}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, phone: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={shipping.country}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, country: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium mb-1">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={shipping.address}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, address: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">City</label>
+                  <input
+                    type="text"
+                    required
+                    value={shipping.city}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, city: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Postal Code
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={shipping.postalCode}
+                    onChange={(e) =>
+                      setShipping((s) => ({ ...s, postalCode: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between mt-6">
+                <button
+                  type="button"
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg"
+                  onClick={() => router.push("/shopping-cart")}
+                >
+                  Back to Cart
+                </button>
+                <button
+                  type="submit"
+                  className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-lg font-semibold"
+                  disabled={isLoadingIntent}
+                >
+                  {isLoadingIntent ? "Processing..." : "Continue"}
+                </button>
+              </div>
+            </form>
+          )}
+          {step === 2 && (
+            <div>
+              <h2 className="text-2xl font-bold text-pink-400 mb-2">
+                Review Order
+              </h2>
+              <div className="bg-gray-700 rounded-lg p-4 mb-4">
+                <div className="mb-2 text-gray-300">Shipping to:</div>
+                <div className="text-gray-200 font-semibold">
+                  {shipping.fullName}
+                </div>
+                <div className="text-gray-400 text-sm">
+                  {shipping.address}, {shipping.city}, {shipping.postalCode},
+                  {shipping.country}
+                </div>
+                <div className="text-gray-400 text-sm">
+                  {shipping.email} | {shipping.phone}
+                </div>
+              </div>
+              {/* Order Items */}
+              <div className="bg-gray-700 rounded-lg p-4 mb-4">
+                <div className="mb-2 text-gray-300">Order Items:</div>
+                {cartState.items.length === 0 ? (
+                  <div className="text-red-400">Your cart is empty.</div>
+                ) : (
+                  <ul className="text-gray-400 text-sm space-y-2">
+                    {cartState.items.map((item, idx) => (
+                      <li
+                        key={item.id || idx}
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-600 pb-2 mb-2 last:border-b-0 last:mb-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          {item.imageUri && (
+                            <img
+                              src={item.imageUri}
+                              alt={item.name}
+                              className="w-12 h-12 object-cover rounded shadow border border-gray-700"
+                            />
+                          )}
+                          <div>
+                            <span className="font-semibold text-white">
+                              {item.name}
+                            </span>
+                            {item.flavor && (
+                              <span className="ml-2 text-xs text-pink-300">
+                                ({item.flavor})
+                              </span>
+                            )}
+                            {item.toppings && item.toppings.length > 0 && (
+                              <span className="ml-2 text-xs text-yellow-300">
+                                + {item.toppings.join(", ")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                          <span className="mr-2">Qty: {item.quantity}</span>
+                          <span className="text-green-400 font-semibold">
+                            ₹{(item.price * item.quantity).toLocaleString()}
+                          </span>
+                          {/* Remove button for cart item */}
+                          <button
+                            type="button"
+                            className="ml-2 px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition"
+                            onClick={() => removeFromCart(item.id)}
+                            aria-label={`Remove ${item.name} from cart`}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {/* Order total */}
+                <div className="mt-4 text-right text-lg font-bold text-green-400">
+                  Total: ₹
+                  {cartState.items
+                    .reduce((sum, item) => sum + item.price * item.quantity, 0)
+                    .toLocaleString()}
+                </div>
+              </div>
+              <div className="flex justify-between mt-6">
+                <button
+                  type="button"
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg"
+                  onClick={() => setStep(1)}
+                >
+                  Edit Shipping
+                </button>
+                <button
+                  type="button"
+                  className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-lg font-semibold"
+                  onClick={() => setStep(3)}
+                  disabled={cartState.items.length === 0}
+                >
+                  Proceed to Payment
+                </button>
+              </div>
+            </div>
+          )}
+          {step === 3 && clientSecret && orderId && (
+            <div>
+              <h2 className="text-2xl font-bold text-pink-400 mb-2">
+                Payment Details
+              </h2>
+              <Elements stripe={stripePromise} options={{ clientSecret }}>
+                <CheckoutForm orderId={orderId} clientSecret={clientSecret} />
+              </Elements>
+              <div className="flex justify-between mt-6">
+                <button
+                  type="button"
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg"
+                  onClick={() => setStep(2)}
+                >
+                  Back to Review
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
