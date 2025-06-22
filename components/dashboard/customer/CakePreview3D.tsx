@@ -5,10 +5,12 @@ import * as THREE from "three";
 import { X, ZoomIn, ZoomOut, ShoppingCart, Move, RotateCw } from "lucide-react";
 
 interface CakeConfig {
+  shape?: "round" | "square"; // Add shape support
   flavor: string;
   layers: number;
   frostingColor: string;
   toppings: string[];
+  price?: number; // Optional price for AI suggestions
   selectedCake?: {
     name: string;
     price: number;
@@ -58,6 +60,7 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     "bg-yellow-400": 0xffd700,
     "bg-purple-400": 0x9370db,
     "bg-white": 0xffffff,
+    "bg-orange-900": 0x8b4513, // brown
   };
   useEffect(() => {
     console.log("CakeConfig received:", cakeConfig);
@@ -323,6 +326,7 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     const layerHeight = 1.2;
     const baseRadius = 2.5;
     const frostingColor = colorMap[cakeConfig.frostingColor] || 0xffffff;
+    const isSquare = cakeConfig.shape === "square";
 
     // Create cake layers with enhanced details
     for (let i = 0; i < cakeConfig.layers; i++) {
@@ -330,18 +334,28 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
       const yPosition = i * layerHeight;
 
       // Main cake layer with better geometry
-      const cakeGeometry = new THREE.CylinderGeometry(
-        radius,
-        radius,
-        layerHeight * 0.8,
-        64,
-        4
-      );
+      let cakeGeometry;
+      if (isSquare) {
+        const size = radius * 2;
+        cakeGeometry = new THREE.BoxGeometry(size, layerHeight * 0.8, size);
+      } else {
+        cakeGeometry = new THREE.CylinderGeometry(
+          radius,
+          radius,
+          layerHeight * 0.8,
+          64,
+          4
+        );
+      }
 
-      const cakeMaterial = new THREE.MeshPhongMaterial({
+      const cakeMaterial = new THREE.MeshPhysicalMaterial({
         color: getCakeColor(cakeConfig.flavor),
-        shininess: 10,
-        specular: 0x111111,
+        roughness: 0.5,
+        metalness: 0.1,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.2,
+        sheen: 0.5,
+        sheenColor: new THREE.Color(0xffffff),
       });
 
       const cakeLayer = new THREE.Mesh(cakeGeometry, cakeMaterial);
@@ -351,20 +365,37 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
       cakeGroup.add(cakeLayer);
 
       // Enhanced frosting layer with texture
-      const frostingGeometry = new THREE.CylinderGeometry(
-        radius + 0.05,
-        radius + 0.05,
-        layerHeight * 0.85,
-        64,
-        4
-      );
+      let frostingGeometry;
+      if (isSquare) {
+        const size = (radius + 0.05) * 2;
+        frostingGeometry = new THREE.BoxGeometry(
+          size,
+          layerHeight * 0.85,
+          size
+        );
+      } else {
+        frostingGeometry = new THREE.CylinderGeometry(
+          radius + 0.05,
+          radius + 0.05,
+          layerHeight * 0.85,
+          64,
+          4
+        );
+      }
 
-      const frostingMaterial = new THREE.MeshPhongMaterial({
+      const frostingMaterial = new THREE.MeshPhysicalMaterial({
         color: frostingColor,
+        roughness: 0.3,
+        metalness: 0.0,
+        transmission: 0.7,
+        thickness: 0.5,
+        ior: 1.3,
         transparent: true,
         opacity: 0.95,
-        shininess: 30,
-        specular: 0x444444,
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.15,
+        sheen: 0.7,
+        sheenColor: new THREE.Color(frostingColor),
       });
 
       const frostingLayer = new THREE.Mesh(frostingGeometry, frostingMaterial);
@@ -374,12 +405,14 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
       cakeGroup.add(frostingLayer);
 
       // Add frosting details (piped edges)
-      addFrostingDetails(
-        cakeGroup,
-        radius,
-        yPosition + layerHeight * 0.4,
-        frostingColor
-      );
+      if (!isSquare) {
+        addFrostingDetails(
+          cakeGroup,
+          radius,
+          yPosition + layerHeight * 0.4,
+          frostingColor
+        );
+      }
     }
 
     // Add enhanced toppings
@@ -450,14 +483,15 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
   };
 
   const getCakeColor = (flavor: string): number => {
+    // Robust flavor color mapping (case-insensitive)
     const flavorColors: { [key: string]: number } = {
-      Chocolate: 0x8b4513,
-      Vanilla: 0xfff8dc,
-      Strawberry: 0xffb6c1,
-      "Red Velvet": 0xdc143c,
-      Lemon: 0xfffacd,
+      chocolate: 0x8b4513,
+      vanilla: 0xfff8dc,
+      strawberry: 0xffb6c1,
+      "red velvet": 0xdc143c,
+      lemon: 0xfffacd,
     };
-    return flavorColors[flavor] || 0xfff8dc;
+    return flavorColors[flavor.toLowerCase()] || 0xfff8dc;
   };
 
   const addEnhancedToppings = (cakeGroup: THREE.Group) => {
@@ -543,7 +577,27 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     panRef.current = { x: 0, y: 0, z: 0 };
   };
 
+  // Capture a snapshot of the 3D canvas and add to cart
   const handleAddToCart = () => {
+    let imageUri = undefined;
+    if (rendererRef.current) {
+      try {
+        // Debug: check renderer and domElement
+        console.log('[CakePreview3D] rendererRef.current:', rendererRef.current);
+        console.log('[CakePreview3D] rendererRef.current.domElement:', rendererRef.current.domElement);
+        // Force a render before snapshot
+        if (sceneRef.current && cameraRef.current) {
+          rendererRef.current.render(sceneRef.current, cameraRef.current);
+        }
+        // Get the data URL of the current canvas
+        imageUri = rendererRef.current.domElement.toDataURL("image/png");
+        console.log("[CakePreview3D] Captured snapshot URI:", imageUri);
+      } catch (err) {
+        console.error("[CakePreview3D] Failed to capture snapshot:", err);
+      }
+    } else {
+      console.warn("[CakePreview3D] Renderer not available for snapshot.");
+    }
     const customCake = {
       id: Date.now(),
       name: `Custom ${cakeConfig.flavor} Cake`,
@@ -552,14 +606,19 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
       frostingColor: cakeConfig.frostingColor,
       toppings: cakeConfig.toppings,
       price: calculatePrice(),
-      image: "🎂",
+      imageUri, // Pass the snapshot URI for the cart
       isCustom: true,
     };
+    console.log("[CakePreview3D] Adding custom cake to cart:", customCake);
     onAddToCart(customCake);
     onClose();
   };
 
   const calculatePrice = (): number => {
+    // Use price from config if present (AI suggestion), else calculate
+    if (typeof cakeConfig.price === 'number') {
+      return cakeConfig.price;
+    }
     let basePrice = 1000;
     basePrice += cakeConfig.layers * 300;
     basePrice += cakeConfig.toppings.length * 100;

@@ -1,4 +1,5 @@
 import React from "react";
+import { DashboardTab } from "@/contexts/DashboardTabContext";
 
 interface Order {
   id: number;
@@ -11,6 +12,7 @@ interface Order {
 
 interface OrdersTabProps {
   recentOrders: Order[];
+  setActiveTab?: (tab: DashboardTab) => void;
 }
 
 const OrdersTab: React.FC<OrdersTabProps> = ({ recentOrders }) => (
@@ -27,15 +29,11 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ recentOrders }) => (
               <div>
                 <h4 className="font-semibold text-gray-800">{order.name}</h4>
                 <p className="text-sm text-gray-500">Order #CK00{order.id}</p>
-                <p className="text-sm text-gray-500">
-                  Ordered on {order.date}
-                </p>
+                <p className="text-sm text-gray-500">Ordered on {order.date}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xl font-bold text-gray-800">
-                ₹{order.price}
-              </p>
+              <p className="text-xl font-bold text-gray-800">₹{order.price}</p>
               <span
                 className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                   order.status === "delivered"

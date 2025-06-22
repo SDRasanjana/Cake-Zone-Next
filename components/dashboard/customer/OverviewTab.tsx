@@ -1,5 +1,12 @@
 import React from "react";
-import { ShoppingCart, Package, DollarSign, Plus, Calendar } from "lucide-react";
+import {
+  ShoppingCart,
+  Package,
+  DollarSign,
+  Plus,
+  Calendar,
+} from "lucide-react";
+import { DashboardTab } from "@/contexts/DashboardTabContext";
 
 interface Order {
   id: number;
@@ -12,10 +19,13 @@ interface Order {
 
 interface OverviewTabProps {
   recentOrders: Order[];
-  setActiveTab: (tab: string) => void;
+  setActiveTab: (tab: DashboardTab) => void;
 }
 
-const OverviewTab: React.FC<OverviewTabProps> = ({ recentOrders, setActiveTab }) => (
+const OverviewTab: React.FC<OverviewTabProps> = ({
+  recentOrders,
+  setActiveTab,
+}) => (
   <div className="space-y-6">
     {/* Stats Cards */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -99,9 +109,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ recentOrders, setActiveTab })
               </div>
               <div className="ml-4">
                 <p className="font-medium text-gray-800">{order.name}</p>
-                <p className="text-sm text-gray-500">
-                  Ordered on {order.date}
-                </p>
+                <p className="text-sm text-gray-500">Ordered on {order.date}</p>
               </div>
             </div>
             <div className="text-right">

@@ -14,7 +14,9 @@ const ShoppingCartPage = () => {
   // state.items contains all cart items (normal + custom)
 
   const handleCheckout = () => {
-    router.push("/checkout");
+    // Generate a unique order_id (timestamp + random string)
+    const orderId = `${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    router.push(`/checkout?order_id=${orderId}`);
   };
   // Animation variants
   const containerVariants = {
@@ -145,98 +147,194 @@ const ShoppingCartPage = () => {
                   animate="visible"
                   className="bg-white rounded-3xl shadow-2xl overflow-hidden"
                 >
-                  {state.items.map((item, index) => (
-                    <motion.div
-                      layout
-                      key={item.id}
-                      variants={itemVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      whileHover={{ scale: 1.01 }}
-                      className="p-8 flex flex-col sm:flex-row justify-between gap-6 group hover:bg-[#FFF9F5] transition-all duration-300 relative"
-                    >
-                      {/* Decorative elements */}
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FFBFA5] to-[#FFD4C2] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  {state.items.map((item, index) => {
+                    // Debug log for imageUri before rendering JSX
+                    console.log(
+                      "[Cart] Rendering item:",
+                      item.name,
+                      "imageUri:",
+                      item.imageUri
+                    );
+                    return (
+                      <motion.div
+                        layout
+                        key={item.id}
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        whileHover={{ scale: 1.01 }}
+                        className="p-8 flex flex-col sm:flex-row justify-between gap-6 group hover:bg-[#FFF9F5] transition-all duration-300 relative"
+                      >
+                        {/* Decorative elements */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FFBFA5] to-[#FFD4C2] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                      <div className="flex items-start gap-6">
-                        <div className="relative flex-shrink-0 w-36 h-36 rounded-2xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-300">
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#FFEDE5]/50 to-transparent z-0" />
-                          <img
-                            src={item.imageUri || "/default-cake.png"} // Use imageUri from CartItem, fallback to a default image
-                            alt={item.name}
-                            className="w-full h-full object-cover object-center relative z-10"
-                          />
-                          <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent z-20"></div>
-                        </div>
-                        <div className="pt-2">
-                          <h3 className="text-2xl font-bold text-[#3A2E26] font-serif tracking-tight">
-                            {item.name}
-                          </h3>
-                          <div className="mt-3 flex flex-wrap gap-3">
-                            <span className="text-xl text-[#E67E5F] font-bold">
-                              ${item.price.toFixed(2)}
-                              <span className="text-sm text-[#A89B91] font-normal ml-1">
-                                each
+                        <div className="flex items-start gap-6">
+                          <div className="relative flex-shrink-0 w-36 h-36 rounded-2xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-300">
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#FFEDE5]/50 to-transparent z-0" />
+                            <img
+                              src={item.imageUri || "/default-cake.png"}
+                              alt={item.name}
+                              className="w-full h-full object-cover object-center relative z-10"
+                              onError={(e) => {
+                                // Fallback to default image if data URI fails
+                                e.currentTarget.src = "/default-cake.png";
+                                console.warn(
+                                  "[Cart] Failed to load imageUri for",
+                                  item.name,
+                                  item.imageUri
+                                );
+                              }}
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent z-20"></div>
+                          </div>
+                          <div className="pt-2">
+                            <h3 className="text-2xl font-bold text-[#3A2E26] font-serif tracking-tight">
+                              {item.name}
+                            </h3>
+                            {/*
+                            Conditionally render details based on cake type.
+                            - Predefined cakes: show only database fields.
+                            - Custom cakes: show only custom fields.
+                          */}
+                            <div className="mt-3 flex flex-wrap gap-3">
+                              <span className="text-xl text-[#E67E5F] font-bold">
+                                ${item.price.toFixed(2)}
+                                <span className="text-sm text-[#A89B91] font-normal ml-1">
+                                  each
+                                </span>
                               </span>
-                            </span>
-                            {item.flavor && (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FFEDE5] text-[#D45D3E] font-medium border border-[#FFD4C2]">
-                                {item.flavor}
-                              </span>
+                              {/* Custom Cake Details */}
+                              {item.isCustom ? (
+                                <>
+                                  {item.flavor && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FFEDE5] text-[#D45D3E] font-medium border border-[#FFD4C2]">
+                                      {item.flavor}
+                                    </span>
+                                  )}
+                                  {item.shape && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F0F9FF] text-[#2563EB] font-medium border border-[#BFDBFE]">
+                                      {item.shape.charAt(0).toUpperCase() +
+                                        item.shape.slice(1)}
+                                    </span>
+                                  )}
+                                  {item.layers && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FEF9C3] text-[#CA8A04] font-medium border border-[#FDE68A]">
+                                      {item.layers} Layer
+                                      {item.layers > 1 ? "s" : ""}
+                                    </span>
+                                  )}
+                                  {item.frostingColor && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F3E8FF] text-[#7C3AED] font-medium border border-[#DDD6FE]">
+                                      Frosting: {item.frostingColor}
+                                    </span>
+                                  )}
+                                  {item.toppings &&
+                                    item.toppings.length > 0 && (
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#DCFCE7] text-[#16A34A] font-medium border border-[#BBF7D0]">
+                                        {item.toppings.join(", ")}
+                                      </span>
+                                    )}
+                                </>
+                              ) : (
+                                // Predefined Cake Details (add more fields as needed)
+                                <>
+                                  {/* Example: show category, weight, ingredients, etc. if available */}
+                                  {item.category && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#E0F2FE] text-[#0284C7] font-medium border border-[#BAE6FD]">
+                                      {item.category}
+                                    </span>
+                                  )}
+                                  {item.weight && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FDE68A] text-[#CA8A04] font-medium border border-[#FDE68A]">
+                                      {item.weight}g
+                                    </span>
+                                  )}
+                                  {item.ingredients && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#F3F4F6] text-[#6B7280] font-medium border border-[#E5E7EB]">
+                                      {Array.isArray(item.ingredients)
+                                        ? item.ingredients.join(", ")
+                                        : item.ingredients}
+                                    </span>
+                                  )}
+                                  {item.rating && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FFF7ED] text-[#F59E42] font-medium border border-[#FED7AA]">
+                                      ⭐ {item.rating}
+                                    </span>
+                                  )}
+                                  {item.stock !== undefined && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#DCFCE7] text-[#16A34A] font-medium border border-[#BBF7D0]">
+                                      In Stock: {item.stock}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            {/* For custom cakes, show a View 3D button */}
+                            {item.isCustom && (
+                              <button
+                                className="mt-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all text-sm font-semibold"
+                                onClick={() =>
+                                  alert(
+                                    "Show 3D preview modal for this custom cake config"
+                                  )
+                                }
+                              >
+                                View 3D
+                              </button>
                             )}
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-6">
-                        <div className="flex items-center gap-1 bg-[#FFF0E8] rounded-full px-4 py-2 shadow-inner border border-[#FFD4C2]">
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
-                            className={`p-2 rounded-full transition-all duration-200 ${
-                              item.quantity <= 1
-                                ? "text-[#FFBFA5] cursor-not-allowed"
-                                : "text-[#E67E5F] hover:text-[#D45D3E] hover:bg-[#FFD4C2]"
-                            }`}
-                            aria-label={`Decrease quantity of ${item.name}`}
-                            disabled={item.quantity <= 1}
-                          >
-                            <MinusIcon className="w-4 h-4" />
-                          </button>
-                          <motion.span
-                            key={item.quantity}
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="w-10 text-center font-bold text-[#3A2E26]"
-                          >
-                            {item.quantity}
-                          </motion.span>
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
-                            className="p-2 rounded-full text-[#E67E5F] hover:text-[#D45D3E] hover:bg-[#FFD4C2] transition-all duration-200"
-                            aria-label={`Increase quantity of ${item.name}`}
-                          >
-                            <PlusIcon className="w-4 h-4" />
-                          </button>
+                        <div className="flex items-center justify-between sm:justify-end gap-6">
+                          <div className="flex items-center gap-1 bg-[#FFF0E8] rounded-full px-4 py-2 shadow-inner border border-[#FFD4C2]">
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity - 1)
+                              }
+                              className={`p-2 rounded-full transition-all duration-200 ${
+                                item.quantity <= 1
+                                  ? "text-[#FFBFA5] cursor-not-allowed"
+                                  : "text-[#E67E5F] hover:text-[#D45D3E] hover:bg-[#FFD4C2]"
+                              }`}
+                              aria-label={`Decrease quantity of ${item.name}`}
+                              disabled={item.quantity <= 1}
+                            >
+                              <MinusIcon className="w-4 h-4" />
+                            </button>
+                            <motion.span
+                              key={item.quantity}
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="w-10 text-center font-bold text-[#3A2E26]"
+                            >
+                              {item.quantity}
+                            </motion.span>
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity + 1)
+                              }
+                              className="p-2 rounded-full text-[#E67E5F] hover:text-[#D45D3E] hover:bg-[#FFD4C2] transition-all duration-200"
+                              aria-label={`Increase quantity of ${item.name}`}
+                            >
+                              <PlusIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <p className="text-xl font-bold text-[#3A2E26]">
+                              ${(item.price * item.quantity).toFixed(2)}
+                            </p>
+                            <button
+                              onClick={() => removeFromCart(item.id)}
+                              className="p-2.5 rounded-full text-[#E67E5F] hover:text-[#D45D3E] hover:bg-[#FFEDE5] transition-all duration-200"
+                              aria-label={`Remove ${item.name} from cart`}
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-6">
-                          <p className="text-xl font-bold text-[#3A2E26]">
-                            ${(item.price * item.quantity).toFixed(2)}
-                          </p>
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="p-2.5 rounded-full text-[#E67E5F] hover:text-[#D45D3E] hover:bg-[#FFEDE5] transition-all duration-200"
-                            aria-label={`Remove ${item.name} from cart`}
-                          >
-                            <TrashIcon className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </motion.div>
               </div>
 

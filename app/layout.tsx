@@ -2,6 +2,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import AppShell from "@/components/AppShell";
+import { DashboardTabProvider } from "@/contexts/DashboardTabContext";
 
 export const metadata = {
   title: "CakeZone",
@@ -22,7 +23,9 @@ export default function RootLayout({
             variables: { colorPrimary: "#f97316", fontSize: "16px" },
           }}
         >
-          <AppShell>{children}</AppShell>
+          <DashboardTabProvider>
+            <AppShell>{children}</AppShell>
+          </DashboardTabProvider>
         </ClerkProvider>
       </body>
     </html>

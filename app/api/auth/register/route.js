@@ -30,6 +30,7 @@ export async function POST(req) {
     await users.insertOne(user);
     return NextResponse.json({ success: true, data: { email, role: 'customer' } }, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ success: false, error: 'Registration failed' }, { status: 500 });
-  }
+  console.error("Registration error:", err);
+  return NextResponse.json({ success: false, error: 'Registration failed' }, { status: 500 });
+}
 }

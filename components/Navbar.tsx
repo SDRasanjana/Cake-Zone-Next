@@ -1,12 +1,27 @@
 "use client";
 
-import { UserButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import {
+  UserButton,
+  SignedIn,
+  SignedOut,
+  useUser,
+  useClerk,
+} from "@clerk/nextjs";
 import Link from "next/link";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
+import {
+  Package,
+  ChefHat,
+  ShoppingCart,
+  Bell,
+  User,
+  Settings,
+} from "lucide-react";
+import { useDashboardTab } from "@/contexts/DashboardTabContext";
 
 const navLinkVariants = {
   initial: { opacity: 0.7 },
@@ -16,9 +31,53 @@ const navLinkVariants = {
 export default function Navbar() {
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { getItemCount } = useCart();
   const totalItems = getItemCount();
   const { isSignedIn, user } = useUser();
+  const { openUserProfile } = useClerk();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { setActiveTab } = useDashboardTab();
+
+  // Dashboard sidebar items for mobile dropdown
+  const dashboardItems = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: Package,
+      href: "/dashboard/customer?tab=OverviewTab",
+    },
+    {
+      id: "customize",
+      label: "Customize Cake",
+      icon: ChefHat,
+      href: "/dashboard/customer?tab=customize",
+    },
+    {
+      id: "orders",
+      label: "My Orders",
+      icon: ShoppingCart,
+      href: "/dashboards/customer?tab=orders",
+    },
+    {
+      id: "notifications",
+      label: "Notifications",
+      icon: Bell,
+      href: "/dashboards/customer?tab=notifications",
+    },
+    {
+      id: "profile",
+      label: "Profile",
+      icon: User,
+      href: "/dashboards/customer?tab=profile",
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: Settings,
+      href: "/dashboards/customer?tab=settings",
+    },
+  ];
 
   useEffect(() => {
     setIsClient(true);
@@ -31,7 +90,8 @@ export default function Navbar() {
   return (
     <nav className="bg-[#2B2B2B] text-white px-6 py-4 shadow-lg flex justify-between items-center relative z-50">
       <div className="text-2xl font-bold text-orange-400">CakeZone</div>
-      <div className="flex gap-4 text-sm uppercase font-semibold items-center">
+      {/* Desktop Nav */}
+      <div className="hidden lg:flex gap-4 text-sm uppercase font-semibold items-center">
         {isClient &&
           isSignedIn &&
           (() => {
@@ -150,6 +210,95 @@ export default function Navbar() {
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
           </>
+        )}
+      </div>
+      {/* Mobile Nav: Profile Dropdown */}
+      <div className="block lg:hidden relative">
+        <button
+          onClick={() => setMobileMenuOpen((open) => !open)}
+          className="focus:outline-none"
+          aria-label="Open user menu"
+        >
+          <User className="w-8 h-8 text-white" />
+        </button>
+        {mobileMenuOpen && (
+          <div className="absolute right-0 mt-2 w-64 bg-white text-gray-900 rounded-xl shadow-lg z-50 overflow-hidden">
+            <div className="p-4 border-b">
+              <div className="font-bold text-lg">
+                {user?.fullName || "Account"}
+              </div>
+              <div className="text-xs text-gray-500">
+                {user?.primaryEmailAddress?.emailAddress ||
+                  user?.emailAddresses?.[0]?.emailAddress}
+              </div>
+            </div>
+            <div className="px-4 py-2 text-xs text-gray-500 font-semibold">
+              NAVIGATION
+            </div>
+            <Link href="/" className="block px-4 py-2 hover:bg-gray-100">
+              HOME
+            </Link>
+            <Link href="/about" className="block px-4 py-2 hover:bg-gray-100">
+              ABOUT US
+            </Link>
+            <Link href="/contact" className="block px-4 py-2 hover:bg-gray-100">
+              CONTACT US
+            </Link>
+            <Link href="/menu" className="block px-4 py-2 hover:bg-gray-100">
+              MENU
+            </Link>
+            <div className="px-4 py-2 text-xs text-gray-500 font-semibold border-t mt-2">
+              DASHBOARD
+            </div>
+            {dashboardItems.map((item) =>
+              item.id === "profile" ? (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openUserProfile();
+                  }}
+                  className="flex items-center w-full px-4 py-2 hover:bg-gray-100"
+                >
+                  <item.icon className="w-4 h-4 mr-2" />
+                  {item.label}
+                </button>
+              ) : (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    router.push(`/dashboards/customer?tab=${item.id}`);
+                  }}
+                  className="flex items-center w-full px-4 py-2 hover:bg-gray-100"
+                >
+                  <item.icon className="w-4 h-4 mr-2" />
+                  {item.label}
+                  {item.id === "notifications" && (
+                    <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      3
+                    </span>
+                  )}
+                </button>
+              )
+            )}
+            <div className="border-t mt-2">
+              <SignedIn>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    // Clerk handles sign out
+                    if (typeof window !== "undefined") {
+                      window.location.href = "/sign-out";
+                    }
+                  }}
+                  className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                >
+                  Sign Out
+                </button>
+              </SignedIn>
+            </div>
+          </div>
         )}
       </div>
     </nav>
