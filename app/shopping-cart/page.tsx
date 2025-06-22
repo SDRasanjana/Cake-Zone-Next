@@ -199,7 +199,7 @@ const ShoppingCartPage = () => {
                           */}
                             <div className="mt-3 flex flex-wrap gap-3">
                               <span className="text-xl text-[#E67E5F] font-bold">
-                                ${item.price.toFixed(2)}
+                                Rs. {item.price.toFixed(2)}
                                 <span className="text-sm text-[#A89B91] font-normal ml-1">
                                   each
                                 </span>
@@ -321,7 +321,7 @@ const ShoppingCartPage = () => {
                           </div>
                           <div className="flex items-center gap-6">
                             <p className="text-xl font-bold text-[#3A2E26]">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              Rs. {(item.price * item.quantity).toFixed(2)}
                             </p>
                             <button
                               onClick={() => removeFromCart(item.id)}
@@ -355,7 +355,7 @@ const ShoppingCartPage = () => {
                       <div className="flex justify-between items-center pb-3 border-b border-[#FFE5D9]">
                         <span className="text-[#7A6A5F]">Subtotal</span>
                         <span className="text-[#3A2E26] font-medium">
-                          ${getCartTotal().toFixed(2)}
+                          Rs. {getCartTotal().toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center pb-3 border-b border-[#FFE5D9]">
@@ -367,7 +367,7 @@ const ShoppingCartPage = () => {
                           Total
                         </span>
                         <span className="text-2xl font-bold text-[#E67E5F]">
-                          ${getCartTotal().toFixed(2)}
+                          Rs. {getCartTotal().toFixed(2)}
                         </span>
                       </div>
                     </div>
