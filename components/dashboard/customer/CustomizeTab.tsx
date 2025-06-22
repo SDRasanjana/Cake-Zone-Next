@@ -102,7 +102,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             }`}
           >
             <div className="text-center">
-              <p className="text-2xl font-bold">₹1,500</p>
+              <p className="text-2xl font-bold">Rs. 1,500</p>
               <p className="text-sm text-gray-600">Budget Category</p>
             </div>
           </button>
@@ -115,7 +115,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             }`}
           >
             <div className="text-center">
-              <p className="text-2xl font-bold">₹2,000</p>
+              <p className="text-2xl font-bold">Rs. 2,000</p>
               <p className="text-sm text-gray-600">Budget Category</p>
             </div>
           </button>
@@ -128,7 +128,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             }`}
           >
             <div className="text-center">
-              <p className="text-2xl font-bold">₹2,000+</p>
+              <p className="text-2xl font-bold">Rs. 2,000+</p>
               <p className="text-sm text-gray-600">Premium Category</p>
             </div>
           </button>
@@ -139,7 +139,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
         <div className="flex items-center mb-4">
           <Sparkles className="w-5 h-5 text-purple-600 mr-2" />
           <h3 className="text-lg font-semibold text-gray-800">
-            AI Budget Suggestions for ₹{selectedBudget}
+            AI Budget Suggestions for Rs. {selectedBudget}
           </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -171,7 +171,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                     {cake.layers} layers
                   </div>
                   <span className="font-bold text-orange-600">
-                    ₹{cake.price}
+                    Rs. {cake.price}
                   </span>
                 </div>
                 {selectedCake === cake.id && (

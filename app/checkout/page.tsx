@@ -308,9 +308,15 @@ const CheckoutPage: React.FC = () => {
   // Block checkout if cart is empty
   useEffect(() => {
     if (cartState.items.length === 0) {
-      router.replace("/shopping-cart"); // Redirect to cart if empty
+      // Redirect to dashboard with error message in query string
+      router.replace("/dashboards/customer?error=Cart%20is%20empty");
     }
   }, [cartState.items, router]);
+
+  // Prevent rendering if cart is empty (avoid error)
+  if (cartState.items.length === 0) {
+    return null;
+  }
 
   if (!stripePromise) {
     return (
@@ -573,7 +579,7 @@ const CheckoutPage: React.FC = () => {
                         <div className="flex items-center gap-2 mt-2 sm:mt-0">
                           <span className="mr-2">Qty: {item.quantity}</span>
                           <span className="text-green-400 font-semibold">
-                            ₹{(item.price * item.quantity).toLocaleString()}
+                            Rs. {(item.price * item.quantity).toLocaleString()}
                           </span>
                           {/* Remove button for cart item */}
                           <button
@@ -591,7 +597,7 @@ const CheckoutPage: React.FC = () => {
                 )}
                 {/* Order total */}
                 <div className="mt-4 text-right text-lg font-bold text-green-400">
-                  Total: ₹
+                  Total: Rs.{" "}
                   {cartState.items
                     .reduce((sum, item) => sum + item.price * item.quantity, 0)
                     .toLocaleString()}

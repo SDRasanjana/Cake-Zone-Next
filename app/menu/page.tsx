@@ -182,7 +182,7 @@ export default function CakeGallery() {
                     <p className="text-[#7A6A5F] mb-4 line-clamp-2">{cake.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold text-[#E67E5F]">
-                        ${cake.price.toFixed(2)}
+                        Rs. {cake.price.toFixed(2)}
                       </span>
                       <motion.button
                         onClick={(e) => {

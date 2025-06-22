@@ -54,7 +54,7 @@ const OverviewTab: React.FC<{ setActiveTab: (tab: DashboardTab) => void }> = ({
             <div>
               <p className="text-purple-100 text-sm">Total Spent</p>
               <p className="text-2xl font-bold">
-                ₹{totalSpent.toLocaleString()}
+                Rs.{totalSpent.toLocaleString()}
               </p>
             </div>
             <DollarSign className="w-8 h-8 text-purple-200" />
@@ -149,7 +149,7 @@ const OverviewTab: React.FC<{ setActiveTab: (tab: DashboardTab) => void }> = ({
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-800">₹{order.total}</p>
+                <p className="font-semibold text-gray-800">Rs. {order.total}</p>
                 <span
                   className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                     order.paymentStatus === "paid" ||

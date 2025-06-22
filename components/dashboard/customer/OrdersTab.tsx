@@ -70,7 +70,7 @@ const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
               </div>
               <div className="text-right">
                 <p className="text-xl font-bold text-gray-800">
-                  ₹{order.total}
+                  Rs. {order.total}
                 </p>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
@@ -101,7 +101,7 @@ const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
                       Type: {item.isCustom ? "Custom" : "Predefined"}
                     </div>
                     <div className="text-black">Qty: {item.quantity}</div>
-                    <div className="text-black">Price: ₹{item.price}</div>
+                    <div className="text-black">Price: Rs. {item.price}</div>
                     {/* Show custom fields if present */}
                     {item.isCustom && (
                       <div>

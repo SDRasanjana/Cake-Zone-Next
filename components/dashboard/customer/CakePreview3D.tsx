@@ -863,7 +863,7 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
                       Total Price:
                     </span>
                     <span className="text-2xl font-bold text-orange-600">
-                      ₹{calculatePrice()}
+                      Rs. {calculatePrice()}
                     </span>
                   </div>
                 </div>
