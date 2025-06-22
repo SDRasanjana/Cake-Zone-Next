@@ -37,7 +37,7 @@ export default function SidebarNav({
             <span className="text-white text-xl font-bold">🍰</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Cake Delight</h1>
+            <h1 className="text-xl font-bold text-gray-900">Cake Zone</h1>
             <p className="text-sm text-gray-500">Owner Dashboard</p>
           </div>
         </div>

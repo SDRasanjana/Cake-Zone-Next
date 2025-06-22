@@ -5,10 +5,9 @@ import { UserButton } from "@clerk/nextjs";
 
 interface TopHeaderProps {
   activeTab: string;
-  userType: "Owner" | "Admin";
 }
 
-export default function TopHeader({ activeTab, userType }: TopHeaderProps) {
+export default function TopHeader({ activeTab }: TopHeaderProps) {
   return (
     <div className="bg-white border-b px-6 py-4">
       <div className="flex items-center justify-between">
