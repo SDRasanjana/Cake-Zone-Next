@@ -55,6 +55,16 @@ const CustomerDashboardContent = () => {
   const router = useRouter();
   const { activeTab, setActiveTab } = useDashboardTab();
 
+  // Set initial tab from query param if present (fix for mobile navigation)
+  React.useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab as DashboardTab);
+    }
+    // If no tab param, keep current activeTab (default is 'overview')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   // Helper to switch tab and update URL
   const handleTabChange = (tab: DashboardTab) => {
     setActiveTab(tab);

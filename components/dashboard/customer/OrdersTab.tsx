@@ -25,20 +25,37 @@ const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
               <div className="flex items-center mb-4 sm:mb-0">
-                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-3xl mr-4">
-                  {order.items?.[0]?.imageUri ? (
-                    <img
-                      src={order.items[0].imageUri}
-                      alt="Cake"
-                      className="w-14 h-14 rounded"
-                    />
+                {/* Show all cakes in the order, not just the first */}
+                <div className="flex flex-wrap gap-2 mr-4">
+                  {order.items && order.items.length > 0 ? (
+                    order.items.map((item: any, idx: number) => (
+                      <div
+                        key={item.id || idx}
+                        className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-3xl"
+                      >
+                        {item.imageUri ? (
+                          <img
+                            src={item.imageUri}
+                            alt={item.name}
+                            className="w-14 h-14 rounded"
+                          />
+                        ) : (
+                          "🎂"
+                        )}
+                      </div>
+                    ))
                   ) : (
-                    "🎂"
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-3xl">
+                      🎂
+                    </div>
                   )}
                 </div>
                 <div>
+                  {/* List all cake names in the order */}
                   <h4 className="font-semibold text-gray-800">
-                    {order.items?.[0]?.name || "Cake Order"}
+                    {order.items && order.items.length > 0
+                      ? order.items.map((item: any) => item.name).join(", ")
+                      : "Cake Order"}
                   </h4>
                   <p className="text-sm text-gray-500">
                     Order #{order._id?.toString().slice(-6)}
@@ -70,16 +87,36 @@ const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
                 </span>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-700 transition-colors">
-                Track Order
-              </button>
-              <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">
-                Reorder
-              </button>
-              <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">
-                Rate & Review
-              </button>
+            {/* List all cakes in the order with details */}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {order.items &&
+                order.items.length > 0 &&
+                order.items.map((item: any, idx: number) => (
+                  <div
+                    key={item.id || idx}
+                    className="border rounded p-2 bg-gray-50 text-xs"
+                  >
+                    <div className="font-semibold text-black">{item.name}</div>
+                    <div className="text-black">
+                      Type: {item.isCustom ? "Custom" : "Predefined"}
+                    </div>
+                    <div className="text-black">Qty: {item.quantity}</div>
+                    <div className="text-black">Price: ₹{item.price}</div>
+                    {/* Show custom fields if present */}
+                    {item.isCustom && (
+                      <div>
+                        <div className="text-black">Flavor: {item.flavor}</div>
+                        <div className="text-black">Layers: {item.layers}</div>
+                        <div className="text-black">
+                          Toppings: {item.toppings?.join(", ")}
+                        </div>
+                        <div className="text-black">
+                          Frosting: {item.frostingColor}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
             </div>
           </div>
         ))}

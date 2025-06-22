@@ -102,27 +102,43 @@ const OverviewTab: React.FC<{ setActiveTab: (tab: DashboardTab) => void }> = ({
           </button>
         </div>
         <div className="space-y-4">
-          {orders.slice(0, 3).map((order) => (
+          {orders.slice(0, 3).map((order: any) => (
             <div
               key={order._id?.toString()}
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
             >
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-2xl">
-                  {/* Show first item image or emoji fallback */}
-                  {order.items?.[0]?.imageUri ? (
-                    <img
-                      src={order.items[0].imageUri}
-                      alt="Cake"
-                      className="w-10 h-10 rounded"
-                    />
+                {/* Show all cakes in the order, not just the first */}
+                <div className="flex flex-wrap gap-2">
+                  {order.items && order.items.length > 0 ? (
+                    order.items.map((item: any, idx: number) => (
+                      <div
+                        key={item.id || idx}
+                        className="w-10 h-10 bg-white rounded flex items-center justify-center text-2xl"
+                      >
+                        {item.imageUri ? (
+                          <img
+                            src={item.imageUri}
+                            alt={item.name}
+                            className="w-10 h-10 rounded"
+                          />
+                        ) : (
+                          "🎂"
+                        )}
+                      </div>
+                    ))
                   ) : (
-                    "🎂"
+                    <div className="w-10 h-10 bg-white rounded flex items-center justify-center text-2xl">
+                      🎂
+                    </div>
                   )}
                 </div>
                 <div className="ml-4">
+                  {/* List all cake names in the order */}
                   <p className="font-medium text-gray-800">
-                    {order.items?.[0]?.name || "Cake Order"}
+                    {order.items && order.items.length > 0
+                      ? order.items.map((item: any) => item.name).join(", ")
+                      : "Cake Order"}
                   </p>
                   <p className="text-sm text-gray-500">
                     Ordered on{" "}
