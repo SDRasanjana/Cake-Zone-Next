@@ -1,618 +1,418 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  RefreshCw,
-  Plus,
-  Lightbulb,
-  Target,
-} from "lucide-react";
-import { useIngredients } from "@/lib/hooks/useIngredients";
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { TrendingUp, RefreshCw, AlertTriangle } from "lucide-react";
 
-// Define TypeScript interfaces
-interface ForecastData {
-  historical: Array<{
-    date: string;
-    price: number;
-    confidence?: number;
-  }>;
-  predictions: Array<{
-    date: string;
-    predictedPrice: number;
-    confidence: number;
-  }>;
-  insights: Array<{
-    type: string;
-    title: string;
-    message: string;
-    priority: string;
-  }>;
-  statistics: {
-    average: number;
-    trend: {
-      direction: "increasing" | "decreasing" | "stable";
-      percentage: number;
-    };
-    dataPoints: number;
-  };
-  currentPrice: number;
-  historicalData?: Array<{
-    date: string;
-    actualPrice: number;
-    trendPrice: number;
-  }>;
-}
-
-interface NewIngredient {
-  name: string;
-  category: string;
-  price: string;
-  unit: string;
-  source: string;
-}
-
-interface ForecastsMap {
-  [key: string]: ForecastData;
+// Define TypeScript interfaces for the forecast data
+interface ForecastDataPoint {
+  ds: string;
+  yhat: number;
+  yhat_lower: number;
+  yhat_upper: number;
 }
 
 export default function Forecast() {
-  const {
-    ingredients,
-    forecasts,
-    loading,
-    forecastLoading,
-    error,
-    fetchIngredients,
-    addIngredientPrice,
-    fetchForecasts,
-    getPriceAlerts,
-  } = useIngredients();
-
-  const [selectedIngredient, setSelectedIngredient] = useState<string>("");
-  const [forecastDays, setForecastDays] = useState<number>(30);
-  const [showAddForm, setShowAddForm] = useState<boolean>(false);
-  const [newIngredient, setNewIngredient] = useState<NewIngredient>({
-    name: "",
-    category: "Flour",
-    price: "",
-    unit: "kg",
-    source: "manual",
-  });
-  // Type the hook returns properly
-  const typedForecasts = forecasts as ForecastsMap;
-
-  const ingredientCategories = [
-    "Flour",
-    "Sugar",
-    "Dairy",
-    "Eggs",
-    "Fats",
-    "Flavoring",
-    "Other",
-  ];
-  const units = ["kg", "liter", "piece", "gram", "pound"];
-
-  // Fetch forecasts when component mounts or when forecast parameters change
-  useEffect(() => {
-    if (ingredients.length > 0) {
-      (
-        fetchForecasts as (
-          ingredient?: string | null,
-          days?: number
-        ) => Promise<unknown>
-      )(selectedIngredient, forecastDays);
-    }
-  }, [fetchForecasts, selectedIngredient, forecastDays, ingredients.length]);
-
-  // Handle adding new ingredient price
-  const handleAddIngredientPrice = async () => {
-    if (
-      !newIngredient.name ||
-      !newIngredient.price ||
-      parseFloat(newIngredient.price) <= 0
-    ) {
-      alert("Please fill in all required fields with valid values");
-      return;
-    }
-
-    try {
-      await addIngredientPrice({
-        name: newIngredient.name,
-        category: newIngredient.category,
-        price: parseFloat(newIngredient.price),
-        unit: newIngredient.unit,
-        source: newIngredient.source,
-      });
-
-      setNewIngredient({
-        name: "",
-        category: "Flour",
-        price: "",
-        unit: "kg",
-        source: "manual",
-      });
-      setShowAddForm(false);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-      alert(`Error adding ingredient price: ${errorMessage}`);
-    }
-  }; // Prepare chart data for selected ingredient
-  const getChartData = () => {
-    if (!selectedIngredient || !typedForecasts[selectedIngredient]) {
-      return [];
-    }
-
-    const forecast = typedForecasts[selectedIngredient];
-    const historical = forecast.historicalData || [];
-    const predictions = forecast.predictions || [];
-
-    return [
-      ...historical.map((item) => ({
-        date: item.date,
-        actual: item.actualPrice,
-        trend: item.trendPrice,
-        type: "historical",
-      })),
-      ...predictions.map((item) => ({
-        date: item.date,
-        predicted: item.predictedPrice,
-        confidence: item.confidence,
-        type: "prediction",
-      })),
-    ];
+  // Available ingredients to forecast with meta information
+  const ingredientsInfo = {
+    Flour: {
+      icon: "🌾",
+      description: "Essential for all baked goods",
+      basePrice: "Rs. 250/kg",
+    },
+    Sugar: {
+      icon: "🍬",
+      description: "Sweetener for cakes and desserts",
+      basePrice: "Rs. 180/kg",
+    },
+    Eggs: {
+      icon: "🥚",
+      description: "Provides structure and richness",
+      basePrice: "Rs. 320/dozen",
+    },
+    Butter: {
+      icon: "🧈",
+      description: "Adds flavor and moisture",
+      basePrice: "Rs. 450/kg",
+    },
   };
 
-  // Get price alerts
-  const priceAlerts = getPriceAlerts();
+  const availableIngredients = Object.keys(ingredientsInfo);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-purple-400 mx-auto mb-4" />
-          <p className="text-white">Loading ingredient data...</p>
-        </div>
-      </div>
-    );
+  interface InsightData {
+    trend: string;
+    percentage_change: number;
+    highest_price: number;
+    lowest_price: number;
+    average_price: number;
+    forecast_date: string;
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">Error: {error}</p>
+  const [selectedIngredient, setSelectedIngredient] = useState<string>("Flour");
+  const [pythonForecastData, setPythonForecastData] = useState<
+    ForecastDataPoint[] | null
+  >(null);
+  const [pythonForecastInsights, setPythonForecastInsights] =
+    useState<InsightData | null>(null);
+  const [pythonForecastLoading, setPythonForecastLoading] =
+    useState<boolean>(false);
+  const [pythonForecastError, setPythonForecastError] = useState<string | null>(
+    null
+  );
+  const [forecastImageUrl, setForecastImageUrl] = useState<string>(
+    "/flour_price_forecast.png"
+  );
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  // Function to run Python forecast script via API for selected ingredient
+  const runPythonForecast = useCallback(
+    async (ingredient = selectedIngredient) => {
+      setPythonForecastLoading(true);
+      setPythonForecastError(null);
+
+      try {
+        const response = await fetch(
+          `/api/forecast/run-python?ingredient=${ingredient}`
+        );
+        const data = await response.json();
+        if (data.success) {
+          // Check if forecastData exists and is an array before setting state
+          if (data.forecastData && Array.isArray(data.forecastData)) {
+            setPythonForecastData(data.forecastData);
+            setForecastImageUrl(data.forecastImageUrl);
+            setLastUpdated(new Date().toLocaleString());
+
+            // Set insights if available
+            if (data.insights) {
+              setPythonForecastInsights(data.insights);
+            }
+          } else {
+            setPythonForecastError("Received invalid forecast data format");
+          }
+        } else {
+          setPythonForecastError(data.error || "Failed to generate forecast");
+        }
+      } catch (err) {
+        setPythonForecastError(
+          "Error running forecast: " +
+            (err instanceof Error ? err.message : "Unknown error")
+        );
+      } finally {
+        setPythonForecastLoading(false);
+      }
+    },
+    [selectedIngredient]
+  );
+  // Load Python forecast data on initial component mount or when ingredient changes
+  useEffect(() => {
+    runPythonForecast(selectedIngredient);
+    setLastUpdated(new Date().toLocaleString());
+  }, [selectedIngredient, runPythonForecast]);
+
+  return (
+    <div className="space-y-6 p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-gray-800">Price Forecasting</h2>
+        <div className="text-sm text-gray-500">
+          {lastUpdated && `Last updated: ${lastUpdated}`}
+        </div>
+      </div>{" "}
+      {/* Ingredient Selection */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <h3 className="text-lg font-medium text-gray-800 mb-3">
+          Select Ingredient for Forecast
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          {availableIngredients.map((ingredient) => (
+            <div
+              key={ingredient}
+              onClick={() => setSelectedIngredient(ingredient)}
+              className={`cursor-pointer p-4 rounded-lg border transition-all duration-200
+                ${
+                  selectedIngredient === ingredient
+                    ? "border-orange-500 bg-orange-50 shadow-md scale-[1.02]"
+                    : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30"
+                }`}
+            >
+              <div className="flex items-center mb-2">
+                <span
+                  className="text-2xl mr-2"
+                  role="img"
+                  aria-label={ingredient}
+                >
+                  {
+                    ingredientsInfo[ingredient as keyof typeof ingredientsInfo]
+                      .icon
+                  }
+                </span>
+                <h4 className="font-semibold text-gray-800">{ingredient}</h4>
+              </div>
+              <p className="text-sm text-gray-500 mb-2">
+                {
+                  ingredientsInfo[ingredient as keyof typeof ingredientsInfo]
+                    .description
+                }
+              </p>
+              <p className="text-xs text-gray-600 font-medium">
+                Base price:{" "}
+                {
+                  ingredientsInfo[ingredient as keyof typeof ingredientsInfo]
+                    .basePrice
+                }
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-between items-center border-t border-gray-100 pt-3">
+          <p className="text-sm text-gray-500">
+            Selected:{" "}
+            <span className="font-medium text-gray-800">
+              {selectedIngredient}
+            </span>
+          </p>
+
           <button
-            onClick={() => fetchIngredients()}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 mx-auto"
+            onClick={() => runPythonForecast(selectedIngredient)}
+            disabled={pythonForecastLoading}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm flex items-center space-x-1 transition-colors disabled:bg-gray-400"
           >
-            <RefreshCw className="w-4 h-4" />
-            Retry
+            {pythonForecastLoading ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin mr-1" />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                <span>Update Forecast</span>
+              </>
+            )}
           </button>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Ingredient Price Forecasting
-          </h1>
-          <p className="text-purple-200">
-            AI-powered price predictions to optimize your purchasing decisions
-          </p>
+      {/* Python-Generated Price Forecast */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-50 to-white p-4 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="bg-orange-100 p-2 rounded-md mr-3">
+                <TrendingUp className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {selectedIngredient} Price Forecast
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Machine learning prediction for next 7 days
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        {/* Price Alerts */}
-        {priceAlerts.length > 0 && (
-          <div className="bg-red-500/10 backdrop-blur-md rounded-xl p-6 border border-red-500/20 mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <AlertTriangle className="text-red-400 w-5 h-5" />
-              Price Alerts
-            </h2>{" "}
-            <div className="grid gap-3">
-              {priceAlerts.map(
-                (
-                  alert: {
-                    ingredient: string;
-                    title: string;
-                    message: string;
-                    type: string;
-                    priority: string;
-                  },
-                  index: number
-                ) => (
-                  <div key={index} className="bg-white/10 rounded-lg p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-white">
-                          {alert.ingredient}
-                        </h3>
-                        <p className="text-sm text-purple-200">{alert.title}</p>
-                        <p className="text-xs text-purple-300 mt-1">
-                          {alert.message}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          alert.priority === "high"
-                            ? "bg-red-500 text-white"
-                            : alert.priority === "medium"
-                            ? "bg-yellow-500 text-black"
-                            : "bg-green-500 text-white"
-                        }`}
-                      >
-                        {alert.priority}
-                      </span>
-                    </div>
+
+        <div className="p-4">
+          {pythonForecastError ? (
+            <div className="bg-red-50 p-4 rounded-md text-red-600 text-sm">
+              <div className="flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                <span>{pythonForecastError}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Display the forecast image */}
+              <div className="flex justify-center border border-gray-100 rounded-lg p-4 bg-gray-50">
+                <Image
+                  src={forecastImageUrl}
+                  alt={`${selectedIngredient} Price Forecast`}
+                  width={700}
+                  height={400}
+                  className="rounded-md shadow-sm"
+                  priority
+                />
+              </div>
+
+              {pythonForecastData && (
+                <div className="mt-4">
+                  <h3 className="text-md font-semibold mb-2">Forecast Data</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Predicted Price (LKR)
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Lower Bound
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Upper Bound
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {" "}
+                        {pythonForecastData &&
+                          pythonForecastData.slice(-7).map((day, index) => (
+                            <tr
+                              key={index}
+                              className={
+                                index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                              }
+                            >
+                              <td className="px-4 py-2 text-sm text-gray-900">
+                                {new Date(day.ds).toLocaleDateString()}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-gray-900 font-medium">
+                                {Number(day.yhat).toFixed(2)}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-gray-600">
+                                {Number(day.yhat_lower).toFixed(2)}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-gray-600">
+                                {Number(day.yhat_upper).toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
                   </div>
-                )
-              )}
-            </div>
-          </div>
-        )}
-        {/* Controls */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 mb-8">
-          <div className="flex flex-wrap gap-4 items-center justify-between">
-            <div className="flex flex-wrap gap-4 items-center">
-              <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">
-                  Select Ingredient
-                </label>
-                <select
-                  value={selectedIngredient}
-                  onChange={(e) => setSelectedIngredient(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="" className="bg-slate-800 text-white">
-                    All Ingredients{" "}
-                  </option>
-                  {ingredients.map(
-                    (ingredient: {
-                      _id?: string;
-                      name: string;
-                      currentPrice: number;
-                      unit: string;
-                    }) => (
-                      <option
-                        key={ingredient._id}
-                        value={ingredient.name}
-                        className="bg-slate-800 text-white"
-                      >
-                        {ingredient.name} (Rs. {ingredient.currentPrice}/
-                        {ingredient.unit})
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">
-                  Forecast Period
-                </label>
-                <select
-                  value={forecastDays}
-                  onChange={(e) => setForecastDays(parseInt(e.target.value))}
-                  className="px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value={7} className="bg-slate-800 text-white">
-                    1 Week
-                  </option>
-                  <option value={30} className="bg-slate-800 text-white">
-                    1 Month
-                  </option>
-                  <option value={60} className="bg-slate-800 text-white">
-                    2 Months
-                  </option>
-                  <option value={90} className="bg-slate-800 text-white">
-                    3 Months
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              {" "}
-              <button
-                onClick={() =>
-                  (
-                    fetchForecasts as (
-                      ingredient?: string | null,
-                      days?: number
-                    ) => Promise<unknown>
-                  )(selectedIngredient, forecastDays)
-                }
-                disabled={forecastLoading}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50"
-              >
-                {forecastLoading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                Refresh Forecast
-              </button>
-              <button
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Price Data
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Add Price Form */}
-        {showAddForm && (
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Add New Price Entry
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-              <input
-                type="text"
-                placeholder="Ingredient name"
-                value={newIngredient.name}
-                onChange={(e) =>
-                  setNewIngredient({ ...newIngredient, name: e.target.value })
-                }
-                className="px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-
-              <select
-                value={newIngredient.category}
-                onChange={(e) =>
-                  setNewIngredient({
-                    ...newIngredient,
-                    category: e.target.value,
-                  })
-                }
-                className="px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                {ingredientCategories.map((category) => (
-                  <option
-                    key={category}
-                    value={category}
-                    className="bg-slate-800 text-white"
-                  >
-                    {category}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="number"
-                placeholder="Price"
-                value={newIngredient.price}
-                onChange={(e) =>
-                  setNewIngredient({ ...newIngredient, price: e.target.value })
-                }
-                className="px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-
-              <select
-                value={newIngredient.unit}
-                onChange={(e) =>
-                  setNewIngredient({ ...newIngredient, unit: e.target.value })
-                }
-                className="px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                {units.map((unit) => (
-                  <option
-                    key={unit}
-                    value={unit}
-                    className="bg-slate-800 text-white"
-                  >
-                    {unit}
-                  </option>
-                ))}
-              </select>
-
-              <button
-                onClick={handleAddIngredientPrice}
-                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
-              >
-                <Plus className="w-4 h-4" />
-                Add
-              </button>
-            </div>
-          </div>
-        )}{" "}
-        {/* Price Forecast Chart */}
-        {selectedIngredient && typedForecasts[selectedIngredient] && (
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Price Forecast: {selectedIngredient}
-            </h2>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={getChartData()}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.1)"
-                />
-                <XAxis dataKey="date" tick={{ fill: "white" }} />
-                <YAxis tick={{ fill: "white" }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(0,0,0,0.8)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: "8px",
-                    color: "white",
-                  }}
-                  formatter={(value: number | string, name: string) => [
-                    `Rs. ${
-                      typeof value === "number" ? value.toFixed(2) : "N/A"
-                    }`,
-                    name === "actual"
-                      ? "Actual Price"
-                      : name === "predicted"
-                      ? "Predicted Price"
-                      : "Trend",
-                  ]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="actual"
-                  stroke="#8b5cf6"
-                  strokeWidth={2}
-                  name="Actual"
-                  connectNulls={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="predicted"
-                  stroke="#06b6d4"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  name="Predicted"
-                  connectNulls={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="trend"
-                  stroke="#10b981"
-                  strokeWidth={1}
-                  name="Trend"
-                  connectNulls={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}{" "}
-        {/* Insights and Recommendations */}
-        {selectedIngredient &&
-          typedForecasts[selectedIngredient] &&
-          typedForecasts[selectedIngredient].insights && (
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 mb-8">
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <Lightbulb className="text-yellow-400 w-5 h-5" />
-                AI Insights & Recommendations
-              </h2>{" "}
-              <div className="grid gap-4">
-                {typedForecasts[selectedIngredient].insights.map(
-                  (
-                    insight: {
-                      type: string;
-                      title: string;
-                      message: string;
-                      priority: string;
-                    },
-                    index: number
-                  ) => (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-lg border-l-4 ${
-                        insight.type === "warning"
-                          ? "bg-yellow-500/10 border-yellow-500"
-                          : insight.type === "alert"
-                          ? "bg-red-500/10 border-red-500"
-                          : insight.type === "opportunity"
-                          ? "bg-green-500/10 border-green-500"
-                          : "bg-blue-500/10 border-blue-500"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-white">
-                            {insight.title}
-                          </h3>
-                          <p className="text-sm text-purple-200 mt-1">
-                            {insight.message}
-                          </p>
-                        </div>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            insight.priority === "high"
-                              ? "bg-red-500 text-white"
-                              : insight.priority === "medium"
-                              ? "bg-yellow-500 text-black"
-                              : "bg-green-500 text-white"
-                          }`}
-                        >
-                          {insight.priority}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          )}
-        {/* Summary Statistics */}{" "}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Object.entries(typedForecasts).map(
-            ([name, forecast]: [string, ForecastData]) =>
-              forecast.statistics && (
-                <div
-                  key={name}
-                  className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20"
-                >
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    {name}
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-purple-200">Current:</span>
-                      <span className="text-white font-medium">
-                        Rs. {forecast.currentPrice}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-purple-200">Average:</span>
-                      <span className="text-white font-medium">
-                        Rs. {forecast.statistics.average}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-purple-200">Trend:</span>
-                      <span
-                        className={`font-medium flex items-center gap-1 ${
-                          forecast.statistics.trend.direction === "increasing"
-                            ? "text-red-400"
-                            : forecast.statistics.trend.direction ===
-                              "decreasing"
-                            ? "text-green-400"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {forecast.statistics.trend.direction ===
-                        "increasing" ? (
-                          <TrendingUp className="w-4 h-4" />
-                        ) : forecast.statistics.trend.direction ===
-                          "decreasing" ? (
-                          <TrendingDown className="w-4 h-4" />
-                        ) : (
-                          <Target className="w-4 h-4" />
-                        )}
-                        {forecast.statistics.trend.percentage}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-purple-200">Data Points:</span>
-                      <span className="text-white font-medium">
-                        {forecast.statistics.dataPoints}
-                      </span>
-                    </div>
+                  <div className="mt-4 p-3 bg-orange-50 border border-orange-100 rounded-lg">
+                    <h3 className="font-medium text-gray-800 mb-2 flex items-center">
+                      <AlertTriangle className="h-4 w-4 text-orange-500 mr-2" />
+                      Key Insights
+                    </h3>{" "}
+                    <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+                      {pythonForecastInsights ? (
+                        <>
+                          <li>
+                            {selectedIngredient} prices show a{" "}
+                            <span
+                              className={
+                                pythonForecastInsights.trend === "increasing"
+                                  ? "text-red-600 font-medium"
+                                  : "text-green-600 font-medium"
+                              }
+                            >
+                              {pythonForecastInsights.trend === "increasing"
+                                ? "rising"
+                                : "declining"}
+                            </span>{" "}
+                            trend over the next week
+                          </li>
+                          <li>
+                            Expected price change:{" "}
+                            <span
+                              className={
+                                pythonForecastInsights.percentage_change > 0
+                                  ? "text-red-600 font-medium"
+                                  : "text-green-600 font-medium"
+                              }
+                            >
+                              {pythonForecastInsights.percentage_change.toFixed(
+                                2
+                              )}
+                              %
+                            </span>
+                          </li>
+                          <li>
+                            Average price: Rs.{" "}
+                            {pythonForecastInsights.average_price.toFixed(2)}{" "}
+                            per kg
+                          </li>
+                          <li>
+                            Price range: Rs.{" "}
+                            {pythonForecastInsights.lowest_price.toFixed(2)} to{" "}
+                            {pythonForecastInsights.highest_price.toFixed(2)}
+                          </li>{" "}
+                          <li>
+                            <span className="font-medium">
+                              Recommended action:{" "}
+                            </span>
+                            {pythonForecastInsights.trend === "increasing"
+                              ? "Consider bulk purchasing now before prices rise further"
+                              : "Consider waiting for better prices before bulk purchasing"}
+                          </li>
+                          <li>
+                            <span className="font-medium">Updated on: </span>
+                            {pythonForecastInsights.forecast_date}
+                          </li>
+                          <li className="pt-2">
+                            <span className="px-2 py-1 bg-orange-100 rounded text-xs font-medium text-orange-700">
+                              {pythonForecastInsights.trend === "increasing"
+                                ? "⚠️ May need to adjust cake prices if trend continues"
+                                : "✓ Current cake pricing should remain competitive"}
+                            </span>
+                          </li>
+                        </>
+                      ) : pythonForecastData &&
+                        pythonForecastData.length > 1 ? (
+                        <>
+                          <li>
+                            {selectedIngredient} prices show a{" "}
+                            {Number(
+                              pythonForecastData[pythonForecastData.length - 1]
+                                .yhat
+                            ) > Number(pythonForecastData[0].yhat)
+                              ? "rising"
+                              : "declining"}{" "}
+                            trend over the next week
+                          </li>
+                          <li>
+                            Expected price change:{" "}
+                            {(
+                              ((Number(
+                                pythonForecastData[
+                                  pythonForecastData.length - 1
+                                ].yhat
+                              ) -
+                                Number(pythonForecastData[0].yhat)) /
+                                Number(pythonForecastData[0].yhat)) *
+                              100
+                            ).toFixed(2)}
+                            %
+                          </li>
+                          <li>
+                            Consider adjusting cake prices or checking
+                            alternative suppliers if trend continues
+                          </li>
+                        </>
+                      ) : (
+                        <li>No forecast insights available</li>
+                      )}
+                    </ul>
                   </div>
                 </div>
-              )
+              )}
+            </div>
           )}
+        </div>
+      </div>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <h3 className="font-semibold text-gray-800 mb-3">
+          Additional Resources
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors">
+            <h4 className="text-sm font-medium text-gray-700">
+              View Historical Price Data
+            </h4>
+            <p className="text-xs text-gray-500 mt-1">
+              Access complete pricing history for all ingredients
+            </p>
+          </div>
+          <div className="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors">
+            <h4 className="text-sm font-medium text-gray-700">
+              Set Price Alerts
+            </h4>
+            <p className="text-xs text-gray-500 mt-1">
+              Get notified when prices exceed thresholds
+            </p>
+          </div>
         </div>
       </div>
     </div>
