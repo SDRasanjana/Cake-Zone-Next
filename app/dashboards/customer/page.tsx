@@ -214,7 +214,6 @@ const CustomerDashboardContent = () => {
             customCakeConfig={customCakeConfig}
             handleConfigChange={handleConfigChange}
             handleToppingChange={handleToppingChange}
-            setShowPreview={setShowPreview}
             handleAddToCart={handleAddToCart}
             setActiveTab={handleTabChange}
           />
@@ -273,13 +272,6 @@ const CustomerDashboardContent = () => {
           </div>
         </main>
       </div>
-      {/* 3D Preview Modal */}
-      <CakePreview3D
-        isOpen={showPreview}
-        onClose={() => setShowPreview(false)}
-        cakeConfig={customCakeConfig}
-        onAddToCart={handleAddToCart}
-      />
     </div>
   );
 };

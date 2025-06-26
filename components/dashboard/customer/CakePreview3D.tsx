@@ -16,13 +16,16 @@ interface CakeConfig {
     price: number;
     description: string;
   };
+  [key: string]: any; // Allow dynamic keys for topping counts
 }
 
+// Accept a price prop for CakePreview3D
 interface CakePreview3DProps {
   isOpen: boolean;
   onClose: () => void;
   cakeConfig: CakeConfig;
   onAddToCart: (cake: unknown) => void;
+  price: number; // Pass calculated price from CustomizeTab
 }
 
 const CakePreview3D: React.FC<CakePreview3DProps> = ({
@@ -30,6 +33,7 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
   onClose,
   cakeConfig,
   onAddToCart,
+  price,
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -60,7 +64,8 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     "bg-yellow-400": 0xffd700,
     "bg-purple-400": 0x9370db,
     "bg-white": 0xffffff,
-    "bg-orange-900": 0x8b4513, // brown
+    "bg-orange-900": 0x8b4513, // chocolate (brown)
+    "bg-cream-200": 0xfffdd0, // cream (light yellow)
   };
   useEffect(() => {
     console.log("CakeConfig received:", cakeConfig);
@@ -498,17 +503,17 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     const topY = (cakeConfig.layers - 1) * 1.2 + 0.5;
     const topRadius = 2.5 - (cakeConfig.layers - 1) * 0.4;
 
-    cakeConfig.toppings.forEach((topping) => {
-      const toppingCount = topping === "Sprinkles" ? 20 : 8;
+    // Always use 100 of each selected topping
+    const TOPPING_COUNT = 100;
 
-      for (let i = 0; i < toppingCount; i++) {
+    cakeConfig.toppings.forEach((topping) => {
+      for (let i = 0; i < TOPPING_COUNT; i++) {
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * topRadius * 0.8;
         const x = Math.cos(angle) * distance;
         const z = Math.sin(angle) * distance;
 
         let toppingMesh: THREE.Mesh;
-
         switch (topping) {
           case "Fresh Berries":
             const berryGeometry = new THREE.SphereGeometry(0.12, 12, 8);
@@ -518,7 +523,6 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
             });
             toppingMesh = new THREE.Mesh(berryGeometry, berryMaterial);
             break;
-
           case "Chocolate Chips":
             const chipGeometry = new THREE.TetrahedronGeometry(0.08);
             const chipMaterial = new THREE.MeshPhongMaterial({
@@ -527,7 +531,6 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
             });
             toppingMesh = new THREE.Mesh(chipGeometry, chipMaterial);
             break;
-
           case "Sprinkles":
             const sprinkleGeometry = new THREE.CylinderGeometry(
               0.02,
@@ -545,7 +548,6 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
               Math.random() * Math.PI
             );
             break;
-
           default:
             const defaultGeometry = new THREE.SphereGeometry(0.1, 8, 6);
             const defaultMaterial = new THREE.MeshPhongMaterial({
@@ -554,7 +556,6 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
             });
             toppingMesh = new THREE.Mesh(defaultGeometry, defaultMaterial);
         }
-
         toppingMesh.position.set(x, topY, z);
         toppingMesh.castShadow = true;
         cakeGroup.add(toppingMesh);
@@ -583,8 +584,14 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     if (rendererRef.current) {
       try {
         // Debug: check renderer and domElement
-        console.log('[CakePreview3D] rendererRef.current:', rendererRef.current);
-        console.log('[CakePreview3D] rendererRef.current.domElement:', rendererRef.current.domElement);
+        console.log(
+          "[CakePreview3D] rendererRef.current:",
+          rendererRef.current
+        );
+        console.log(
+          "[CakePreview3D] rendererRef.current.domElement:",
+          rendererRef.current.domElement
+        );
         // Force a render before snapshot
         if (sceneRef.current && cameraRef.current) {
           rendererRef.current.render(sceneRef.current, cameraRef.current);
@@ -605,24 +612,13 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
       layers: cakeConfig.layers,
       frostingColor: cakeConfig.frostingColor,
       toppings: cakeConfig.toppings,
-      price: calculatePrice(),
+      price, // Use price prop directly
       imageUri, // Pass the snapshot URI for the cart
       isCustom: true,
     };
     console.log("[CakePreview3D] Adding custom cake to cart:", customCake);
     onAddToCart(customCake);
     onClose();
-  };
-
-  const calculatePrice = (): number => {
-    // Use price from config if present (AI suggestion), else calculate
-    if (typeof cakeConfig.price === 'number') {
-      return cakeConfig.price;
-    }
-    let basePrice = 1000;
-    basePrice += cakeConfig.layers * 300;
-    basePrice += cakeConfig.toppings.length * 100;
-    return basePrice;
   };
 
   if (!isOpen) return null;
@@ -863,7 +859,7 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
                       Total Price:
                     </span>
                     <span className="text-2xl font-bold text-orange-600">
-                      Rs. {calculatePrice()}
+                      Rs. {price} {/* Use price prop directly */}
                     </span>
                   </div>
                 </div>
