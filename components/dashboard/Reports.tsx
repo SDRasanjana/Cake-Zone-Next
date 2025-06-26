@@ -18,25 +18,74 @@ export default function Reports() {
   // Helper to generate dummy PDF as Blob
   const generateDummyPdfBlob = async (type: "orders" | "expenses") => {
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([400, 300]);
+    const page = pdfDoc.addPage([600, 400]);
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const fontSize = 18;
-    let text = "";
+    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontSize = 16;
+    let title = type === "orders" ? "Order Summary" : "Expenses Summary";
+    let headers, rows;
     if (type === "orders") {
-      text = "Order Summary\nTotal Orders: 12\nTotal Amount: Rs. 10,000";
+      headers = ["Order ID", "Date", "Customer", "Amount (Rs.)"];
+      rows = [
+        ["ORD001", "2025-06-26", "John Doe", "2,000"],
+        ["ORD002", "2025-06-26", "Jane Smith", "1,500"],
+        ["ORD003", "2025-06-25", "Alice Lee", "1,200"],
+      ];
     } else {
-      text = "Expenses Summary\nTotal Expenses: Rs. 4,500";
+      headers = ["Expense", "Date", "Category", "Amount (Rs.)"];
+      rows = [
+        ["Flour", "2025-06-26", "Ingredients", "500"],
+        ["Sugar", "2025-06-25", "Ingredients", "300"],
+        ["Electricity", "2025-06-24", "Utilities", "700"],
+      ];
     }
-    const lines = text.split("\n");
-    lines.forEach((line, i) => {
-      page.drawText(line, {
-        x: 40,
-        y: 250 - i * 40,
+    // Title
+    page.drawText(title, { x: 40, y: 370, size: 20, font, color: rgb(0.2,0.2,0.2) });
+    // Table
+    const startY = 310; // moved down for more top margin
+    const rowHeight = 32;
+    const colWidths = [110, 110, 180, 120];
+    // Draw header background
+    page.drawRectangle({ x: 40, y: startY - rowHeight + 6, width: 520, height: rowHeight, color: rgb(0.95,0.6,0.2) });
+    // Draw headers
+    let x = 40;
+    headers.forEach((header, i) => {
+      page.drawText(header, {
+        x,
+        y: startY,
         size: fontSize,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: rgb(1,1,1),
+      });
+      x += colWidths[i];
+    });
+    // Draw rows
+    rows.forEach((row, rowIdx) => {
+      let y = startY - (rowIdx + 1) * rowHeight;
+      // Alternate row background
+      if (rowIdx % 2 === 0) {
+        page.drawRectangle({ x: 40, y: y - 6, width: 520, height: rowHeight, color: rgb(0.98,0.93,0.85) });
+      }
+      let x = 40;
+      row.forEach((cell, colIdx) => {
+        page.drawText(cell, {
+          x,
+          y,
+          size: fontSize,
+          font: fontRegular,
+          color: rgb(0.2,0.2,0.2),
+        });
+        x += colWidths[colIdx];
       });
     });
+    // Add more space below the table before the summary
+    let summaryY = startY - (rows.length + 3.2) * rowHeight;
+    if (type === "orders") {
+      page.drawText(`Total Orders: ${rows.length}`, { x: 40, y: summaryY, size: 15, font, color: rgb(0.2,0.2,0.2) });
+      page.drawText(`Total Amount: Rs. 4,700`, { x: 250, y: summaryY, size: 15, font, color: rgb(0.2,0.2,0.2) });
+    } else {
+      page.drawText(`Total Expenses: Rs. 1,500`, { x: 40, y: summaryY, size: 15, font, color: rgb(0.2,0.2,0.2) });
+    }
     const pdfBytes = await pdfDoc.save();
     return new Blob([pdfBytes], { type: "application/pdf" });
   };
@@ -175,7 +224,7 @@ export default function Reports() {
       {/* PDF Modal - only render on client and when Viewer/Worker loaded */}
       {showModal && pdfUrl && typeof window !== "undefined" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl h-[80vh] flex flex-col">
+          <div className="bg-white rounded-lg shadow-lg w-full h-full max-w-none max-h-none flex flex-col">
             <div className="flex justify-between items-center p-4 border-b">
               <span className="font-bold text-lg text-gray-800">PDF Report</span>
               <button onClick={closeModal} className="text-gray-500 hover:text-red-600 text-2xl">&times;</button>
@@ -184,9 +233,11 @@ export default function Reports() {
               {loadingPdf || !Viewer || !Worker || !defaultLayout ? (
                 <div className="w-full h-full flex items-center justify-center text-gray-600 text-lg">Loading PDF Viewer...</div>
               ) : (
-                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                  <Viewer fileUrl={pdfUrl} plugins={[defaultLayout]} />
-                </Worker>
+                <div className="w-full h-full">
+                  <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                    <Viewer fileUrl={pdfUrl} plugins={[defaultLayout]} />
+                  </Worker>
+                </div>
               )}
             </div>
           </div>
