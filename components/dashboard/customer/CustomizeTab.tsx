@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Sparkles, Layers } from "lucide-react";
 import { DashboardTab } from "@/contexts/DashboardTabContext";
+import CakePreview3D from "./CakePreview3D";
 
 type BudgetKey = "1500" | "2000" | "2000+";
 
@@ -10,6 +11,8 @@ interface CakeConfig {
   layers: number;
   frostingColor: string;
   toppings: string[];
+  // Add topping counts
+  [key: string]: any; // Allow dynamic keys for topping counts
 }
 
 interface CakeSuggestion {
@@ -29,10 +32,28 @@ interface CustomizeTabProps {
   customCakeConfig: CakeConfig;
   handleConfigChange: (key: string, value: any) => void;
   handleToppingChange: (topping: string, checked: boolean) => void;
-  setShowPreview: (show: boolean) => void;
   handleAddToCart: (cake: any) => void;
   setActiveTab?: (tab: DashboardTab) => void;
 }
+
+// Add a utility to deeply compare two cake configs (ignoring price)
+function isSameCakeConfig(a: any, b: any) {
+  if (!a || !b) return false;
+  return (
+    a.shape === b.shape &&
+    a.flavor === b.flavor &&
+    a.layers === b.layers &&
+    a.frostingColor === b.frostingColor &&
+    Array.isArray(a.toppings) &&
+    Array.isArray(b.toppings) &&
+    a.toppings.length === b.toppings.length &&
+    a.toppings.every((t: any, i: number) => t === b.toppings[i])
+  );
+}
+
+const AI_LAYER_PRICE = 300;
+const AI_TOPPING_PRICE = 100;
+const BASE_PRICE = 1000;
 
 const CustomizeTab: React.FC<CustomizeTabProps> = ({
   selectedBudget,
@@ -42,11 +63,14 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
   customCakeConfig,
   handleConfigChange,
   handleToppingChange,
-  setShowPreview,
   handleAddToCart,
+  setActiveTab,
 }) => {
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [suggestionsLoaded, setSuggestionsLoaded] = useState(false);
+  const [aiBaseConfig, setAiBaseConfig] = useState<any | null>(null); // Store base config for selected AI suggestion
+  const [aiBasePrice, setAiBasePrice] = useState<number | null>(null); // Store base price for selected AI suggestion
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     async function fetchSuggestions() {
@@ -71,11 +95,15 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
         handleConfigChange("layers", data.suggestions[0].layers);
         handleConfigChange("frostingColor", data.suggestions[0].frostingColor);
         handleConfigChange("toppings", data.suggestions[0].toppings);
+        setAiBaseConfig(data.suggestions[0]);
+        setAiBasePrice(data.suggestions[0].price);
       }
     }
     fetchSuggestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBudget]);
+
+  // When a suggestion is clicked, update base config/price
   const handleSuggestionClick = (cake: any) => {
     setSelectedCake(cake.id);
     handleConfigChange("shape", cake.shape);
@@ -83,8 +111,34 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
     handleConfigChange("layers", cake.layers);
     handleConfigChange("frostingColor", cake.frostingColor);
     handleConfigChange("toppings", cake.toppings);
-    handleConfigChange("price", cake.price); // Store AI price in form
+    setAiBaseConfig(cake);
+    setAiBasePrice(cake.price);
   };
+
+  // Calculate price based on current config and AI base config
+  const calculatePrice = () => {
+    if (aiBaseConfig && aiBasePrice != null) {
+      // Calculate extras
+      let extraLayers = customCakeConfig.layers - aiBaseConfig.layers;
+      let extraToppings =
+        customCakeConfig.toppings.length - aiBaseConfig.toppings.length;
+      // Only count extra if positive
+      extraLayers = Math.max(0, extraLayers);
+      extraToppings = Math.max(0, extraToppings);
+      return (
+        aiBasePrice +
+        extraLayers * AI_LAYER_PRICE +
+        extraToppings * AI_TOPPING_PRICE
+      );
+    }
+    // Default pricing
+    return (
+      BASE_PRICE +
+      (customCakeConfig.layers || 1) * AI_LAYER_PRICE +
+      (customCakeConfig.toppings?.length || 0) * AI_TOPPING_PRICE
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Budget Categories */}
@@ -227,6 +281,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
               Frosting Color
             </label>
             <div className="flex space-x-2">
+              {/* Add new frosting colors: Chocolate and Cream */}
               {[
                 "bg-pink-400",
                 "bg-blue-400",
@@ -234,6 +289,8 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                 "bg-yellow-400",
                 "bg-purple-400",
                 "bg-white",
+                "bg-orange-900", // Chocolate (brown)
+                "bg-cream-200", // Cream (light yellow)
               ].map((color) => (
                 <button
                   key={color}
@@ -246,6 +303,8 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                   title={color
                     .replace("bg-", "")
                     .replace("-400", "")
+                    .replace("-200", "")
+                    .replace("-900", "")
                     .replace("-", " ")
                     .replace(/\b\w/g, (l) => l.toUpperCase())}
                 />
@@ -289,6 +348,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Toppings
             </label>
+            {/* Simple toppings: just checkboxes, no quantity selector */}
             <div className="space-y-2">
               {["Fresh Berries", "Chocolate Chips", "Nuts"].map((topping) => (
                 <label key={topping} className="flex items-center">
@@ -319,10 +379,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                 id: Date.now(),
                 name: `Custom ${customCakeConfig.flavor} Cake`,
                 ...customCakeConfig,
-                price:
-                  1000 +
-                  customCakeConfig.layers * 300 +
-                  customCakeConfig.toppings.length * 100,
+                price: calculatePrice(), // Use dynamic price
                 image: "🎂",
                 isCustom: true,
               })
@@ -333,6 +390,27 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           </button>
         </div>
       </div>
+      <CakePreview3D
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        cakeConfig={customCakeConfig}
+        onAddToCart={(cake) => {
+          if (typeof cake === "object" && cake !== null) {
+            handleAddToCart({ ...cake, price: calculatePrice() });
+          } else {
+            handleAddToCart({
+              id: Date.now(),
+              name: `Custom ${customCakeConfig.flavor} Cake`,
+              ...customCakeConfig,
+              price: calculatePrice(),
+              image: "🎂",
+              isCustom: true,
+            });
+          }
+          setShowPreview(false);
+        }}
+        price={calculatePrice()}
+      />
     </div>
   );
 };
