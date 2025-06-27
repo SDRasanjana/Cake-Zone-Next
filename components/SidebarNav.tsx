@@ -28,22 +28,24 @@ export default function SidebarNav({
     { name: "Financial Advisor", icon: Brain },
   ];
   return (
-    <div className="h-full flex flex-col bg-white shadow-md rounded-lg">
+    <div className="h-full flex flex-col bg-white shadow-md">
       {/* Logo Section */}
-      <div className="p-6 border-b border-orange-100">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
+      <div className="py-6 px-5 border-b border-orange-100">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
             <span className="text-white text-xl font-bold">🍰</span>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Cake Zone</h1>
-            <p className="text-sm text-gray-500 font-medium">Owner Dashboard</p>
+          <div className="text-center mt-2">
+            <h1 className="text-xl font-bold text-gray-900">Owner Dashboard</h1>
+            <p className="text-sm text-orange-500 font-medium mt-1">
+              {activeTab}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+      <nav className="flex-1 py-4 px-4 space-y-2.5 overflow-y-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.name;
@@ -52,9 +54,9 @@ export default function SidebarNav({
             <button
               key={tab.name}
               onClick={() => setActiveTab(tab.name)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-left transition-all duration-200 ${
                 isActive
-                  ? "bg-orange-500 text-white shadow-lg"
+                  ? "bg-orange-500 text-white shadow-sm"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
