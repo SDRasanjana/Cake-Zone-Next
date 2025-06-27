@@ -1,6 +1,8 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import PeriodDateSelector from "./PeriodDateSelector";
+import ReportCard from "./ReportCard";
 
 // Types
 type PeriodType = 'daily' | 'weekly' | 'monthly';
@@ -315,37 +317,12 @@ export default function Reports() {
   return (
     <div className="space-y-6 font-sans">
       <h2 className="text-2xl font-extrabold text-gray-800">Reports</h2>
-      <div className="flex flex-wrap gap-6 items-center mb-8 p-4 bg-orange-50 border border-orange-200 rounded-lg shadow-sm">
-        <div className="flex flex-col">
-          <label htmlFor="period-select" className="font-bold text-orange-700 mb-1">Period</label>
-          <select
-            id="period-select"
-            value={period}
-            onChange={e => setPeriod(e.target.value)}
-            className="border-2 border-orange-300 rounded px-3 py-2 text-lg font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-gray-900"
-            title="Select report period"
-          >
-            <option value="daily" className="text-black">Daily</option>
-            <option value="weekly" className="text-black">Weekly</option>
-            <option value="monthly" className="text-black">Monthly</option>
-          </select>
-        </div>
-        <div className="flex flex-col">
-          <label htmlFor="date-select" className="font-bold text-orange-700 mb-1">Reference Date</label>
-          <input
-            id="date-select"
-            type="date"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            className="border-2 border-orange-300 rounded px-3 py-2 text-lg font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-black"
-            title="Select reference date"
-          />
-        </div>
-        <div className="flex flex-col justify-end ml-6">
-          <span className="font-bold text-black text-lg">Selected Period: {period.charAt(0).toUpperCase() + period.slice(1)}</span>
-          <span className="font-bold text-black text-lg">Selected Date: {selectedDate}</span>
-        </div>
-      </div>
+      <PeriodDateSelector
+        period={period as PeriodType}
+        selectedDate={selectedDate}
+        setPeriod={setPeriod}
+        setSelectedDate={setSelectedDate}
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div
           className={`bg-white border border-orange-200 rounded-lg shadow p-6 flex items-center space-x-4 transition cursor-pointer ${activeCard === "orders" ? "ring-2 ring-orange-500" : "hover:shadow-lg hover:border-orange-400"}`}
@@ -374,26 +351,21 @@ export default function Reports() {
       </div>
       {/* Show summary and download/view for selected card */}
       {activeCard === "orders" && (
-        <div className="bg-white rounded shadow p-4 mb-6">
-          <h2 className="text-lg font-semibold mb-2 text-gray-800">Order Summary</h2>
-          <pre className="whitespace-pre-wrap text-gray-700 mb-4 font-mono text-base">{orderSummary}</pre>
-          <div className="flex gap-4">
-            <button onClick={handleOrderDownload} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold shadow">Download Orders PDF</button>
-            <button onClick={handleOrderView} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold shadow">View Orders PDF</button>
-          </div>
-        </div>
+        <ReportCard
+          title="Order Summary"
+          summary={orderSummary}
+          onDownload={handleOrderDownload}
+          onView={handleOrderView}
+        />
       )}
       {activeCard === "expenses" && (
-        <div className="bg-white rounded shadow p-4 mb-6">
-          <h2 className="text-lg font-semibold mb-2 text-gray-800">Expenses Summary</h2>
-          <pre className="whitespace-pre-wrap text-gray-700 mb-4 font-mono text-base">{expensesSummary}</pre>
-          <div className="flex gap-4">
-            <button onClick={handleExpensesDownload} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold shadow">Download Expenses PDF</button>
-            <button onClick={handleExpensesView} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold shadow">View Expenses PDF</button>
-          </div>
-        </div>
+        <ReportCard
+          title="Expenses Summary"
+          summary={expensesSummary}
+          onDownload={handleExpensesDownload}
+          onView={handleExpensesView}
+        />
       )}
-
       {/* PDF Viewer Modal */}
       {showModal && Viewer && Worker && defaultLayout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
