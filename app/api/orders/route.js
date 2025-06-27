@@ -6,7 +6,8 @@
 import clientPromise from "@/lib/mongodb";
 
 export async function POST(req) {
-  const { cartItems, shipping, userId, total } = await req.json();
+  // Get deliveryDate from request body
+  const { cartItems, shipping, userId, total, deliveryDate } = await req.json();
   const client = await clientPromise;
   const db = client.db();
   // Insert the order document using the native MongoDB driver
@@ -15,6 +16,7 @@ export async function POST(req) {
     items: cartItems,
     shipping,
     total,
+    deliveryDate, // Store delivery date in DB
     paymentStatus: "pending",
     createdAt: new Date(),
     updatedAt: new Date(),
