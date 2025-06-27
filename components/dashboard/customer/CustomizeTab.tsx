@@ -251,12 +251,12 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             <select
               value={customCakeConfig.flavor}
               onChange={(e) => handleConfigChange("flavor", e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black" // Force black text
               aria-label="Flavor"
             >
-              <option>Chocolate</option>
-              <option>Vanilla</option>
-              <option>Strawberry</option>
+              <option className="text-black">Chocolate</option>
+              <option className="text-black">Vanilla</option>
+              <option className="text-black">Strawberry</option>
             </select>
           </div>
           <div>
@@ -268,12 +268,18 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
               onChange={(e) =>
                 handleConfigChange("layers", parseInt(e.target.value))
               }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black" // Force black text
               aria-label="Layers"
             >
-              <option value={1}>1 Layer</option>
-              <option value={2}>2 Layers</option>
-              <option value={3}>3 Layers</option>
+              <option value={1} className="text-black">
+                1 Layer
+              </option>
+              <option value={2} className="text-black">
+                2 Layers
+              </option>
+              <option value={3} className="text-black">
+                3 Layers
+              </option>
             </select>
           </div>
           <div>
@@ -320,8 +326,8 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                 onClick={() => handleConfigChange("shape", "round")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${
                   customCakeConfig.shape === "round"
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-200"
+                    ? "border-orange-500 bg-orange-50 text-black"
+                    : "border-gray-200 text-black"
                 }`}
               >
                 <span className="w-4 h-4 rounded-full bg-gray-300 inline-block" />
@@ -331,8 +337,8 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                 onClick={() => handleConfigChange("shape", "square")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${
                   customCakeConfig.shape === "square"
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-200"
+                    ? "border-orange-500 bg-orange-50 text-black"
+                    : "border-gray-200 text-black"
                 }`}
               >
                 <span

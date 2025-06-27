@@ -221,14 +221,21 @@ const CheckoutPage: React.FC = () => {
     phone: "",
     email: "",
   });
-  // Save shipping details to localStorage for persistence
+  // Delivery date state
+  const [deliveryDate, setDeliveryDate] = useState<string>("");
+  // Save shipping details and delivery date to localStorage for persistence
   useEffect(() => {
     const saved = localStorage.getItem("checkout_shipping");
     if (saved) setShipping(JSON.parse(saved));
+    const savedDate = localStorage.getItem("checkout_deliveryDate");
+    if (savedDate) setDeliveryDate(savedDate);
   }, []);
   useEffect(() => {
     localStorage.setItem("checkout_shipping", JSON.stringify(shipping));
   }, [shipping]);
+  useEffect(() => {
+    localStorage.setItem("checkout_deliveryDate", deliveryDate);
+  }, [deliveryDate]);
 
   // Create order in DB after shipping step
   const handleShippingSubmit = async (e: React.FormEvent) => {
@@ -243,6 +250,7 @@ const CheckoutPage: React.FC = () => {
         body: JSON.stringify({
           cartItems: cartState.items,
           shipping,
+          deliveryDate, // Pass delivery date to backend
           userId: user?.id || "guest",
           total: cartState.items.reduce(
             (sum, item) => sum + item.price * item.quantity,
@@ -279,7 +287,7 @@ const CheckoutPage: React.FC = () => {
       body: JSON.stringify({
         orderId,
         cartItems: cartState.items,
-        deliveryDate: cartState.deliveryDate,
+        deliveryDate, // Pass delivery date to payment intent
       }),
     })
       .then(async (res) => {
@@ -303,7 +311,7 @@ const CheckoutPage: React.FC = () => {
       .finally(() => {
         setIsLoadingIntent(false);
       });
-  }, [step, orderId, cartState]);
+  }, [step, orderId, cartState, deliveryDate]);
 
   // Block checkout if cart is empty
   useEffect(() => {
@@ -503,6 +511,19 @@ const CheckoutPage: React.FC = () => {
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
                   />
                 </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium mb-1">
+                    Delivery Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    min={new Date().toISOString().split("T")[0]}
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200"
+                  />
+                </div>
               </div>
               <div className="flex justify-between mt-6">
                 <button
@@ -538,6 +559,12 @@ const CheckoutPage: React.FC = () => {
                 </div>
                 <div className="text-gray-400 text-sm">
                   {shipping.email} | {shipping.phone}
+                </div>
+                <div className="text-gray-400 text-sm mt-2">
+                  <span className="font-semibold text-pink-300">
+                    Delivery Date:
+                  </span>{" "}
+                  {deliveryDate}
                 </div>
               </div>
               {/* Order Items */}
