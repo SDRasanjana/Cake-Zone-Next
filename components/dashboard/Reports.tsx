@@ -1,5 +1,4 @@
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import PeriodDateSelector from "./PeriodDateSelector";
 import ReportCard from "./ReportCard";
@@ -35,11 +34,11 @@ export default function Reports() {
   const [activeCard, setActiveCard] = useState<"orders" | "expenses" | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [defaultLayout, setDefaultLayout] = useState<any>(null);
-  const [Viewer, setViewer] = useState<any>(null);
-  const [Worker, setWorker] = useState<any>(null);
+  const [defaultLayout, setDefaultLayout] = useState<ReturnType<any> | null>(null);
+  const [Viewer, setViewer] = useState<React.ComponentType<any> | null>(null);
+  const [Worker, setWorker] = useState<React.ComponentType<any> | null>(null);
   const [loadingPdf, setLoadingPdf] = useState(false);
-  const [period, setPeriod] = useState("daily");
+  const [period, setPeriod] = useState<PeriodType>("daily");
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = new Date();
     return d.toISOString().slice(0, 10);
@@ -84,7 +83,7 @@ export default function Reports() {
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const fontSize = 12;
-    let title = type === "orders" ? "Orders Report" : "Expenses Report";
+    const title = type === "orders" ? "Orders Report" : "Expenses Report";
     let headers: string[], rows: DataRow[];
     if (type === "orders") {
       headers = ["Order ID", "Date", "Customer", "Amount (Rs.)"];
@@ -276,33 +275,6 @@ export default function Reports() {
     const url = await generateDummyPdfUrl("expenses");
     window.open(url, "_blank");
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-  };
-
-  const fetchAndShowPdf = async (type: "orders" | "expenses") => {
-    setLoadingPdf(true);
-    // Use dummy PDF generator instead of fetch
-    const url = await generateDummyPdfUrl(type);
-    // Dynamically import PDF viewer only on client
-    let ViewerComp = null;
-    let WorkerComp = null;
-    let layoutPlugin = null;
-    if (typeof window !== "undefined") {
-      const mod = await import("@react-pdf-viewer/core");
-      const layoutMod = await import("@react-pdf-viewer/default-layout");
-      // @ts-ignore
-      await import("@react-pdf-viewer/core/lib/styles/index.css");
-      // @ts-ignore
-      await import("@react-pdf-viewer/default-layout/lib/styles/index.css");
-      ViewerComp = mod.Viewer;
-      WorkerComp = mod.Worker;
-      layoutPlugin = layoutMod.defaultLayoutPlugin();
-    }
-    setPdfUrl(url);
-    setViewer(() => ViewerComp);
-    setWorker(() => WorkerComp);
-    setDefaultLayout(() => layoutPlugin);
-    setShowModal(true);
-    setLoadingPdf(false);
   };
 
   const closeModal = () => {
