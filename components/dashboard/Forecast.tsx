@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { TrendingUp, RefreshCw, AlertTriangle } from "lucide-react";
 
@@ -13,32 +13,6 @@ interface ForecastDataPoint {
 }
 
 export default function Forecast() {
-  // Available ingredients to forecast with meta information
-  const ingredientsInfo = {
-    Flour: {
-      icon: "🌾",
-      description: "Essential for all baked goods",
-      basePrice: "Rs. 250/kg",
-    },
-    Sugar: {
-      icon: "🍬",
-      description: "Sweetener for cakes and desserts",
-      basePrice: "Rs. 180/kg",
-    },
-    Eggs: {
-      icon: "🥚",
-      description: "Provides structure and richness",
-      basePrice: "Rs. 320/dozen",
-    },
-    Butter: {
-      icon: "🧈",
-      description: "Adds flavor and moisture",
-      basePrice: "Rs. 450/kg",
-    },
-  };
-
-  const availableIngredients = Object.keys(ingredientsInfo);
-
   interface InsightData {
     trend: string;
     percentage_change: number;
@@ -48,7 +22,6 @@ export default function Forecast() {
     forecast_date: string;
   }
 
-  const [selectedIngredient, setSelectedIngredient] = useState<string>("Flour");
   const [pythonForecastData, setPythonForecastData] = useState<
     ForecastDataPoint[] | null
   >(null);
@@ -59,54 +32,48 @@ export default function Forecast() {
   const [pythonForecastError, setPythonForecastError] = useState<string | null>(
     null
   );
-  const [forecastImageUrl, setForecastImageUrl] = useState<string>(
-    "/flour_price_forecast.png"
-  );
+  const [, setPythonForecastTimestamp] = useState<string>("");
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  // Function to run Python forecast script via API for selected ingredient
-  const runPythonForecast = useCallback(
-    async (ingredient = selectedIngredient) => {
-      setPythonForecastLoading(true);
-      setPythonForecastError(null);
+  // Function to run Python forecast script via API
+  const runPythonForecast = async () => {
+    setPythonForecastLoading(true);
+    setPythonForecastError(null);
 
-      try {
-        const response = await fetch(
-          `/api/forecast/run-python?ingredient=${ingredient}`
-        );
-        const data = await response.json();
-        if (data.success) {
-          // Check if forecastData exists and is an array before setting state
-          if (data.forecastData && Array.isArray(data.forecastData)) {
-            setPythonForecastData(data.forecastData);
-            setForecastImageUrl(data.forecastImageUrl);
-            setLastUpdated(new Date().toLocaleString());
+    try {
+      const response = await fetch("/api/forecast/run-python");
+      const data = await response.json();
+      if (data.success) {
+        // Check if forecastData exists and is an array before setting state
+        if (data.forecastData && Array.isArray(data.forecastData)) {
+          setPythonForecastData(data.forecastData);
+          setPythonForecastTimestamp(data.timestamp);
+          setLastUpdated(new Date().toLocaleString());
 
-            // Set insights if available
-            if (data.insights) {
-              setPythonForecastInsights(data.insights);
-            }
-          } else {
-            setPythonForecastError("Received invalid forecast data format");
+          // Set insights if available
+          if (data.insights) {
+            setPythonForecastInsights(data.insights);
           }
         } else {
-          setPythonForecastError(data.error || "Failed to generate forecast");
+          setPythonForecastError("Received invalid forecast data format");
         }
-      } catch (err) {
-        setPythonForecastError(
-          "Error running forecast: " +
-            (err instanceof Error ? err.message : "Unknown error")
-        );
-      } finally {
-        setPythonForecastLoading(false);
+      } else {
+        setPythonForecastError(data.error || "Failed to generate forecast");
       }
-    },
-    [selectedIngredient]
-  );
-  // Load Python forecast data on initial component mount or when ingredient changes
+    } catch (err) {
+      setPythonForecastError(
+        "Error running forecast: " +
+          (err instanceof Error ? err.message : "Unknown error")
+      );
+    } finally {
+      setPythonForecastLoading(false);
+    }
+  };
+
+  // Load Python forecast data on initial component mount
   useEffect(() => {
-    runPythonForecast(selectedIngredient);
+    runPythonForecast();
     setLastUpdated(new Date().toLocaleString());
-  }, [selectedIngredient, runPythonForecast]);
+  }, []);
 
   return (
     <div className="space-y-6 p-4">
@@ -115,83 +82,9 @@ export default function Forecast() {
         <div className="text-sm text-gray-500">
           {lastUpdated && `Last updated: ${lastUpdated}`}
         </div>
-      </div>{" "}
-      {/* Ingredient Selection */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <h3 className="text-lg font-medium text-gray-800 mb-3">
-          Select Ingredient for Forecast
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          {availableIngredients.map((ingredient) => (
-            <div
-              key={ingredient}
-              onClick={() => setSelectedIngredient(ingredient)}
-              className={`cursor-pointer p-4 rounded-lg border transition-all duration-200
-                ${
-                  selectedIngredient === ingredient
-                    ? "border-orange-500 bg-orange-50 shadow-md scale-[1.02]"
-                    : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30"
-                }`}
-            >
-              <div className="flex items-center mb-2">
-                <span
-                  className="text-2xl mr-2"
-                  role="img"
-                  aria-label={ingredient}
-                >
-                  {
-                    ingredientsInfo[ingredient as keyof typeof ingredientsInfo]
-                      .icon
-                  }
-                </span>
-                <h4 className="font-semibold text-gray-800">{ingredient}</h4>
-              </div>
-              <p className="text-sm text-gray-500 mb-2">
-                {
-                  ingredientsInfo[ingredient as keyof typeof ingredientsInfo]
-                    .description
-                }
-              </p>
-              <p className="text-xs text-gray-600 font-medium">
-                Base price:{" "}
-                {
-                  ingredientsInfo[ingredient as keyof typeof ingredientsInfo]
-                    .basePrice
-                }
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-between items-center border-t border-gray-100 pt-3">
-          <p className="text-sm text-gray-500">
-            Selected:{" "}
-            <span className="font-medium text-gray-800">
-              {selectedIngredient}
-            </span>
-          </p>
-
-          <button
-            onClick={() => runPythonForecast(selectedIngredient)}
-            disabled={pythonForecastLoading}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm flex items-center space-x-1 transition-colors disabled:bg-gray-400"
-          >
-            {pythonForecastLoading ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin mr-1" />
-                <span>Processing...</span>
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4 mr-1" />
-                <span>Update Forecast</span>
-              </>
-            )}
-          </button>
-        </div>
       </div>
-      {/* Python-Generated Price Forecast */}
+
+      {/* Python-Generated Flour Price Forecast */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-r from-orange-50 to-white p-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
@@ -201,13 +94,48 @@ export default function Forecast() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">
-                  {selectedIngredient} Price Forecast
+                  Flour Price Forecast
                 </h2>
                 <p className="text-sm text-gray-500">
                   Machine learning prediction for next 7 days
                 </p>
               </div>
             </div>
+
+            <button
+              onClick={runPythonForecast}
+              disabled={pythonForecastLoading}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm flex items-center space-x-1 transition-colors"
+            >
+              {pythonForecastLoading ? (
+                <>
+                  <svg
+                    className="animate-spin h-4 w-4 mr-2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Updating...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  <span>Update Forecast</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -224,8 +152,8 @@ export default function Forecast() {
               {/* Display the forecast image */}
               <div className="flex justify-center border border-gray-100 rounded-lg p-4 bg-gray-50">
                 <Image
-                  src={forecastImageUrl}
-                  alt={`${selectedIngredient} Price Forecast`}
+                  src="/flour_price_forecast.png"
+                  alt="Flour Price Forecast"
                   width={700}
                   height={400}
                   className="rounded-md shadow-sm"
@@ -290,7 +218,7 @@ export default function Forecast() {
                       {pythonForecastInsights ? (
                         <>
                           <li>
-                            {selectedIngredient} prices show a{" "}
+                            Flour prices show a{" "}
                             <span
                               className={
                                 pythonForecastInsights.trend === "increasing"
@@ -328,32 +256,18 @@ export default function Forecast() {
                             Price range: Rs.{" "}
                             {pythonForecastInsights.lowest_price.toFixed(2)} to{" "}
                             {pythonForecastInsights.highest_price.toFixed(2)}
-                          </li>{" "}
+                          </li>
                           <li>
-                            <span className="font-medium">
-                              Recommended action:{" "}
-                            </span>
                             {pythonForecastInsights.trend === "increasing"
                               ? "Consider bulk purchasing now before prices rise further"
                               : "Consider waiting for better prices before bulk purchasing"}
-                          </li>
-                          <li>
-                            <span className="font-medium">Updated on: </span>
-                            {pythonForecastInsights.forecast_date}
-                          </li>
-                          <li className="pt-2">
-                            <span className="px-2 py-1 bg-orange-100 rounded text-xs font-medium text-orange-700">
-                              {pythonForecastInsights.trend === "increasing"
-                                ? "⚠️ May need to adjust cake prices if trend continues"
-                                : "✓ Current cake pricing should remain competitive"}
-                            </span>
                           </li>
                         </>
                       ) : pythonForecastData &&
                         pythonForecastData.length > 1 ? (
                         <>
                           <li>
-                            {selectedIngredient} prices show a{" "}
+                            Flour prices show a{" "}
                             {Number(
                               pythonForecastData[pythonForecastData.length - 1]
                                 .yhat
@@ -392,6 +306,7 @@ export default function Forecast() {
           )}
         </div>
       </div>
+
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <h3 className="font-semibold text-gray-800 mb-3">
           Additional Resources
