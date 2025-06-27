@@ -3,19 +3,11 @@ import { exec } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-export async function GET(request) {
+export async function GET() {
     try {
-        // Get the ingredient from query parameters (default to flour)
-        const url = new URL(request.url);
-        const ingredient = url.searchParams.get('ingredient') || 'Flour';
-
-        console.log(`Generating forecast for ingredient: ${ingredient}`);
-
         // Execute the Python script
-        const scriptsDir = path.join(process.cwd(), 'scripts');
-
-        // Use the more flexible script for any ingredient
-        const scriptPath = path.join(scriptsDir, 'forecast_sugar_price.py');
+        const scriptsDir = path.join(process.cwd(), 'scripts');        // Check if Python script exists before running
+        const scriptPath = path.join(scriptsDir, 'forecast_flour_price.py');
         const scriptExists = await fs.stat(scriptPath).catch(() => null);
 
         if (!scriptExists) {
@@ -24,7 +16,7 @@ export async function GET(request) {
 
         // Use a promise to handle the exec callback with improved error handling
         const runScript = new Promise((resolve, reject) => {
-            exec(`python "${scriptPath}" "${ingredient}"`, (error, stdout, stderr) => {
+            exec(`python "${scriptPath}"`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing script: ${error.message}`);
                     return reject(new Error(`Failed to execute Python script: ${error.message}`));
@@ -36,10 +28,11 @@ export async function GET(request) {
             });
         });
 
-        const output = await runScript;        // Check if the forecast JSON file exists (using lowercase ingredient name)
-        const ingredientLower = ingredient.toLowerCase();
-        const forecastDataPath = path.join(process.cwd(), 'public', `${ingredientLower}_price_forecast_data.json`);
-        const insightsPath = path.join(process.cwd(), 'public', `${ingredientLower}_price_insights.json`);
+        const output = await runScript;
+
+        // Check if the forecast JSON file exists
+        const forecastDataPath = path.join(process.cwd(), 'public', 'flour_price_forecast_data.json');
+        const insightsPath = path.join(process.cwd(), 'public', 'flour_price_insights.json');
         let forecastData = null;
         let insights = null;
         // Read forecast data and insights with improved error handling
@@ -79,12 +72,11 @@ export async function GET(request) {
 
         return NextResponse.json({
             success: true,
-            message: `${ingredient} price forecast generated successfully`,
+            message: 'Forecast generated successfully',
             output: output,
             forecastData: forecastData,
             insights: insights,
-            ingredient: ingredient,
-            forecastImageUrl: `/${ingredientLower}_price_forecast.png`,
+            forecastImageUrl: '/flour_price_forecast.png',
             timestamp: new Date().toISOString()
         });
     } catch (error) {
