@@ -127,7 +127,7 @@ export default function OwnerDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <TopHeader activeTab={activeTab} userType="Owner" />
+        <TopHeader />
         <main className="flex-1 p-6 overflow-auto">
           <ErrorBoundary
             FallbackComponent={ErrorFallback}
