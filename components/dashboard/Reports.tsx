@@ -2,9 +2,14 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
-function getPeriodRange(period, baseDate) {
+// Types
+type PeriodType = 'daily' | 'weekly' | 'monthly';
+type DataRow = [string, string, string, string];
+
+function getPeriodRange(period: PeriodType, baseDate: string) {
   const date = new Date(baseDate);
-  let start, end;
+  let start: Date, end: Date;
+
   if (period === "daily") {
     start = new Date(date);
     end = new Date(date);
@@ -14,10 +19,11 @@ function getPeriodRange(period, baseDate) {
     start.setDate(date.getDate() - day);
     end = new Date(start);
     end.setDate(start.getDate() + 6);
-  } else if (period === "monthly") {
+  } else {
     start = new Date(date.getFullYear(), date.getMonth(), 1);
     end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
   }
+  
   start.setHours(0,0,0,0);
   end.setHours(23,59,59,999);
   return { start, end };
@@ -38,7 +44,7 @@ export default function Reports() {
   });
 
   // Dummy data for demonstration; replace with real API calls as needed
-  const orderData = [
+  const orderData: DataRow[] = [
     ["ORD001", "2025-06-27", "John Doe", "2,000"],
     ["ORD002", "2025-06-27", "Jane Smith", "1,500"],
     ["ORD003", "2025-06-27", "Alice Lee", "1,200"],
@@ -46,7 +52,7 @@ export default function Reports() {
     ["ORD005", "2025-06-26", "Carol Brown", "1,800"],
     ["ORD006", "2025-06-26", "David Clark", "900"],
   ];
-  const expensesData = [
+  const expensesData: DataRow[] = [
     ["EXP001", "2025-06-27", "Ingredients", "500"],
     ["EXP002", "2025-06-27", "Utilities", "300"],
     ["EXP003", "2025-06-27", "Packaging", "700"],
@@ -55,9 +61,9 @@ export default function Reports() {
     ["EXP006", "2025-06-26", "Marketing", "800"],
   ];
 
-  function filterRows(rows) {
-    const { start, end } = getPeriodRange(period, selectedDate);
-    return rows.filter(row => {
+  function filterRows(rows: DataRow[]) {
+    const { start, end } = getPeriodRange(period as PeriodType, selectedDate);
+    return rows.filter((row: DataRow) => {
       const rowDate = new Date(row[1]);
       return rowDate >= start && rowDate <= end;
     });
@@ -66,8 +72,8 @@ export default function Reports() {
   const filteredOrders = filterRows(orderData);
   const filteredExpenses = filterRows(expensesData);
 
-  const orderSummary = `Order Summary\nTotal Orders: ${filteredOrders.length}\nTotal Amount: Rs. ${filteredOrders.reduce((sum, row) => sum + parseInt(row[3].replace(/,/g, '')), 0).toLocaleString()}`;
-  const expensesSummary = `Expenses Summary\nTotal Expenses: Rs. ${filteredExpenses.reduce((sum, row) => sum + parseInt(row[3].replace(/,/g, '')), 0).toLocaleString()}`;
+  const orderSummary = `Order Summary\nTotal Orders: ${filteredOrders.length}\nTotal Amount: Rs. ${filteredOrders.reduce((sum: number, row: DataRow) => sum + parseInt(row[3].replace(/,/g, '')), 0).toLocaleString()}`;
+  const expensesSummary = `Expenses Summary\nTotal Expenses: Rs. ${filteredExpenses.reduce((sum: number, row: DataRow) => sum + parseInt(row[3].replace(/,/g, '')), 0).toLocaleString()}`;
 
   // Helper to generate dummy PDF as Blob
   const generateDummyPdfBlob = async (type: "orders" | "expenses") => {
@@ -77,7 +83,7 @@ export default function Reports() {
     const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const fontSize = 12;
     let title = type === "orders" ? "Orders Report" : "Expenses Report";
-    let headers, rows;
+    let headers: string[], rows: DataRow[];
     if (type === "orders") {
       headers = ["Order ID", "Date", "Customer", "Amount (Rs.)"];
       rows = filteredOrders;
@@ -316,8 +322,7 @@ export default function Reports() {
             id="period-select"
             value={period}
             onChange={e => setPeriod(e.target.value)}
-            className="border-2 border-orange-300 rounded px-3 py-2 text-lg font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-black"
-            style={{ color: '#111' }}
+            className="border-2 border-orange-300 rounded px-3 py-2 text-lg font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-gray-900"
             title="Select report period"
           >
             <option value="daily" className="text-black">Daily</option>
@@ -332,7 +337,7 @@ export default function Reports() {
             type="date"
             value={selectedDate}
             onChange={e => setSelectedDate(e.target.value)}
-            className="border-2 border-orange-300 rounded px-3 py-2 text-lg font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="border-2 border-orange-300 rounded px-3 py-2 text-lg font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-black"
             title="Select reference date"
           />
         </div>
@@ -395,7 +400,7 @@ export default function Reports() {
           <div className="bg-white rounded-lg overflow-hidden shadow-lg max-w-3xl w-full">
             <div className="flex justify-between items-center bg-gray-100 px-4 py-2">
               <h3 className="text-lg font-semibold text-gray-800">PDF Viewer</h3>
-              <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
+              <button onClick={closeModal} className="text-gray-500 hover:text-gray-700" title="Close PDF viewer" aria-label="Close PDF viewer">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
