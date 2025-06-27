@@ -146,6 +146,13 @@ const OverviewTab: React.FC<{ setActiveTab: (tab: DashboardTab) => void }> = ({
                       ? new Date(order.createdAt).toLocaleDateString()
                       : "-"}
                   </p>
+                  {/* Show delivery date if available */}
+                  {order.deliveryDate && (
+                    <p className="text-sm text-pink-600 font-semibold">
+                      Delivery:{" "}
+                      {new Date(order.deliveryDate).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="text-right">
