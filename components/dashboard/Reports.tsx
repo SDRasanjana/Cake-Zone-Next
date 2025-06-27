@@ -18,74 +18,161 @@ export default function Reports() {
   // Helper to generate dummy PDF as Blob
   const generateDummyPdfBlob = async (type: "orders" | "expenses") => {
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 400]);
+    const page = pdfDoc.addPage([600, 800]); // Increased page height
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontSize = 16;
-    let title = type === "orders" ? "Order Summary" : "Expenses Summary";
+    const fontSize = 12; // Reduced font size
+    let title = type === "orders" ? "Orders Report" : "Expenses Report";
     let headers, rows;
+    
     if (type === "orders") {
       headers = ["Order ID", "Date", "Customer", "Amount (Rs.)"];
       rows = [
-        ["ORD001", "2025-06-26", "John Doe", "2,000"],
-        ["ORD002", "2025-06-26", "Jane Smith", "1,500"],
-        ["ORD003", "2025-06-25", "Alice Lee", "1,200"],
+        ["ORD001", "2025-06-27", "John Doe", "2,000"],
+        ["ORD002", "2025-06-27", "Jane Smith", "1,500"],
+        ["ORD003", "2025-06-27", "Alice Lee", "1,200"],
+        ["ORD004", "2025-06-26", "Bob Wilson", "2,300"],
+        ["ORD005", "2025-06-26", "Carol Brown", "1,800"],
+        ["ORD006", "2025-06-26", "David Clark", "900"],
       ];
     } else {
-      headers = ["Expense", "Date", "Category", "Amount (Rs.)"];
+      headers = ["Expense ID", "Date", "Category", "Amount (Rs.)"];
       rows = [
-        ["Flour", "2025-06-26", "Ingredients", "500"],
-        ["Sugar", "2025-06-25", "Ingredients", "300"],
-        ["Electricity", "2025-06-24", "Utilities", "700"],
+        ["EXP001", "2025-06-27", "Ingredients", "500"],
+        ["EXP002", "2025-06-27", "Utilities", "300"],
+        ["EXP003", "2025-06-27", "Packaging", "700"],
+        ["EXP004", "2025-06-26", "Equipment", "1,500"],
+        ["EXP005", "2025-06-26", "Labor", "2,000"],
+        ["EXP006", "2025-06-26", "Marketing", "800"],
       ];
     }
-    // Title
-    page.drawText(title, { x: 40, y: 370, size: 20, font, color: rgb(0.2,0.2,0.2) });
-    // Table
-    const startY = 310; // moved down for more top margin
-    const rowHeight = 32;
-    const colWidths = [110, 110, 180, 120];
-    // Draw header background
-    page.drawRectangle({ x: 40, y: startY - rowHeight + 6, width: 520, height: rowHeight, color: rgb(0.95,0.6,0.2) });
+
+    // Document Title
+    page.drawText(title, {
+      x: 50,
+      y: 750,
+      size: 24,
+      font,
+      color: rgb(0.2, 0.2, 0.2)
+    });
+
+    // Date
+    page.drawText(`Generated on: ${new Date().toLocaleDateString()}`, {
+      x: 50,
+      y: 720,
+      size: 12,
+      font: fontRegular,
+      color: rgb(0.4, 0.4, 0.4)
+    });
+
+    // Table Constants
+    const startY = 680;
+    const rowHeight = 30;
+    const colWidths = [120, 120, 160, 100];
+    const tableWidth = colWidths.reduce((sum, width) => sum + width, 0);
+    const startX = 50;
+    
+    // Draw table border
+    page.drawRectangle({
+      x: startX,
+      y: startY - (rows.length + 1) * rowHeight,
+      width: tableWidth,
+      height: (rows.length + 1) * rowHeight,
+      borderColor: rgb(0.8, 0.8, 0.8),
+      borderWidth: 1,
+    });
+
+    // Draw header
+    page.drawRectangle({
+      x: startX,
+      y: startY - rowHeight,
+      width: tableWidth,
+      height: rowHeight,
+      color: rgb(0.95, 0.6, 0.2)
+    });
+
     // Draw headers
-    let x = 40;
+    let currentX = startX + 10;
     headers.forEach((header, i) => {
       page.drawText(header, {
-        x,
-        y: startY,
+        x: currentX,
+        y: startY - rowHeight/2,
         size: fontSize,
         font,
-        color: rgb(1,1,1),
+        color: rgb(1, 1, 1)
       });
-      x += colWidths[i];
+      currentX += colWidths[i];
     });
+
     // Draw rows
-    rows.forEach((row, rowIdx) => {
-      let y = startY - (rowIdx + 1) * rowHeight;
+    rows.forEach((row, rowIndex) => {
+      const y = startY - (rowIndex + 2) * rowHeight;
+      
       // Alternate row background
-      if (rowIdx % 2 === 0) {
-        page.drawRectangle({ x: 40, y: y - 6, width: 520, height: rowHeight, color: rgb(0.98,0.93,0.85) });
+      if (rowIndex % 2 === 0) {
+        page.drawRectangle({
+          x: startX,
+          y: y,
+          width: tableWidth,
+          height: rowHeight,
+          color: rgb(0.98, 0.98, 0.98)
+        });
       }
-      let x = 40;
-      row.forEach((cell, colIdx) => {
+
+      // Draw vertical lines
+      let lineX = startX;
+      colWidths.forEach(width => {
+        page.drawLine({
+          start: { x: lineX, y: startY - rowHeight },
+          end: { x: lineX, y: startY - (rows.length + 1) * rowHeight },
+          thickness: 1,
+          color: rgb(0.8, 0.8, 0.8)
+        });
+        lineX += width;
+      });
+
+      // Draw cell content
+      let x = startX + 10;
+      row.forEach((cell, colIndex) => {
         page.drawText(cell, {
           x,
-          y,
+          y: y + rowHeight/3,
           size: fontSize,
           font: fontRegular,
-          color: rgb(0.2,0.2,0.2),
+          color: rgb(0.2, 0.2, 0.2)
         });
-        x += colWidths[colIdx];
+        x += colWidths[colIndex];
       });
     });
-    // Add more space below the table before the summary
-    let summaryY = startY - (rows.length + 3.2) * rowHeight;
-    if (type === "orders") {
-      page.drawText(`Total Orders: ${rows.length}`, { x: 40, y: summaryY, size: 15, font, color: rgb(0.2,0.2,0.2) });
-      page.drawText(`Total Amount: Rs. 4,700`, { x: 250, y: summaryY, size: 15, font, color: rgb(0.2,0.2,0.2) });
-    } else {
-      page.drawText(`Total Expenses: Rs. 1,500`, { x: 40, y: summaryY, size: 15, font, color: rgb(0.2,0.2,0.2) });
-    }
+
+    // Draw summary section
+    const summaryY = startY - (rows.length + 2) * rowHeight;
+    const totalAmount = rows.reduce((sum, row) => sum + parseInt(row[3].replace(/,/g, '')), 0);
+    
+    page.drawText("Summary", {
+      x: startX,
+      y: summaryY,
+      size: 14,
+      font,
+      color: rgb(0.2, 0.2, 0.2)
+    });
+
+    page.drawText(`Total ${type === "orders" ? "Orders" : "Expenses"}: ${rows.length}`, {
+      x: startX,
+      y: summaryY - 25,
+      size: 12,
+      font: fontRegular,
+      color: rgb(0.2, 0.2, 0.2)
+    });
+
+    page.drawText(`Total Amount: Rs. ${totalAmount.toLocaleString()}`, {
+      x: startX,
+      y: summaryY - 45,
+      size: 12,
+      font: fontRegular,
+      color: rgb(0.2, 0.2, 0.2)
+    });
+
     const pdfBytes = await pdfDoc.save();
     return new Blob([pdfBytes], { type: "application/pdf" });
   };
