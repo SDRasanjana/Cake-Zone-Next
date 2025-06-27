@@ -73,8 +73,8 @@ export default function Reports() {
   const filteredOrders = filterRows(orderData);
   const filteredExpenses = filterRows(expensesData);
 
-  const orderSummary = `Order Summary\nTotal Orders: ${filteredOrders.length}\nTotal Amount: Rs. ${filteredOrders.reduce((sum: number, row: DataRow) => sum + parseInt(row[3].replace(/,/g, '')), 0).toLocaleString()}`;
-  const expensesSummary = `Expenses Summary\nTotal Expenses: Rs. ${filteredExpenses.reduce((sum: number, row: DataRow) => sum + parseInt(row[3].replace(/,/g, '')), 0).toLocaleString()}`;
+  const orderSummary = `Total Orders: ${filteredOrders.length}\nTotal Amount: Rs. ${filteredOrders.reduce((sum: number, row: DataRow) => sum + parseInt(row[3].replace(/,/g, '')), 0).toLocaleString()}`;
+  const expensesSummary = `Total Expenses: Rs. ${filteredExpenses.reduce((sum: number, row: DataRow) => sum + parseInt(row[3].replace(/,/g, '')), 0).toLocaleString()}`;
 
   // Helper to generate dummy PDF as Blob
   const generateDummyPdfBlob = async (type: "orders" | "expenses") => {
