@@ -31,6 +31,7 @@
     "mongodb": "^6.16.0",
     "mongoose": "^8.15.1",
     "next": "15.3.2",
+    "pdf-lib": "^1.17.1",
     "postcss-cli": "^11.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
