@@ -169,16 +169,16 @@ const UsersTab: React.FC<UsersTabProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {users.map((user) => (
+                {users.map((user, idx) => (
                   <tr
                     key={user._id}
                     className="hover:bg-[#F8F9FB] transition-colors"
                   >
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-white font-medium text-xs">
-                          {user.name?.charAt(0)}
-                        </div>
+                        <span className="w-7 h-7 flex items-center justify-center text-gray-500 font-semibold text-xs border border-gray-200 rounded-full bg-white">
+                          {idx + 1}
+                        </span>
                         <span className="font-medium text-gray-900 text-sm">
                           {user.name}
                         </span>
