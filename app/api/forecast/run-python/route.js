@@ -3,11 +3,25 @@ import { exec } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-export async function GET() {
+export async function GET(request) {
     try {
-        // Execute the Python script
-        const scriptsDir = path.join(process.cwd(), 'scripts');        // Check if Python script exists before running
-        const scriptPath = path.join(scriptsDir, 'forecast_flour_price.py');
+        // Get ingredient parameter from query string
+        const { searchParams } = new URL(request.url);
+        const ingredient = searchParams.get('ingredient') || 'flour';
+
+        // Validate ingredient parameter
+        const validIngredients = ['flour', 'sugar', 'eggs', 'butter'];
+        if (!validIngredients.includes(ingredient)) {
+            return NextResponse.json({
+                success: false,
+                error: `Invalid ingredient. Must be one of: ${validIngredients.join(', ')}`,
+                timestamp: new Date().toISOString()
+            }, { status: 400 });
+        }
+
+        // Execute the Python script for the specified ingredient
+        const scriptsDir = path.join(process.cwd(), 'scripts');
+        const scriptPath = path.join(scriptsDir, `forecast_${ingredient}_price.py`);
         const scriptExists = await fs.stat(scriptPath).catch(() => null);
 
         if (!scriptExists) {
@@ -16,9 +30,16 @@ export async function GET() {
 
         // Use a promise to handle the exec callback with improved error handling
         const runScript = new Promise((resolve, reject) => {
-            exec(`python "${scriptPath}"`, (error, stdout, stderr) => {
+            // Set the working directory to the scripts directory
+            const options = {
+                cwd: scriptsDir
+            };
+
+            exec(`python "${scriptPath}"`, options, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing script: ${error.message}`);
+                    console.error(`Script path: ${scriptPath}`);
+                    console.error(`Working directory: ${scriptsDir}`);
                     return reject(new Error(`Failed to execute Python script: ${error.message}`));
                 }
                 if (stderr && stderr.trim() !== '') {
@@ -30,9 +51,9 @@ export async function GET() {
 
         const output = await runScript;
 
-        // Check if the forecast JSON file exists
-        const forecastDataPath = path.join(process.cwd(), 'public', 'flour_price_forecast_data.json');
-        const insightsPath = path.join(process.cwd(), 'public', 'flour_price_insights.json');
+        // Check if the forecast JSON file exists for the specific ingredient
+        const forecastDataPath = path.join(process.cwd(), 'public', `${ingredient}_price_forecast_data.json`);
+        const insightsPath = path.join(process.cwd(), 'public', `${ingredient}_price_insights.json`);
         let forecastData = null;
         let insights = null;
         // Read forecast data and insights with improved error handling
@@ -72,11 +93,12 @@ export async function GET() {
 
         return NextResponse.json({
             success: true,
-            message: 'Forecast generated successfully',
+            message: `${ingredient.charAt(0).toUpperCase() + ingredient.slice(1)} forecast generated successfully`,
             output: output,
             forecastData: forecastData,
             insights: insights,
-            forecastImageUrl: '/flour_price_forecast.png',
+            forecastImageUrl: `/${ingredient}_price_forecast.png`,
+            ingredient: ingredient,
             timestamp: new Date().toISOString()
         });
     } catch (error) {
