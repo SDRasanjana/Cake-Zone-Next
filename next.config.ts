@@ -5,6 +5,16 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-}
+  env: {
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    MONGODB_URI: process.env.MONGODB_URI,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  },
+  experimental: {
+    // Enable server components
+    serverComponentsExternalPackages: ["stripe"],
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

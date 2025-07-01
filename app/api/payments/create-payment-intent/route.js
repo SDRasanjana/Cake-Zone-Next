@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import clientPromise from "@/lib/mongodb";
 
 // Ensure you have STRIPE_SECRET_KEY in your environment variables
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2022-11-15",
 });
 
 export async function POST(req) {
   try {
+    // Additional validation to ensure Stripe is properly initialized
+    if (!stripe) {
+      console.error("Stripe initialization failed");
+      return NextResponse.json({ error: "Payment service unavailable" }, { status: 500 });
+    }
     const body = await req.json();
     const { orderId, cartItems, userId, deliveryDate } = body;
 
