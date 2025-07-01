@@ -11,10 +11,7 @@ const nextConfig = {
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
-  experimental: {
-    // Enable server components
-    serverComponentsExternalPackages: ["stripe"],
-  },
+  serverExternalPackages: ["stripe"],
 };
 
 module.exports = nextConfig;
