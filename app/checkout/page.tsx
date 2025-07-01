@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect, FormEvent, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation"; // To get orderId from URL
 import { loadStripe, StripeError } from "@stripe/stripe-js";
 import {
@@ -674,4 +674,14 @@ const CheckoutPage: React.FC = () => {
   );
 };
 
-export default CheckoutPage;
+const CheckoutPageWrapper = () => (
+  <Suspense
+    fallback={
+      <div className="p-8 text-center text-gray-500">Loading checkout...</div>
+    }
+  >
+    <CheckoutPage />
+  </Suspense>
+);
+
+export default CheckoutPageWrapper;

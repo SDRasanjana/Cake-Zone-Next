@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import CakePreview3D from "@/components/dashboard/customer/CakePreview3D";
 import SidebarNavigation from "@/components/dashboard/customer/SidebarNavigation";
 import MobileNavigation from "@/components/dashboard/customer/MobileNavigation";
@@ -278,7 +278,15 @@ const CustomerDashboardContent = () => {
 
 const CustomerDashboard = () => (
   <DashboardTabProvider>
-    <CustomerDashboardContent />
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-gray-500">
+          Loading dashboard...
+        </div>
+      }
+    >
+      <CustomerDashboardContent />
+    </Suspense>
   </DashboardTabProvider>
 );
 
