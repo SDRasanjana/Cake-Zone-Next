@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import clientPromise from "@/lib/mongodb";
+import { getStripeConfig } from "@/lib/env-validation";
 
-// Ensure you have STRIPE_SECRET_KEY in your environment variables
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+// Validate and get Stripe configuration
+const stripeConfig = getStripeConfig();
+const stripe = new Stripe(stripeConfig.secretKey, {
   apiVersion: "2022-11-15",
 });
 
