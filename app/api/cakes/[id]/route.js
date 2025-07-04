@@ -21,14 +21,27 @@ export async function GET(request, { params }) {
 // PUT: Update a cake by ID (admin only)
 export async function PUT(req, { params }) {
   try {
-    const { id } = params;
+    // Defensive: support both route segment param and query param fallback
+    let id = params?.id;
+    // Some Next.js edge runtimes pass params as an array
+    if (Array.isArray(id)) id = id[0];
+    if (!id || typeof id !== "string" || id.length !== 24 || !/^[a-fA-F0-9]{24}$/.test(id)) {
+      return NextResponse.json({ message: "Invalid or missing cake id", id }, { status: 400 });
+    }
     const body = await req.json();
     const client = await clientPromise;
     const db = client.db();
-    const result = await db.collection("cakes").updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { ...body, updatedAt: new Date() } }
-    );
+    // Remove _id from body if present (MongoDB does not allow updating _id)
+    if (body._id) delete body._id;
+    let result;
+    try {
+      result = await db.collection("cakes").updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { ...body, updatedAt: new Date() } }
+      );
+    } catch (err) {
+      return NextResponse.json({ message: "MongoDB update error", error: err?.message, id, body }, { status: 500 });
+    }
     if (result.matchedCount === 0) {
       return NextResponse.json({ message: "Cake not found" }, { status: 404 });
     }

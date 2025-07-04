@@ -19,7 +19,7 @@ export async function POST(req) {
   try {
     const body = await req.json();
     // Validate required fields
-    const { name, price, image, rating, description } = body;
+    const { name, price, image, rating, description, category, stock, weight, ingredients } = body;
     if (!name || !price || !image) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
@@ -31,6 +31,10 @@ export async function POST(req) {
       image,
       rating: rating || 0,
       description: description || "",
+      category: category || "",
+      stock: stock || 0,
+      weight: weight || "",
+      ingredients: ingredients || [],
       createdAt: new Date(),
       updatedAt: new Date(),
     });

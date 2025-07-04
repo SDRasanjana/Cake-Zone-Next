@@ -182,7 +182,7 @@ const CakeDetails = () => {
                   {cakeData.name}
                 </h1>
                 <p className="text-2xl text-[#E67E5F] font-bold">
-                  ${cakeData.price.toFixed(2)}
+                  Rs. {cakeData.price.toFixed(2)}
                 </p>
               </div>
               <motion.button
