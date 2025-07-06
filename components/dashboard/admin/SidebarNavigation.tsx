@@ -1,5 +1,5 @@
 import React from "react";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, ShoppingBag } from "lucide-react";
 
 interface SidebarItem {
   id: string;
@@ -20,7 +20,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   setActiveTab,
   notifications = 0,
 }) => (
-  <aside className="w-64 bg-white shadow-sm border-r min-h-screen hidden lg:block">
+  <aside className="w-64 bg-white shadow-sm border-r min-h-screen hidden lg:block font-normal font-sans">
     <nav className="mt-8 px-4">
       <ul className="space-y-2">
         {items.map((item) => {

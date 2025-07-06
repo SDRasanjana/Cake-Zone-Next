@@ -9,6 +9,8 @@ import NotificationsTab from "@/components/dashboard/admin/NotificationsTab";
 import SidebarNavigation from "@/components/dashboard/admin/SidebarNavigation";
 import MobileNavigation from "@/components/dashboard/admin/MobileNavigation";
 import AdminTopHeader from "@/components/dashboard/admin/AdminTopHeader";
+import ProductManagementTab from "@/components/dashboard/admin/ProductManagementTab";
+
 import {
   ShoppingCart,
   Package,
@@ -235,9 +237,7 @@ export default function AdminDashboard() {
         <main className="flex-1 p-2 sm:p-4 lg:p-8 pb-20 lg:pb-8 w-full max-w-7xl mx-auto">
           <div className="mx-auto">
             {/* Render tab components based on activeTab */}
-            {activeTab === "overview" && (
-              <OverviewTab stats={stats} recentOrders={recentOrders} />
-            )}
+            {activeTab === "overview" && <OverviewTab />}
             {activeTab === "users" && (
               <UsersTab
                 users={users}
@@ -250,11 +250,9 @@ export default function AdminDashboard() {
               />
             )}
             {activeTab === "orders" && (
-              <OrdersTab
-                recentOrders={recentOrders}
-                getStatusColor={getStatusColor}
-              />
+              <OrdersTab getStatusColor={getStatusColor} />
             )}
+            {activeTab === "products" && <ProductManagementTab />}
             {activeTab === "notifications" && (
               <NotificationsTab notifications={notifications} />
             )}
