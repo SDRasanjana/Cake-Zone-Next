@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { getStripeConfig } from "@/lib/env-validation";
 
+// Validate and get Stripe configuration
+const stripeConfig = getStripeConfig();
+const stripe = new Stripe(stripeConfig.secretKey, {
 // Ensure you have STRIPE_SECRET_KEY in your environment variables
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY environment variable is not set");
