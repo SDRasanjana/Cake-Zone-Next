@@ -6,7 +6,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useCart } from "@/contexts/CartContext";
-import { useRouter } from "next/navigation";
 
 interface Cake {
   _id: string;
@@ -18,12 +17,24 @@ interface Cake {
 }
 
 export default function CakeGallery() {
-  const { addToCart, getItemCount } = useCart();
-  const totalItems = getItemCount();
-  const router = useRouter();
+  const { addToCart } = useCart();
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
+  // Handle image loading errors
+  const handleImageError = (cakeId: string) => {
+    setImageErrors((prev) => new Set([...prev, cakeId]));
+  };
+
+  // Get image source with fallback
+  const getImageSrc = (cake: Cake) => {
+    if (imageErrors.has(cake._id)) {
+      return "/default-cake.png";
+    }
+    return cake.image || "/default-cake.png";
+  };
 
   useEffect(() => {
     async function fetchCakes() {
@@ -31,31 +42,37 @@ export default function CakeGallery() {
       setError(null);
       try {
         console.log("Frontend: Starting to fetch cakes...");
-        
+
         const res = await fetch("/api/cakes");
         console.log("Frontend: Response status:", res.status);
-        
+
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
-        
+
         const data = await res.json();
         console.log("Frontend: Raw API response:", data);
         console.log("Frontend: Is array?", Array.isArray(data));
         console.log("Frontend: Data type:", typeof data);
-        
+
         // Handle both success and error responses
-        if (res.status === 200 && Array.isArray(data)) {
-          setCakes(data);
-          console.log("Frontend: Successfully set cakes:", data.length, "items");
-        } else if (data.message) {
-          // This is an error response from the API
-          console.error("API returned error:", data.message);
-          setError(data.message);
-          setCakes([]);
+        if (res.status === 200) {
+          if (Array.isArray(data)) {
+            setCakes(data);
+            console.log(
+              "Frontend: Successfully set cakes:",
+              data.length,
+              "items"
+            );
+          } else {
+            console.error("API returned non-array data:", data);
+            setError("Invalid data format received from server");
+            setCakes([]);
+          }
         } else {
-          console.error("Unexpected response format:", data);
-          setError("Unexpected response format from server");
+          // This is an error response from the API
+          console.error("API returned error:", data.message || "Unknown error");
+          setError(data.message || `Server error: ${res.status}`);
           setCakes([]);
         }
       } catch (err) {
@@ -100,7 +117,9 @@ export default function CakeGallery() {
       <div className="min-h-screen bg-[#FFF9F2] flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
-            <h2 className="text-xl font-bold text-red-800 mb-2">Oops! Something went wrong</h2>
+            <h2 className="text-xl font-bold text-red-800 mb-2">
+              Oops! Something went wrong
+            </h2>
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => window.location.reload()}
@@ -110,7 +129,8 @@ export default function CakeGallery() {
             </button>
           </div>
           <p className="text-[#7A6A5F] text-sm">
-            If the problem persists, please check your internet connection or try again later.
+            If the problem persists, please check your internet connection or
+            try again later.
           </p>
         </div>
       </div>
@@ -120,7 +140,7 @@ export default function CakeGallery() {
   return (
     <div className="min-h-screen bg-[#FFF9F2] py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div 
+        <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-16"
@@ -129,20 +149,21 @@ export default function CakeGallery() {
             Our <span className="text-[#E67E5F]">Sweet</span> Collection
           </h1>
           <p className="text-[#7A6A5F] text-lg max-w-2xl mx-auto">
-            Discover our handcrafted cakes made with love and premium ingredients
+            Discover our handcrafted cakes made with love and premium
+            ingredients
           </p>
         </motion.div>
 
         {Array.isArray(cakes) && cakes.length > 0 ? (
-          <motion.div 
+          <motion.div
             variants={{
               hidden: { opacity: 0 },
               show: {
                 opacity: 1,
                 transition: {
-                  staggerChildren: 0.1
-                }
-              }
+                  staggerChildren: 0.1,
+                },
+              },
             }}
             initial="hidden"
             animate="show"
@@ -153,7 +174,7 @@ export default function CakeGallery() {
                 key={cake._id}
                 variants={{
                   hidden: { y: 20, opacity: 0 },
-                  show: { y: 0, opacity: 1 }
+                  show: { y: 0, opacity: 1 },
                 }}
                 className="group relative bg-white rounded-3xl shadow-xl overflow-hidden"
                 whileHover={{ y: -5 }}
@@ -162,10 +183,11 @@ export default function CakeGallery() {
                 <Link href={`/menu/${cake._id}`} className="block">
                   <div className="relative aspect-square">
                     <Image
-                      src={cake.image}
+                      src={getImageSrc(cake)}
                       alt={cake.name}
                       fill
                       className="object-cover transform group-hover:scale-110 transition-transform duration-500"
+                      onError={() => handleImageError(cake._id)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
@@ -176,10 +198,14 @@ export default function CakeGallery() {
                       </h2>
                       <div className="flex items-center bg-[#FFF0E8] px-2 py-1 rounded-full">
                         <span className="text-yellow-500 mr-1">★</span>
-                        <span className="text-[#E67E5F] font-medium">{cake.rating}</span>
+                        <span className="text-[#E67E5F] font-medium">
+                          {cake.rating}
+                        </span>
                       </div>
                     </div>
-                    <p className="text-[#7A6A5F] mb-4 line-clamp-2">{cake.description}</p>
+                    <p className="text-[#7A6A5F] mb-4 line-clamp-2">
+                      {cake.description}
+                    </p>
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold text-[#E67E5F]">
                         Rs. {cake.price.toFixed(2)}
@@ -205,9 +231,11 @@ export default function CakeGallery() {
           <div className="text-center py-20">
             <div className="bg-white rounded-lg p-8 max-w-md mx-auto shadow-lg">
               <div className="text-6xl mb-4">🍰</div>
-              <h3 className="text-xl font-bold text-[#3A2E26] mb-2">No Cakes Available</h3>
+              <h3 className="text-xl font-bold text-[#3A2E26] mb-2">
+                No Cakes Available
+              </h3>
               <p className="text-[#7A6A5F] mb-4">
-                We're currently updating our menu. Please check back soon!
+                We&apos;re currently updating our menu. Please check back soon!
               </p>
               <button
                 onClick={() => window.location.reload()}

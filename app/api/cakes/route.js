@@ -4,13 +4,45 @@ import clientPromise from "@/lib/mongodb";
 // GET: Fetch all cakes
 export async function GET() {
   try {
+    console.log("API: Starting to fetch cakes from database...");
+
+    // Check if MongoDB URI is configured
+    if (!process.env.MONGODB_URI) {
+      console.error("MONGODB_URI is not configured");
+      return NextResponse.json({
+        message: "Database connection not configured",
+        error: "MONGODB_URI environment variable is missing"
+      }, { status: 500 });
+    }
+
     const client = await clientPromise;
     const db = client.db();
+
     // Fetch all cakes from the 'cakes' collection
     const cakes = await db.collection("cakes").find({}).toArray();
-    return NextResponse.json(cakes);
+    console.log("API: Successfully fetched", cakes.length, "cakes");
+
+    // Transform the data to ensure consistent structure
+    const transformedCakes = cakes.map(cake => ({
+      _id: cake._id,
+      name: cake.name,
+      price: cake.price,
+      image: cake.image,
+      rating: cake.rating || 4.5,
+      description: cake.description || "",
+      category: cake.category || "",
+      stock: cake.stock || 0,
+      weight: cake.weight || "",
+      ingredients: cake.ingredients || []
+    }));
+
+    return NextResponse.json(transformedCakes);
   } catch (error) {
-    return NextResponse.json({ message: "Error fetching cakes", error: error.message }, { status: 500 });
+    console.error("API: Error fetching cakes:", error);
+    return NextResponse.json({
+      message: "Error fetching cakes",
+      error: error.message
+    }, { status: 500 });
   }
 }
 
