@@ -1,5 +1,7 @@
+"use client";
+
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface OptimizedImageProps {
   src: string;
@@ -24,29 +26,50 @@ export default function OptimizedImage({
 }: OptimizedImageProps) {
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Update imgSrc when src prop changes
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+    setIsLoading(true);
+  }, [src]);
 
   const handleError = () => {
     if (!hasError) {
+      console.log(`Image failed to load: ${imgSrc}`);
       setHasError(true);
       setImgSrc("/default-cake.png");
       onError?.();
     }
   };
 
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
   // For Vercel, we need to ensure the image path is properly formatted
   const formattedSrc = imgSrc.startsWith("/") ? imgSrc : `/${imgSrc}`;
 
   return (
-    <Image
-      src={formattedSrc}
-      alt={alt}
-      fill={fill}
-      className={className}
-      priority={priority}
-      sizes={sizes}
-      quality={quality}
-      onError={handleError}
-      unoptimized // Disable optimization for Vercel compatibility
-    />
+    <div className="relative w-full h-full">
+      {isLoading && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+          <div className="text-gray-400 text-sm">Loading...</div>
+        </div>
+      )}
+      <Image
+        src={formattedSrc}
+        alt={alt}
+        fill={fill}
+        className={className}
+        priority={priority}
+        sizes={sizes}
+        quality={quality}
+        onError={handleError}
+        onLoad={handleLoad}
+        unoptimized // Disable optimization for Vercel compatibility
+      />
+    </div>
   );
 }

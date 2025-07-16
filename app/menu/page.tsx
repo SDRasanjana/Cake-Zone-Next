@@ -21,19 +21,9 @@ export default function CakeGallery() {
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-
-  // Handle image loading errors
-  const handleImageError = (cakeId: string) => {
-    setImageErrors((prev) => new Set([...prev, cakeId]));
-  };
 
   // Get image source with fallback
   const getImageSrc = (cake: Cake) => {
-    if (imageErrors.has(cake._id)) {
-      return "/default-cake.png";
-    }
-
     // Ensure the image path is properly formatted
     let imagePath = cake.image;
     if (imagePath && !imagePath.startsWith("/")) {
@@ -194,7 +184,6 @@ export default function CakeGallery() {
                       alt={cake.name}
                       fill
                       className="object-cover transform group-hover:scale-110 transition-transform duration-500"
-                      onError={() => handleImageError(cake._id)}
                       priority={index < 3}
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
