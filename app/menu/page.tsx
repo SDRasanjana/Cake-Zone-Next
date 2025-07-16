@@ -37,23 +37,45 @@ export default function CakeGallery() {
     async function fetchCakes() {
       setLoading(true);
       setError(null);
-      try {
-        console.log("Frontend: Starting to fetch cakes...");
 
-        const res = await fetch("/api/cakes");
-        console.log("Frontend: Response status:", res.status);
+      // Retry logic for API calls
+      const maxRetries = 3;
+      let retryCount = 0;
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
+      while (retryCount < maxRetries) {
+        try {
+          console.log(
+            `Frontend: Attempt ${retryCount + 1} - Starting to fetch cakes...`
+          );
 
-        const data = await res.json();
-        console.log("Frontend: Raw API response:", data);
-        console.log("Frontend: Is array?", Array.isArray(data));
-        console.log("Frontend: Data type:", typeof data);
+          const res = await fetch("/api/cakes", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            // Add timeout
+            signal: AbortSignal.timeout(15000),
+          });
 
-        // Handle both success and error responses
-        if (res.status === 200) {
+          console.log("Frontend: Response status:", res.status);
+
+          if (!res.ok) {
+            const errorData = await res
+              .json()
+              .catch(() => ({ message: "Unknown error" }));
+            throw new Error(
+              `HTTP error! status: ${res.status} - ${
+                errorData.message || "Unknown error"
+              }`
+            );
+          }
+
+          const data = await res.json();
+          console.log("Frontend: Raw API response:", data);
+          console.log("Frontend: Is array?", Array.isArray(data));
+          console.log("Frontend: Data type:", typeof data);
+
+          // Handle both success and error responses
           if (Array.isArray(data)) {
             setCakes(data);
             console.log(
@@ -61,25 +83,40 @@ export default function CakeGallery() {
               data.length,
               "items"
             );
+            return; // Success, exit retry loop
           } else {
             console.error("API returned non-array data:", data);
             setError("Invalid data format received from server");
             setCakes([]);
+            return; // Don't retry for data format errors
           }
-        } else {
-          // This is an error response from the API
-          console.error("API returned error:", data.message || "Unknown error");
-          setError(data.message || `Server error: ${res.status}`);
-          setCakes([]);
+        } catch (err) {
+          console.error(
+            `Frontend: Error fetching cakes (attempt ${retryCount + 1}):`,
+            err
+          );
+          retryCount++;
+
+          if (retryCount >= maxRetries) {
+            // Last attempt failed
+            setError(
+              err instanceof Error
+                ? err.message
+                : "Failed to fetch cakes after multiple attempts"
+            );
+            setCakes([]);
+          } else {
+            // Wait before retrying
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * retryCount)
+            );
+          }
         }
-      } catch (err) {
-        console.error("Frontend: Error fetching cakes:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch cakes");
-        setCakes([]);
-      } finally {
-        setLoading(false);
       }
+
+      setLoading(false);
     }
+
     fetchCakes();
   }, []);
 
@@ -114,20 +151,24 @@ export default function CakeGallery() {
       <div className="min-h-screen bg-[#FFF9F2] flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+            <div className="text-6xl mb-4">😞</div>
             <h2 className="text-xl font-bold text-red-800 mb-2">
-              Oops! Something went wrong
+              Unable to load cakes
             </h2>
-            <p className="text-red-600 mb-4">{error}</p>
+            <p className="text-red-600 mb-4">
+              {error.includes("timeout")
+                ? "The server is taking too long to respond. Please try again."
+                : "There was an issue connecting to our bakery. Please check your internet connection and try again."}
+            </p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-[#E67E5F] text-white px-4 py-2 rounded-lg hover:bg-[#D66A4F] transition-colors"
+              className="bg-[#E67E5F] text-white px-4 py-2 rounded-lg hover:bg-[#D66A4F] transition-colors mr-2"
             >
               Try Again
             </button>
           </div>
           <p className="text-[#7A6A5F] text-sm">
-            If the problem persists, please check your internet connection or
-            try again later.
+            Our team has been notified and is working to fix this issue.
           </p>
         </div>
       </div>
@@ -180,7 +221,7 @@ export default function CakeGallery() {
                 <Link href={`/menu/${cake._id}`} className="block">
                   <div className="relative aspect-square">
                     <OptimizedImage
-                      src={getImageSrc(cakes[index])}
+                      src={getImageSrc(cake)}
                       alt={cake.name}
                       fill
                       className="object-cover transform group-hover:scale-110 transition-transform duration-500"
