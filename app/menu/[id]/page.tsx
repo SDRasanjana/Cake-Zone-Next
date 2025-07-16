@@ -42,22 +42,55 @@ const CakeDetails = () => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+
+  // Get image source with fallback
+  const getImageSrc = (imagePath: string | undefined) => {
+    if (!imagePath || imageError) {
+      return "/default-cake.png";
+    }
+    
+    // Ensure the image path is properly formatted
+    let formattedPath = imagePath;
+    if (formattedPath && !formattedPath.startsWith('/')) {
+      formattedPath = '/' + formattedPath;
+    }
+    
+    return formattedPath;
+  };
+
+  // Handle image loading errors
+  const handleImageError = () => {
+    setImageError(true);
+  };
 
   // Fetch cake data from API
   useEffect(() => {
     if (!id) return;
+
     setLoading(true);
+    setError(null);
+
     fetch(`/api/cakes/${id}`)
       .then((res) => {
-        if (!res.ok) throw new Error("Cake not found");
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         return res.json();
       })
       .then((data) => {
+        if (data.message) {
+          // This is an error response
+          throw new Error(data.message);
+        }
         setCakeData(data);
-        setLoading(false);
+        console.log("Successfully fetched cake data:", data);
       })
       .catch((err) => {
-        setError(err.message);
+        console.error("Error fetching cake:", err);
+        setError(err.message || "Failed to fetch cake details");
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, [id]);
@@ -73,7 +106,7 @@ const CakeDetails = () => {
       toppings: [], // No toppings by default
       frostingColor: "bg-pink-400", // Default frosting color
       productId: cakeData._id?.toString() || "",
-      imageUri: cakeData.images?.[0] || cakeData.image || "",
+      imageUri: getImageSrc(cakeData.images?.[0] || cakeData.image),
       quantity: quantity, // Use selected quantity
     });
   };
@@ -85,19 +118,53 @@ const CakeDetails = () => {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen bg-[#FFF9F2] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E67E5F] mx-auto mb-4"></div>
+          <p className="text-[#7A6A5F] text-lg">Loading cake details...</p>
+        </div>
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        {error}
+      <div className="min-h-screen bg-[#FFF9F2] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+            <h2 className="text-xl font-bold text-red-800 mb-2">
+              Cake Not Found
+            </h2>
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => (window.location.href = "/menu")}
+              className="bg-[#E67E5F] text-white px-4 py-2 rounded-lg hover:bg-[#D66A4F] transition-colors"
+            >
+              Back to Menu
+            </button>
+          </div>
+        </div>
       </div>
     );
-  if (!cakeData) return null;
+  }
+
+  if (!cakeData) {
+    return (
+      <div className="min-h-screen bg-[#FFF9F2] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#7A6A5F] text-lg">No cake data available</p>
+          <button
+            onClick={() => (window.location.href = "/menu")}
+            className="mt-4 bg-[#E67E5F] text-white px-4 py-2 rounded-lg hover:bg-[#D66A4F] transition-colors"
+          >
+            Back to Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF9F2] py-12">
@@ -112,9 +179,9 @@ const CakeDetails = () => {
               onClick={() => setIsZoomed(!isZoomed)}
             >
               <Image
-                src={
-                  (cakeData.images?.[selectedImage] || cakeData.image) as string
-                }
+                src={getImageSrc(
+                  cakeData.images?.[selectedImage] || cakeData.image
+                )}
                 alt={cakeData.name}
                 fill
                 className={`object-cover transform transition-transform duration-500 ${
@@ -123,6 +190,9 @@ const CakeDetails = () => {
                     : "hover:scale-110 cursor-zoom-in"
                 }`}
                 quality={100}
+                onError={handleImageError}
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
               {isZoomed && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
@@ -156,7 +226,7 @@ const CakeDetails = () => {
                   whileTap={{ scale: 0.95 }}
                 >
                   <Image
-                    src={image}
+                    src={getImageSrc(image)}
                     alt={`${cakeData.name} ${
                       index === 0
                         ? "front view"
@@ -168,6 +238,7 @@ const CakeDetails = () => {
                     }`}
                     fill
                     className="object-cover"
+                    onError={handleImageError}
                   />
                 </motion.button>
               ))}
@@ -215,22 +286,35 @@ const CakeDetails = () => {
                 Ingredients
               </h3>
               <div className="flex flex-wrap gap-2">
-                {cakeData.ingredients?.map((ingredient, index) => (
-                  <span
-                    key={index}
-                    className="px-4 py-2 rounded-full bg-[#FFEDE5] text-[#E67E5F] text-sm font-medium"
-                  >
-                    {ingredient}
+                {cakeData.ingredients && cakeData.ingredients.length > 0 ? (
+                  cakeData.ingredients.map((ingredient, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 rounded-full bg-[#FFEDE5] text-[#E67E5F] text-sm font-medium"
+                    >
+                      {ingredient}
+                    </span>
+                  ))
+                ) : (
+                  <span className="px-4 py-2 rounded-full bg-[#FFEDE5] text-[#E67E5F] text-sm font-medium">
+                    Premium ingredients
                   </span>
-                ))}
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              {" "}
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-[#3A2E26]">Weight</h3>
-                <p className="text-[#7A6A5F]">{cakeData.weight}</p>
+                <p className="text-[#7A6A5F]">{cakeData.weight || "1.0 kg"}</p>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#3A2E26]">
+                  Category
+                </h3>
+                <p className="text-[#7A6A5F]">
+                  {cakeData.category || "Classic"}
+                </p>
               </div>
             </div>
 
@@ -266,7 +350,7 @@ const CakeDetails = () => {
                   whileTap={{ scale: 0.98 }}
                   className="flex-1 bg-gradient-to-r from-[#E67E5F] to-[#D45D3E] text-white py-4 px-8 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  Add to Cart - ${(cakeData.price * quantity).toFixed(2)}
+                  Add to Cart - Rs. {(cakeData.price * quantity).toFixed(2)}
                 </motion.button>
               </div>
             </div>
@@ -298,7 +382,7 @@ const CakeDetails = () => {
                     {cake.name}
                   </h3>
                   <p className="text-[#E67E5F] font-bold">
-                    ${cake.price.toFixed(2)}
+                    Rs. {cake.price.toFixed(2)}
                   </p>
                 </div>
               </motion.div>

@@ -13,16 +13,24 @@ const nextConfig = {
       },
     ],
     formats: ["image/avif", "image/webp"],
+    unoptimized: false,
   },
   // Ensure static files are properly served
-  async rewrites() {
+  async headers() {
     return [
       {
-        source: "/api/:path*",
-        destination: "/api/:path*",
+        source: "/(.*).(jpg|jpeg|png|gif|svg|ico)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
       },
     ];
   },
+  // Add proper static file handling
+  trailingSlash: false,
 };
 
 module.exports = nextConfig;
