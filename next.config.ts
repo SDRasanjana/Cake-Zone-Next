@@ -5,6 +5,34 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-}
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+    formats: ["image/avif", "image/webp"],
+    unoptimized: true, // Disable optimization for Vercel compatibility
+    domains: [], // Add any external domains if needed
+  },
+  // Ensure static files are properly served
+  async headers() {
+    return [
+      {
+        source: "/(.*)\\.(jpg|jpeg|png|gif|svg|ico|webp)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
+  // Add proper static file handling
+  trailingSlash: false,
+  output: "standalone",
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

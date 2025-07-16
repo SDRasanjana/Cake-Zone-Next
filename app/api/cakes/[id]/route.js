@@ -5,16 +5,52 @@ import { ObjectId } from "mongodb";
 export async function GET(request, { params }) {
   const { id } = params;
   try {
+    console.log("API: Fetching cake with ID:", id);
+
+    // Validate the ID format
+    if (!id || typeof id !== "string" || id.length !== 24 || !/^[a-fA-F0-9]{24}$/.test(id)) {
+      return NextResponse.json({ message: "Invalid cake ID format" }, { status: 400 });
+    }
+
     const client = await clientPromise;
-    const db = client.db(); // uses default DB from URI
+    const db = client.db();
+
     // Find the cake by _id (convert to ObjectId)
     const cake = await db.collection("cakes").findOne({ _id: new ObjectId(id) });
+
     if (!cake) {
       return NextResponse.json({ message: "Cake not found" }, { status: 404 });
     }
-    return NextResponse.json(cake);
+
+    console.log("API: Successfully fetched cake:", cake.name);
+
+    // Transform the data to ensure consistent structure
+    const transformedCake = {
+      _id: cake._id,
+      name: cake.name,
+      price: cake.price,
+      image: cake.image,
+      rating: cake.rating || 4.5,
+      description: cake.description || "",
+      category: cake.category || "",
+      stock: cake.stock || 0,
+      weight: cake.weight || "",
+      ingredients: cake.ingredients || [],
+      createdAt: cake.createdAt,
+      updatedAt: cake.updatedAt,
+      // For single cake view, we only have one image but we can structure it as array for consistency
+      images: cake.images || [cake.image],
+      // Add some related cakes (this could be enhanced with actual related product logic)
+      relatedCakes: []
+    };
+
+    return NextResponse.json(transformedCake);
   } catch (error) {
-    return NextResponse.json({ message: "Error fetching cake", error: error.message }, { status: 500 });
+    console.error("API: Error fetching cake:", error);
+    return NextResponse.json({
+      message: "Error fetching cake",
+      error: error.message
+    }, { status: 500 });
   }
 }
 
