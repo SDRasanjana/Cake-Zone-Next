@@ -180,7 +180,7 @@ export default function CakeGallery() {
                 <Link href={`/menu/${cake._id}`} className="block">
                   <div className="relative aspect-square">
                     <OptimizedImage
-                      src={getImageSrc(cake)}
+                      src={getImageSrc(cakes[index])}
                       alt={cake.name}
                       fill
                       className="object-cover transform group-hover:scale-110 transition-transform duration-500"
