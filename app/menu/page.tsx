@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useCart } from "@/contexts/CartContext";
+import OptimizedImage from "@/components/OptimizedImage";
 
 interface Cake {
   _id: string;
@@ -189,7 +189,7 @@ export default function CakeGallery() {
               >
                 <Link href={`/menu/${cake._id}`} className="block">
                   <div className="relative aspect-square">
-                    <Image
+                    <OptimizedImage
                       src={getImageSrc(cake)}
                       alt={cake.name}
                       fill

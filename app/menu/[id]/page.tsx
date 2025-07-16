@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useParams } from "next/navigation";
+import OptimizedImage from "@/components/OptimizedImage";
 
 interface Cake {
   _id: string;
@@ -49,13 +49,13 @@ const CakeDetails = () => {
     if (!imagePath || imageError) {
       return "/default-cake.png";
     }
-    
+
     // Ensure the image path is properly formatted
     let formattedPath = imagePath;
-    if (formattedPath && !formattedPath.startsWith('/')) {
-      formattedPath = '/' + formattedPath;
+    if (formattedPath && !formattedPath.startsWith("/")) {
+      formattedPath = "/" + formattedPath;
     }
-    
+
     return formattedPath;
   };
 
@@ -178,7 +178,7 @@ const CakeDetails = () => {
               whileHover={{ scale: isZoomed ? 1 : 1.02 }}
               onClick={() => setIsZoomed(!isZoomed)}
             >
-              <Image
+              <OptimizedImage
                 src={getImageSrc(
                   cakeData.images?.[selectedImage] || cakeData.image
                 )}
@@ -225,7 +225,7 @@ const CakeDetails = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Image
+                  <OptimizedImage
                     src={getImageSrc(image)}
                     alt={`${cakeData.name} ${
                       index === 0
@@ -370,7 +370,7 @@ const CakeDetails = () => {
                 className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer"
               >
                 <div className="relative aspect-square">
-                  <Image
+                  <OptimizedImage
                     src={cake.image}
                     alt={cake.name}
                     fill

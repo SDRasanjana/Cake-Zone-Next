@@ -13,13 +13,14 @@ const nextConfig = {
       },
     ],
     formats: ["image/avif", "image/webp"],
-    unoptimized: false,
+    unoptimized: true, // Disable optimization for Vercel compatibility
+    domains: [], // Add any external domains if needed
   },
   // Ensure static files are properly served
   async headers() {
     return [
       {
-        source: "/(.*).(jpg|jpeg|png|gif|svg|ico)",
+        source: "/(.*)\\.(jpg|jpeg|png|gif|svg|ico|webp)",
         headers: [
           {
             key: "Cache-Control",
@@ -31,6 +32,7 @@ const nextConfig = {
   },
   // Add proper static file handling
   trailingSlash: false,
+  output: "standalone",
 };
 
 module.exports = nextConfig;
