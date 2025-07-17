@@ -48,8 +48,23 @@ export default function OptimizedImage({
     setIsLoading(false);
   };
 
-  // For Vercel, we need to ensure the image path is properly formatted
-  const formattedSrc = imgSrc.startsWith("/") ? imgSrc : `/${imgSrc}`;
+  // Format image source properly based on type
+  const getFormattedSrc = (src: string) => {
+    // Handle base64 data URLs (uploaded images) - use as-is
+    if (src.startsWith("data:image")) {
+      return src;
+    }
+
+    // Handle HTTP/HTTPS URLs - use as-is
+    if (src.startsWith("http")) {
+      return src;
+    }
+
+    // Handle relative paths - ensure they start with /
+    return src.startsWith("/") ? src : `/${src}`;
+  };
+
+  const formattedSrc = getFormattedSrc(imgSrc);
 
   return (
     <div className="relative w-full h-full">

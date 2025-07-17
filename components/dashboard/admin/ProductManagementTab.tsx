@@ -61,8 +61,18 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <svg
+                className="w-6 h-6 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
@@ -76,7 +86,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
               {productImage && (
                 <div className="flex-shrink-0">
-                  {productImage.startsWith("data:image") || productImage.startsWith("http") || productImage.startsWith("/") ? (
+                  {productImage.startsWith("data:image") ||
+                  productImage.startsWith("http") ||
+                  productImage.startsWith("/") ? (
                     <img
                       src={productImage}
                       alt={productName}
@@ -90,8 +102,12 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 truncate">{productName}</h4>
-                <p className="text-sm text-gray-500">This action cannot be undone</p>
+                <h4 className="font-medium text-gray-900 truncate">
+                  {productName}
+                </h4>
+                <p className="text-sm text-gray-500">
+                  This action cannot be undone
+                </p>
               </div>
             </div>
           )}
@@ -102,12 +118,24 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           {/* Warning */}
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
             <div className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <svg
+                className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
               <div>
                 <p className="text-sm font-medium text-red-800">Warning</p>
-                <p className="text-sm text-red-700">This action is permanent and cannot be reversed.</p>
+                <p className="text-sm text-red-700">
+                  This action is permanent and cannot be reversed.
+                </p>
               </div>
             </div>
           </div>
@@ -129,16 +157,30 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Deleting...
               </>
             ) : (
-              <>
-                🗑️ Delete Product
-              </>
+              <>🗑️ Delete Product</>
             )}
           </button>
         </div>
@@ -158,7 +200,7 @@ const ProductManagementTab: React.FC = () => {
   const [editId, setEditId] = useState<string | null>(null);
   // Track the raw textarea value for ingredients
   const [ingredientsInput, setIngredientsInput] = useState("");
-  
+
   // Delete confirmation modal state
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
@@ -192,9 +234,12 @@ const ProductManagementTab: React.FC = () => {
     setFormError("");
     setFormLoading(true);
     try {
+      console.log("Form submission:", { editId, form });
+
       let res;
       if (editId) {
         // Update existing cake
+        console.log(`Updating cake with ID: ${editId}`);
         res = await fetch(`/api/cakes/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -202,22 +247,44 @@ const ProductManagementTab: React.FC = () => {
         });
       } else {
         // Add new cake
+        console.log("Adding new cake");
         res = await fetch("/api/cakes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
       }
+
+      console.log("API Response:", res.status, res.ok);
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to save cake");
+        // Try to get error message from response
+        let errorMessage = "Failed to save cake";
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          // If JSON parsing fails, get text response
+          const errorText = await res.text();
+          if (errorText.includes("<!DOCTYPE")) {
+            errorMessage = `Server error: ${res.status}. Please check if the API endpoint exists and is working correctly.`;
+          } else {
+            errorMessage = errorText || errorMessage;
+          }
+        }
+        throw new Error(errorMessage);
       }
+
+      const result = await res.json();
+      console.log("Success result:", result);
+
       setShowAdd(false);
       setForm(initialForm);
       setIngredientsInput("");
       setEditId(null);
       fetchCakes();
     } catch (err: any) {
+      console.error("Form submission error:", err);
       setFormError(err.message || "Failed to save cake");
     } finally {
       setFormLoading(false);
@@ -258,21 +325,47 @@ const ProductManagementTab: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!deleteModal.cake) return;
 
-    setDeleteModal(prev => ({ ...prev, isLoading: true }));
+    setDeleteModal((prev) => ({ ...prev, isLoading: true }));
 
     try {
+      console.log(`Deleting cake with ID: ${deleteModal.cake._id}`);
+
       const res = await fetch(`/api/cakes/${deleteModal.cake._id}`, {
         method: "DELETE",
       });
-      
-      if (!res.ok) throw new Error("Failed to delete");
-      
+
+      console.log("Delete API Response:", res.status, res.ok);
+
+      if (!res.ok) {
+        let errorMessage = "Failed to delete";
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          const errorText = await res.text();
+          if (errorText.includes("<!DOCTYPE")) {
+            errorMessage = `Server error: ${res.status}. Please check if the API endpoint exists.`;
+          } else {
+            errorMessage = errorText || errorMessage;
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await res.json();
+      console.log("Delete success result:", result);
+
       // Close modal and refresh data
       setDeleteModal({ isOpen: false, cake: null, isLoading: false });
       fetchCakes();
     } catch (err) {
-      setDeleteModal(prev => ({ ...prev, isLoading: false }));
-      alert("Delete failed. Please try again.");
+      console.error("Delete error:", err);
+      setDeleteModal((prev) => ({ ...prev, isLoading: false }));
+      alert(
+        `Delete failed: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }. Please try again.`
+      );
     }
   };
 
@@ -467,7 +560,9 @@ const ProductManagementTab: React.FC = () => {
 
       {/* Loading/Error States */}
       {loading ? (
-        <div className="text-center text-gray-500 py-8">Loading products...</div>
+        <div className="text-center text-gray-500 py-8">
+          Loading products...
+        </div>
       ) : error ? (
         <div className="text-center text-red-600 py-8">{error}</div>
       ) : (
@@ -481,10 +576,16 @@ const ProductManagementTab: React.FC = () => {
                     <th className="px-4 py-3 text-left font-semibold">Image</th>
                     <th className="px-4 py-3 text-left font-semibold">Name</th>
                     <th className="px-4 py-3 text-left font-semibold">Price</th>
-                    <th className="px-4 py-3 text-left font-semibold">Rating</th>
-                    <th className="px-4 py-3 text-left font-semibold">Category</th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Rating
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Category
+                    </th>
                     <th className="px-4 py-3 text-left font-semibold">Stock</th>
-                    <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -528,8 +629,12 @@ const ProductManagementTab: React.FC = () => {
                       <td className="px-4 py-3 font-medium text-gray-900 text-sm">
                         {cake.name}
                       </td>
-                      <td className="px-4 py-3 text-gray-900">Rs. {cake.price}</td>
-                      <td className="px-4 py-3 text-yellow-600">{cake.rating}</td>
+                      <td className="px-4 py-3 text-gray-900">
+                        Rs. {cake.price}
+                      </td>
+                      <td className="px-4 py-3 text-yellow-600">
+                        {cake.rating}
+                      </td>
                       <td className="px-4 py-3 text-gray-500">
                         {cake.category || "-"}
                       </td>
@@ -603,32 +708,50 @@ const ProductManagementTab: React.FC = () => {
                     <h3 className="font-semibold text-gray-900 text-base truncate">
                       {cake.name}
                     </h3>
-                    <p className="text-lg font-bold text-[#F59E0B]">Rs. {cake.price}</p>
+                    <p className="text-lg font-bold text-[#F59E0B]">
+                      Rs. {cake.price}
+                    </p>
                   </div>
                 </div>
 
                 {/* Details Grid - Enhanced visibility */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-                    <div className="text-yellow-700 text-xs font-semibold uppercase tracking-wide">Rating</div>
-                    <div className="text-yellow-600 text-lg font-bold">⭐ {cake.rating || "0"}</div>
+                    <div className="text-yellow-700 text-xs font-semibold uppercase tracking-wide">
+                      Rating
+                    </div>
+                    <div className="text-yellow-600 text-lg font-bold">
+                      ⭐ {cake.rating || "0"}
+                    </div>
                   </div>
                   <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                    <div className="text-blue-700 text-xs font-semibold uppercase tracking-wide">Stock</div>
+                    <div className="text-blue-700 text-xs font-semibold uppercase tracking-wide">
+                      Stock
+                    </div>
                     <div className="text-blue-900 text-lg font-bold">
-                      {cake.stock !== undefined && cake.stock !== null ? cake.stock : "N/A"}
+                      {cake.stock !== undefined && cake.stock !== null
+                        ? cake.stock
+                        : "N/A"}
                     </div>
                   </div>
                   <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-                    <div className="text-green-700 text-xs font-semibold uppercase tracking-wide">Category</div>
+                    <div className="text-green-700 text-xs font-semibold uppercase tracking-wide">
+                      Category
+                    </div>
                     <div className="text-green-900 text-sm font-semibold">
-                      {cake.category && cake.category.trim() !== "" ? cake.category : "N/A"}
+                      {cake.category && cake.category.trim() !== ""
+                        ? cake.category
+                        : "N/A"}
                     </div>
                   </div>
                   <div className="bg-purple-50 border border-purple-200 p-3 rounded-lg">
-                    <div className="text-purple-700 text-xs font-semibold uppercase tracking-wide">Weight</div>
+                    <div className="text-purple-700 text-xs font-semibold uppercase tracking-wide">
+                      Weight
+                    </div>
                     <div className="text-purple-900 text-sm font-semibold">
-                      {cake.weight && cake.weight.trim() !== "" ? cake.weight : "N/A"}
+                      {cake.weight && cake.weight.trim() !== ""
+                        ? cake.weight
+                        : "N/A"}
                     </div>
                   </div>
                 </div>
@@ -636,7 +759,9 @@ const ProductManagementTab: React.FC = () => {
                 {/* Description */}
                 {cake.description && (
                   <div className="bg-gray-50 p-3 rounded-lg">
-                    <div className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1">Description</div>
+                    <div className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1">
+                      Description
+                    </div>
                     <p className="text-sm text-gray-600 leading-relaxed">
                       {cake.description}
                     </p>
@@ -646,7 +771,9 @@ const ProductManagementTab: React.FC = () => {
                 {/* Ingredients */}
                 {cake.ingredients && cake.ingredients.length > 0 && (
                   <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
-                    <div className="text-orange-700 text-xs font-semibold uppercase tracking-wide mb-1">Ingredients</div>
+                    <div className="text-orange-700 text-xs font-semibold uppercase tracking-wide mb-1">
+                      Ingredients
+                    </div>
                     <div className="text-sm text-orange-900">
                       {cake.ingredients.join(", ")}
                     </div>

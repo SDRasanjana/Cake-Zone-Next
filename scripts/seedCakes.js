@@ -8,7 +8,7 @@ const cakes = [
   {
     name: "Butterscotch Fudge Cake",
     price: 95.0,
-    image: "/Butterscoch-Fudge.jpg",
+    image: "/Butterscoch-Fudge-Cake.jpg",
     rating: 4.8,
     description:
       "A rich, moist cake layered with creamy butterscotch fudge and topped with caramel drizzle. Perfect for those who love a sweet and buttery treat.",
@@ -27,7 +27,7 @@ const cakes = [
   {
     name: "Marble Cake",
     price: 95.0,
-    image: "/marbel.jpg",
+    image: "/Marble-Cake-1.jpg",
     rating: 4.5,
     description:
       "Classic vanilla and chocolate cake batters swirled together for a beautiful marbled effect. Soft, fluffy, and visually stunning.",
@@ -46,7 +46,7 @@ const cakes = [
   {
     name: "Mocha Chocolate Cake",
     price: 95.0,
-    image: "/mocha-chocolate.jpg",
+    image: "/Mocha-Chocolate-Cake.jpg",
     rating: 4.9,
     description:
       "A decadent dark chocolate cake infused with espresso, layered with mocha cream, and finished with chocolate shavings.",
@@ -65,7 +65,7 @@ const cakes = [
   {
     name: "Pineapple Gateau",
     price: 105.0,
-    image: "/pineapple.jpg",
+    image: "/Pineapple-Gateaux.jpg",
     rating: 4.7,
     description:
       "A light and airy sponge cake layered with whipped cream and juicy pineapple chunks, finished with a pineapple glaze.",
@@ -84,7 +84,7 @@ const cakes = [
   {
     name: "Ultimate Chocolate Cake",
     price: 89.0,
-    image: "/ultimate.jpg",
+    image: "/Ultimate-Chocolate-Cake.jpg",
     rating: 4.6,
     description:
       "An ultra-rich chocolate cake with layers of chocolate ganache and fudge, perfect for true chocolate lovers.",
@@ -103,7 +103,7 @@ const cakes = [
   {
     name: "Red Velvet Cake",
     price: 99.0,
-    image: "/red-velvet.jpg",
+    image: "/Red-velvet-cake-1-1.jpg",
     rating: 4.8,
     description:
       "A classic red velvet cake with a hint of cocoa, layered with smooth cream cheese frosting and finished with red velvet crumbs.",
