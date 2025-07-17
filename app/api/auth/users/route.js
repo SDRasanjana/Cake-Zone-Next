@@ -1,3 +1,6 @@
+// Force Node.js runtime to support MongoDB connections
+export const runtime = 'nodejs';
+
 import clientPromise from '@/lib/mongodb';
 import getUserModel from '@/lib/models/User';
 import { NextResponse } from 'next/server';
@@ -55,11 +58,31 @@ export async function POST(req) {
       updatedAt: now,
     };
     await users.insertOne(newUser);
-    // --- Clerk: create user in Clerk and set role ---
-    const clerkResult = await createClerkUser({ email, password, role });
-    if (!clerkResult.success) {
-      return NextResponse.json({ success: false, error: 'User added to DB but failed to create Clerk user: ' + clerkResult.error }, { status: 500 });
+    // --- Clerk: Check if user exists, create if not, or update role if exists ---
+    const { getClerkUserByEmail } = await import('@/lib/clerkApi');
+    const existingClerkUser = await getClerkUserByEmail(email);
+    
+    let clerkResult;
+    if (existingClerkUser) {
+      // User exists in Clerk, just update their role
+      clerkResult = await updateClerkUserRoleByEmail(email, role);
+      if (!clerkResult.success) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'User added to DB but failed to update Clerk user role: ' + clerkResult.error 
+        }, { status: 500 });
+      }
+    } else {
+      // User doesn't exist in Clerk, create new user
+      clerkResult = await createClerkUser({ email, password, role });
+      if (!clerkResult.success) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'User added to DB but failed to create Clerk user: ' + clerkResult.error 
+        }, { status: 500 });
+      }
     }
+    
     return NextResponse.json({ success: true, data: { ...newUser, password: undefined } });
   } catch (err) {
     return NextResponse.json({ success: false, error: 'Failed to add user' }, { status: 500 });

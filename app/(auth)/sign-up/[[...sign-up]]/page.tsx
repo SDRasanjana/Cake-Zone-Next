@@ -36,7 +36,7 @@ const SignUpPage = () => {
 
   return (
     <main className="flex justify-center items-center h-screen">
-      <SignUp afterSignUpUrl="/sign-up" />
+      <SignUp afterSignUpUrl="/post-signin-redirect" />
     </main>
   );
 };
