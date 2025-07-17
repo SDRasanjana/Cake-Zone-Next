@@ -32,6 +32,4 @@ export default function RootLayout({
   );
 }
 
-export const config = {
-  runtime: "edge",
-};
+export const runtime = "edge";

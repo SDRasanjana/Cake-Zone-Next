@@ -38,83 +38,43 @@ export default function CakeGallery() {
       setLoading(true);
       setError(null);
 
-      // Retry logic for API calls
-      const maxRetries = 3;
-      let retryCount = 0;
+      try {
+        console.log("Frontend: Starting to fetch cakes...");
 
-      while (retryCount < maxRetries) {
-        try {
-          console.log(
-            `Frontend: Attempt ${retryCount + 1} - Starting to fetch cakes...`
-          );
+        const res = await fetch("/api/cakes", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-          const res = await fetch("/api/cakes", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            // Add timeout
-            signal: AbortSignal.timeout(15000),
-          });
+        console.log("Frontend: Response status:", res.status);
+        console.log("Frontend: Response ok:", res.ok);
 
-          console.log("Frontend: Response status:", res.status);
-
-          if (!res.ok) {
-            const errorData = await res
-              .json()
-              .catch(() => ({ message: "Unknown error" }));
-            throw new Error(
-              `HTTP error! status: ${res.status} - ${
-                errorData.message || "Unknown error"
-              }`
-            );
-          }
-
-          const data = await res.json();
-          console.log("Frontend: Raw API response:", data);
-          console.log("Frontend: Is array?", Array.isArray(data));
-          console.log("Frontend: Data type:", typeof data);
-
-          // Handle both success and error responses
-          if (Array.isArray(data)) {
-            setCakes(data);
-            console.log(
-              "Frontend: Successfully set cakes:",
-              data.length,
-              "items"
-            );
-            return; // Success, exit retry loop
-          } else {
-            console.error("API returned non-array data:", data);
-            setError("Invalid data format received from server");
-            setCakes([]);
-            return; // Don't retry for data format errors
-          }
-        } catch (err) {
-          console.error(
-            `Frontend: Error fetching cakes (attempt ${retryCount + 1}):`,
-            err
-          );
-          retryCount++;
-
-          if (retryCount >= maxRetries) {
-            // Last attempt failed
-            setError(
-              err instanceof Error
-                ? err.message
-                : "Failed to fetch cakes after multiple attempts"
-            );
-            setCakes([]);
-          } else {
-            // Wait before retrying
-            await new Promise((resolve) =>
-              setTimeout(resolve, 1000 * retryCount)
-            );
-          }
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
         }
-      }
 
-      setLoading(false);
+        const data = await res.json();
+        console.log("Frontend: Successfully fetched data:", data);
+
+        if (Array.isArray(data)) {
+          setCakes(data);
+          console.log(
+            "Frontend: Set cakes successfully:",
+            data.length,
+            "items"
+          );
+        } else {
+          console.error("Frontend: Invalid data format:", data);
+          setError("Invalid data format received");
+        }
+      } catch (err) {
+        console.error("Frontend: Error fetching cakes:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch cakes");
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchCakes();
