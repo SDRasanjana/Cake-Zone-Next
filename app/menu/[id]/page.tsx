@@ -50,13 +50,22 @@ const CakeDetails = () => {
       return "/default-cake.png";
     }
 
-    // Ensure the image path is properly formatted
-    let formattedPath = imagePath;
-    if (formattedPath && !formattedPath.startsWith("/")) {
-      formattedPath = "/" + formattedPath;
+    // Handle base64 data URLs (uploaded images)
+    if (imagePath.startsWith("data:image")) {
+      return imagePath;
     }
 
-    return formattedPath;
+    // Handle HTTP/HTTPS URLs
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+
+    // Handle relative paths - ensure they start with /
+    if (!imagePath.startsWith("/")) {
+      return "/" + imagePath;
+    }
+
+    return imagePath;
   };
 
   // Handle image loading errors

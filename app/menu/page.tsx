@@ -24,13 +24,26 @@ export default function CakeGallery() {
 
   // Get image source with fallback
   const getImageSrc = (cake: Cake) => {
-    // Ensure the image path is properly formatted
-    let imagePath = cake.image;
-    if (imagePath && !imagePath.startsWith("/")) {
-      imagePath = "/" + imagePath;
+    if (!cake.image) {
+      return "/default-cake.png";
     }
 
-    return imagePath || "/default-cake.png";
+    // Handle base64 data URLs (uploaded images)
+    if (cake.image.startsWith("data:image")) {
+      return cake.image;
+    }
+
+    // Handle HTTP/HTTPS URLs
+    if (cake.image.startsWith("http")) {
+      return cake.image;
+    }
+
+    // Handle relative paths - ensure they start with /
+    if (!cake.image.startsWith("/")) {
+      return "/" + cake.image;
+    }
+
+    return cake.image;
   };
 
   useEffect(() => {

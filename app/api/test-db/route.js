@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import dbConnect from '@/lib/dbConnect';  
 
+// Force Node.js runtime to support MongoDB connections
+export const runtime = 'nodejs';
+
 export async function GET() {
     try {
         console.log('Testing MongoDB connection...');

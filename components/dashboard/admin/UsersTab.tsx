@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 export interface User {
   _id: string;
-  name: string;
+  name?: string; // Made optional since some users from API don't have names
   email: string;
   role: string;
   status: string;
@@ -139,18 +139,27 @@ const UsersTab: React.FC<UsersTabProps> = ({
             </select>
             <input
               className="border rounded px-2 py-2 flex-1 text-sm text-black"
-              placeholder="Password"
+              placeholder="Password (must be strong and unique)"
               type="password"
               value={form.password}
               onChange={(e) =>
                 setForm((f) => ({ ...f, password: e.target.value }))
               }
               required={form.role !== "customer"}
+              minLength={8}
+              title="Password must be at least 8 characters and not found in data breaches"
             />
           </div>
 
           {/* Error Message */}
           {formError && <div className="text-red-600 text-xs">{formError}</div>}
+
+          {/* Password Requirements Info */}
+          <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+            💡 <strong>Password Requirements:</strong> Use a strong, unique
+            password (8+ characters). Common passwords found in data breaches
+            will be rejected by our security system.
+          </div>
 
           {/* Submit Button - Full width on mobile */}
           <button
@@ -179,9 +188,15 @@ const UsersTab: React.FC<UsersTabProps> = ({
                     <th className="px-4 py-3 text-left font-semibold">Name</th>
                     <th className="px-4 py-3 text-left font-semibold">Email</th>
                     <th className="px-4 py-3 text-left font-semibold">Role</th>
-                    <th className="px-4 py-3 text-left font-semibold">Status</th>
-                    <th className="px-4 py-3 text-left font-semibold">Created</th>
-                    <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Created
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -196,7 +211,9 @@ const UsersTab: React.FC<UsersTabProps> = ({
                             {idx + 1}
                           </span>
                           <span className="font-medium text-gray-900 text-sm">
-                            {user.name}
+                            {user.name ||
+                              user.email.split("@")[0] ||
+                              "Unnamed User"}
                           </span>
                         </div>
                       </td>
@@ -278,7 +295,9 @@ const UsersTab: React.FC<UsersTabProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 text-base truncate">
-                        {user.name}
+                        {user.name ||
+                          user.email.split("@")[0] ||
+                          "Unnamed User"}
                       </h3>
                       <p className="text-sm text-gray-600 truncate">
                         {user.email}
@@ -299,9 +318,12 @@ const UsersTab: React.FC<UsersTabProps> = ({
                 {/* User Details Grid */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                    <div className="text-blue-700 text-xs font-semibold uppercase tracking-wide">Role</div>
+                    <div className="text-blue-700 text-xs font-semibold uppercase tracking-wide">
+                      Role
+                    </div>
                     <div className="mt-1">
-                      {currentUserRole === "admin" && user.role !== "customer" ? (
+                      {currentUserRole === "admin" &&
+                      user.role !== "customer" ? (
                         <select
                           className="w-full px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-semibold border-0 focus:ring-2 focus:ring-blue-300"
                           value={user.role}
@@ -321,7 +343,9 @@ const UsersTab: React.FC<UsersTabProps> = ({
                     </div>
                   </div>
                   <div className="bg-purple-50 border border-purple-200 p-3 rounded-lg">
-                    <div className="text-purple-700 text-xs font-semibold uppercase tracking-wide">Member Since</div>
+                    <div className="text-purple-700 text-xs font-semibold uppercase tracking-wide">
+                      Member Since
+                    </div>
                     <div className="text-purple-900 text-sm font-semibold">
                       {user.createdAt
                         ? new Date(user.createdAt).toLocaleDateString()
@@ -332,7 +356,9 @@ const UsersTab: React.FC<UsersTabProps> = ({
 
                 {/* User ID Section */}
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1">User ID</div>
+                  <div className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1">
+                    User ID
+                  </div>
                   <p className="text-xs text-gray-600 font-mono break-all">
                     {user._id}
                   </p>
