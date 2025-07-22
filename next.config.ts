@@ -32,7 +32,18 @@ const nextConfig = {
   },
   // Add proper static file handling
   trailingSlash: false,
-  output: "standalone",
+  // Remove standalone output to prevent file copying issues
+  experimental: {
+    // Optimize build process
+    turbo: {
+      rules: {
+        "*.svg": {
+          loaders: ["@svgr/webpack"],
+          as: "*.js",
+        },
+      },
+    },
+  },
 };
 
 module.exports = nextConfig;
