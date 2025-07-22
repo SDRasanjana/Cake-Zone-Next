@@ -1,36 +1,38 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export default function TestPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function testAPI() {
       try {
-        console.log('Testing API from test page...');
-        
-        const response = await fetch('/api/cakes');
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
+        console.log("Testing API from test page...");
+
+        const response = await fetch("/api/cakes");
+        console.log("Response status:", response.status);
+        console.log("Response ok:", response.ok);
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const result = await response.json();
-        console.log('API result:', result);
+        console.log("API result:", result);
         setData(result);
       } catch (err) {
-        console.error('API test failed:', err);
-        setError(err.message);
+        console.error("API test failed:", err);
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error occurred";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
     }
-    
+
     testAPI();
   }, []);
 
