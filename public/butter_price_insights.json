@@ -1,1 +1,29 @@
-{"trend": "decreasing", "percentage_change": -6.06, "highest_price": 437.23, "lowest_price": 415.69, "average_price": 428.11, "forecast_date": "2025-07-07", "current_price": 442.51, "forecasted_price": 415.69, "price_change": -26.82, "ingredient": "Butter"}
+{
+  "forecast_period": {
+    "start_date": "2025-07-27",
+    "end_date": "2025-08-09",
+    "days": 14
+  },
+  "price_analysis": {
+    "current_trend": "stable",
+    "trend_strength": "stable",
+    "price_change_lkr": 0.0,
+    "percentage_change": 0.0,
+    "highest_price": 415.16,
+    "lowest_price": 415.16,
+    "average_price": 415.16,
+    "volatility": 0.0
+  },
+  "recommendations": {
+    "buy_timing": "any_time",
+    "price_stability": "high",
+    "confidence_level": "high"
+  },
+  "metadata": {
+    "generated_at": "2025-07-25T08:58:14.560964",
+    "forecast_date": "2025-07-26",
+    "model_type": "Facebook Prophet",
+    "confidence_interval": "95%",
+    "ingredient": "Butter"
+  }
+}
