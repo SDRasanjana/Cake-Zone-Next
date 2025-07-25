@@ -385,7 +385,15 @@ export default function Forecast() {
               className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             />
             <p className="text-xs text-gray-600">
-              Forecast will start from: {new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              Forecast will start from:{" "}
+              {new Date(
+                new Date(startDate).getTime() + 24 * 60 * 60 * 1000
+              ).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
           </div>
 
@@ -406,7 +414,16 @@ export default function Forecast() {
               <option value={30}>30 days (1 month)</option>
             </select>
             <p className="text-xs text-gray-600">
-              End date: {new Date(new Date(startDate).getTime() + (forecastDays + 1) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              End date:{" "}
+              {new Date(
+                new Date(startDate).getTime() +
+                  (forecastDays + 1) * 24 * 60 * 60 * 1000
+              ).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
           </div>
 
@@ -430,36 +447,47 @@ export default function Forecast() {
 
         {/* Current Parameters Display */}
         <div className="mt-6 p-6 bg-blue-50 rounded-lg border-2 border-blue-200">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">📊 Forecast Summary</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-3">
+            📊 Forecast Summary
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white p-4 rounded-lg border">
               <h4 className="font-bold text-gray-700 mb-2">📅 Date Range</h4>
               <p className="text-sm text-gray-600">
-                <span className="font-medium">From:</span><br/>
+                <span className="font-medium">From:</span>
+                <br />
                 <span className="text-blue-600 font-bold">
-                  {new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                  {new Date(
+                    new Date(startDate).getTime() + 24 * 60 * 60 * 1000
+                  ).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </span>
               </p>
               <p className="text-sm text-gray-600 mt-2">
-                <span className="font-medium">To:</span><br/>
+                <span className="font-medium">To:</span>
+                <br />
                 <span className="text-green-600 font-bold">
-                  {new Date(new Date(startDate).getTime() + (forecastDays + 1) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                  {new Date(
+                    new Date(startDate).getTime() +
+                      (forecastDays + 1) * 24 * 60 * 60 * 1000
+                  ).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </span>
               </p>
             </div>
             <div className="bg-white p-4 rounded-lg border">
               <h4 className="font-bold text-gray-700 mb-2">⏱️ Duration</h4>
-              <p className="text-2xl font-bold text-purple-600">{forecastDays} days</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {forecastDays} days
+              </p>
               {currentData.insights?.forecast_period && (
                 <p className="text-sm text-green-600 font-medium mt-2">
                   ✅ Ready - Generated forecast available
