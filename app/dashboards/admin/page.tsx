@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import OverviewTab from "@/components/dashboard/admin/OverviewTab";
 import UsersTab from "@/components/dashboard/admin/UsersTab";
@@ -15,7 +15,6 @@ import {
   ShoppingCart,
   Package,
   Bell,
-  User,
   Settings,
   Users as UsersIcon,
   Box,
@@ -28,71 +27,20 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [notifications] = useState([
-    {
-      id: 1,
-      type: "order",
-      message: "New cake order from Sarah Johnson",
-      time: "5 min ago",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "alert",
-      message: "Low inventory: Vanilla extract",
-      time: "1 hour ago",
-      read: false,
-    },
-    {
-      id: 3,
-      type: "system",
-      message: "System backup completed",
-      time: "2 hours ago",
-      read: true,
-    },
-  ]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
-  const stats = {
-    totalUsers: 1247,
-    activeOrders: 23,
-    totalRevenue: 15680,
-    systemUptime: 99.9,
-  };
-
-  const recentOrders = [
-    {
-      id: "#ORD001",
-      customer: "Alice Brown",
-      cake: "Chocolate Layer Cake",
-      amount: "$45.00",
-      status: "completed",
-      date: "2025-01-20",
-    },
-    {
-      id: "#ORD002",
-      customer: "Mike Wilson",
-      cake: "Vanilla Birthday Cake",
-      amount: "$35.00",
-      status: "processing",
-      date: "2025-01-20",
-    },
-    {
-      id: "#ORD003",
-      customer: "Emma Davis",
-      cake: "Red Velvet Cake",
-      amount: "$55.00",
-      status: "pending",
-      date: "2025-01-19",
-    },
-    {
-      id: "#ORD004",
-      customer: "John Smith",
-      cake: "Strawberry Cake",
-      amount: "$40.00",
-      status: "completed",
-      date: "2025-01-19",
-    },
-  ];
+  // Fetch notification count for sidebar
+  const fetchNotificationCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications?targetRole=admin&unreadOnly=true");
+      const data = await res.json();
+      if (data.success) {
+        setUnreadNotificationCount(data.pagination.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  }, []);
 
   const [users, setUsers] = useState<AdminUserType[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -110,7 +58,8 @@ export default function AdminDashboard() {
       } else {
         setUserError(data.error || "Failed to fetch users");
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Error fetching users:", error);
       setUserError("Failed to fetch users");
     } finally {
       setLoadingUsers(false);
@@ -123,8 +72,16 @@ export default function AdminDashboard() {
     }
     if (isLoaded && isSignedIn && user?.publicMetadata?.role === "admin") {
       fetchUsers();
+      fetchNotificationCount();
+      
+      // Set up polling for notification count every 30 seconds
+      const interval = setInterval(() => {
+        fetchNotificationCount();
+      }, 30000);
+      
+      return () => clearInterval(interval);
     }
-  }, [isLoaded, isSignedIn, user, router, fetchUsers]);
+  }, [isLoaded, isSignedIn, user, router, fetchUsers, fetchNotificationCount]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -165,7 +122,8 @@ export default function AdminDashboard() {
       } else {
         return { success: false, error: data.error };
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Error adding user:", error);
       return { success: false, error: "Failed to add user" };
     }
   };
@@ -192,7 +150,8 @@ export default function AdminDashboard() {
       } else {
         return { success: false, error: data.error };
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Error updating user:", error);
       return { success: false, error: "Failed to update user" };
     }
   };
@@ -210,10 +169,7 @@ export default function AdminDashboard() {
 
   // Responsive layout and navigation
   return (
-    <div
-      className="min-h-screen bg-gray-50"
-      style={{ fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif' }}
-    >
+    <div className="min-h-screen bg-gray-50 font-sans">
       <AdminTopHeader />
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar - only visible on large screens */}
@@ -222,7 +178,7 @@ export default function AdminDashboard() {
             items={sidebarItems}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            notifications={notifications.filter((n) => !n.read).length}
+            notifications={unreadNotificationCount}
           />
         </div>
         {/* Mobile Navigation - only visible on small/medium screens */}
@@ -253,9 +209,7 @@ export default function AdminDashboard() {
               <OrdersTab getStatusColor={getStatusColor} />
             )}
             {activeTab === "products" && <ProductManagementTab />}
-            {activeTab === "notifications" && (
-              <NotificationsTab notifications={notifications} />
-            )}
+            {activeTab === "notifications" && <NotificationsTab />}
             {/* Add more tab components as needed for products, reports, settings, etc. */}
           </div>
         </main>

@@ -1,9 +1,11 @@
 // API Route: /api/orders/[orderId]/confirm-payment
 // Marks an order as paid after Stripe payment is successful
 // Updates paymentStatus and saves paymentIntentId
+// Creates admin notification when order is successfully placed
 
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { createOrderNotification } from "@/lib/services/notificationService";
 
 // Force Node.js runtime to support MongoDB connections
 export const runtime = 'nodejs';
@@ -29,6 +31,14 @@ export async function POST(req, { params }) {
     const client = await clientPromise;
     const db = client.db("cakezone"); // Use correct database name
     
+    // First, get the order details for notification
+    const order = await db.collection("orders").findOne({ _id: new ObjectId(orderId) });
+    
+    if (!order) {
+      console.error("Confirm Payment API: Order not found:", orderId);
+      return Response.json({ error: "Order not found" }, { status: 404 });
+    }
+    
     // Update the order as paid using the native MongoDB driver
     const result = await db.collection("orders").updateOne(
       { _id: new ObjectId(orderId) },
@@ -52,6 +62,28 @@ export async function POST(req, { params }) {
     if (result.modifiedCount === 0) {
       console.error("Confirm Payment API: Order not updated:", orderId);
       return Response.json({ error: "Order status not updated" }, { status: 500 });
+    }
+
+    // Create admin notification for successful order placement
+    try {
+      const orderData = {
+        orderId: orderId,
+        userId: order.userId,
+        customerName: order.shipping?.fullName,
+        total: order.total,
+        items: order.items || []
+      };
+
+      const notificationResult = await createOrderNotification(orderData);
+      
+      if (notificationResult.success) {
+        console.log('Admin notification created successfully for order:', orderId);
+      } else {
+        console.error('Failed to create admin notification:', notificationResult.error);
+      }
+    } catch (notificationError) {
+      // Don't fail the payment confirmation if notification creation fails
+      console.error('Failed to create admin notification:', notificationError);
     }
     
     console.log("Confirm Payment API: Order successfully updated to paid:", orderId);
