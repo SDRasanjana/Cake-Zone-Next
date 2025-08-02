@@ -2,6 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useIngredients } from "@/lib/hooks/useIngredients";
+import { usePriceCalculation } from "@/lib/hooks/usePriceCalculation";
+import { InventoryItem } from "@/types/inventory";
+import Notification from "@/components/ui/Notification";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import {
   Plus,
   Edit3,
@@ -11,25 +15,18 @@ import {
   TrendingDown,
 } from "lucide-react";
 
-interface InventoryItem {
-  id?: string;
-  name: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  costPerUnit: number;
-  lowStockThreshold: number;
-  totalValue: number;
-}
-
 export default function Inventory() {
   const { loading, addIngredientPrice } = useIngredients();
+  const { updateCakePrices } = usePriceCalculation();
 
   // Local state for inventory management
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [editingStock, setEditingStock] = useState<{ [key: string]: string }>(
+    {}
+  );
+  const [editingPrice, setEditingPrice] = useState<{ [key: string]: string }>(
     {}
   );
   const [formData, setFormData] = useState({
@@ -39,6 +36,33 @@ export default function Inventory() {
     unit: "kg",
     costPerUnit: "",
     lowStockThreshold: "5",
+  });
+
+  // Notification and modal states
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    message: string;
+    isVisible: boolean;
+  }>({
+    type: "info",
+    title: "",
+    message: "",
+    isVisible: false,
+  });
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type?: "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    type: "warning",
   });
 
   // Default inventory items with proper cake shop ingredients
@@ -136,6 +160,36 @@ export default function Inventory() {
     }
   }, [inventoryItems]);
 
+  // Helper function to show notifications
+  const showNotification = (
+    type: "success" | "error" | "warning" | "info",
+    title: string,
+    message: string
+  ) => {
+    setNotification({
+      type,
+      title,
+      message,
+      isVisible: true,
+    });
+  };
+
+  // Helper function to show confirmation modal
+  const showConfirmModal = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    type: "danger" | "warning" | "info" = "warning"
+  ) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+      type,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -144,27 +198,43 @@ export default function Inventory() {
     const lowStockThreshold = parseFloat(formData.lowStockThreshold);
 
     if (!formData.name || !formData.category) {
-      alert("Please fill in ingredient name and category");
+      showNotification(
+        "error",
+        "Validation Error",
+        "Please fill in ingredient name and category"
+      );
       return;
     }
 
     if (isNaN(quantity) || quantity < 0) {
-      alert("Please enter a valid quantity (0 or greater)");
+      showNotification(
+        "error",
+        "Validation Error",
+        "Please enter a valid quantity (0 or greater)"
+      );
       return;
     }
 
     if (isNaN(costPerUnit) || costPerUnit <= 0) {
-      alert("Please enter a valid cost per unit (greater than 0)");
+      showNotification(
+        "error",
+        "Validation Error",
+        "Please enter a valid cost per unit (greater than 0)"
+      );
       return;
     }
 
     if (isNaN(lowStockThreshold) || lowStockThreshold < 0) {
-      alert("Please enter a valid low stock threshold (0 or greater)");
+      showNotification(
+        "error",
+        "Validation Error",
+        "Please enter a valid low stock threshold (0 or greater)"
+      );
       return;
     }
 
     const newItem: InventoryItem = {
-      id: editingItem?.id || Date.now().toString(),
+      id: editingItem?.id ?? Date.now().toString(),
       name: formData.name,
       category: formData.category,
       quantity,
@@ -184,14 +254,25 @@ export default function Inventory() {
         source: "manual",
       });
 
+      let updatedInventory;
       if (editingItem) {
         // Update existing item
-        setInventoryItems((prev) =>
-          prev.map((item) => (item.id === editingItem.id ? newItem : item))
-        );
+        setInventoryItems((prev) => {
+          updatedInventory = prev.map((item) =>
+            item.id === editingItem.id ? newItem : item
+          );
+          // Trigger cake price update
+          updateCakePrices(updatedInventory);
+          return updatedInventory;
+        });
       } else {
         // Add new item
-        setInventoryItems((prev) => [...prev, newItem]);
+        setInventoryItems((prev) => {
+          updatedInventory = [...prev, newItem];
+          // Trigger cake price update
+          updateCakePrices(updatedInventory);
+          return updatedInventory;
+        });
       }
 
       // Reset form
@@ -205,9 +286,23 @@ export default function Inventory() {
       });
       setShowAddForm(false);
       setEditingItem(null);
+
+      showNotification(
+        "success",
+        "Ingredient Saved Successfully!",
+        `${editingItem ? "Updated" : "Added"} ${
+          formData.name
+        } to inventory. Cake prices have been updated automatically.`
+      );
     } catch (error) {
       console.error("Error saving ingredient:", error);
-      alert("Error saving ingredient. Please try again.");
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      showNotification(
+        "error",
+        "Error Saving Ingredient",
+        `There was an error saving the ingredient: ${errorMessage}. Please try again.`
+      );
     }
   };
 
@@ -225,17 +320,31 @@ export default function Inventory() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this item?")) {
-      setInventoryItems((prev) => prev.filter((item) => item.id !== id));
-    }
+    const itemToDelete = inventoryItems.find((item) => item.id === id);
+    if (!itemToDelete) return;
+
+    showConfirmModal(
+      "Delete Ingredient",
+      `Are you sure you want to delete "${itemToDelete.name}" from your inventory? This action cannot be undone.`,
+      () => {
+        setInventoryItems((prev) => prev.filter((item) => item.id !== id));
+        showNotification(
+          "success",
+          "Ingredient Deleted",
+          `${itemToDelete.name} has been removed from your inventory.`
+        );
+      },
+      "danger"
+    );
   };
 
   const updateStock = (id: string, newQuantity: number) => {
     // Ensure the quantity is not negative
     const validQuantity = Math.max(0, newQuantity);
+    const item = inventoryItems.find((item) => item.id === id);
 
-    setInventoryItems((prev) =>
-      prev.map((item) =>
+    setInventoryItems((prev) => {
+      const updatedItems = prev.map((item) =>
         item.id === id
           ? {
               ...item,
@@ -243,8 +352,83 @@ export default function Inventory() {
               totalValue: validQuantity * item.costPerUnit,
             }
           : item
-      )
-    );
+      );
+
+      // Trigger cake price update when inventory changes
+      updateCakePrices(updatedItems);
+
+      return updatedItems;
+    });
+
+    // Show notification for stock update
+    if (item) {
+      const difference = validQuantity - item.quantity;
+      if (difference !== 0) {
+        showNotification(
+          "info",
+          "Stock Updated",
+          `${item.name} stock ${
+            difference > 0 ? "increased" : "decreased"
+          } by ${Math.abs(difference)} ${item.unit}`
+        );
+      }
+    }
+  };
+
+  const updatePrice = async (id: string, newCostPerUnit: number) => {
+    // Ensure the cost per unit is not negative
+    const validCostPerUnit = Math.max(0.01, newCostPerUnit);
+    const item = inventoryItems.find((item) => item.id === id);
+
+    setInventoryItems((prev) => {
+      const updatedItems = prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              costPerUnit: validCostPerUnit,
+              totalValue: item.quantity * validCostPerUnit,
+            }
+          : item
+      );
+
+      // Trigger cake price update when cost changes
+      updateCakePrices(updatedItems);
+
+      return updatedItems;
+    });
+
+    // Show notification for price update
+    if (item) {
+      showNotification(
+        "info",
+        "Price Updated",
+        `${item.name} cost per unit updated to Rs. ${validCostPerUnit.toFixed(
+          2
+        )}. Cake prices have been recalculated.`
+      );
+    }
+
+    // Also update in the database for price tracking
+    try {
+      if (item) {
+        await addIngredientPrice({
+          name: item.name,
+          category: item.category,
+          price: validCostPerUnit,
+          unit: item.unit,
+          source: "manual",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating ingredient price in database:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      showNotification(
+        "warning",
+        "Database Update Warning",
+        `Price updated locally but could not save to database: ${errorMessage}`
+      );
+    }
   };
 
   const lowStockItems = inventoryItems.filter(
@@ -590,30 +774,30 @@ export default function Inventory() {
                       type="number"
                       step="0.1"
                       value={
-                        editingStock[item.id!] !== undefined
-                          ? editingStock[item.id!]
+                        editingStock[item.id] !== undefined
+                          ? editingStock[item.id]
                           : item.quantity.toString()
                       }
                       onChange={(e) => {
                         const value = e.target.value;
                         setEditingStock((prev) => ({
                           ...prev,
-                          [item.id!]: value,
+                          [item.id]: value,
                         }));
                       }}
                       onBlur={(e) => {
                         const value = e.target.value;
                         if (value === "") {
-                          updateStock(item.id!, 0);
+                          updateStock(item.id, 0);
                         } else {
                           const numValue = parseFloat(value);
                           if (!isNaN(numValue) && numValue >= 0) {
-                            updateStock(item.id!, numValue);
+                            updateStock(item.id, numValue);
                           } else {
                             // Reset to original value if invalid
                             setEditingStock((prev) => {
                               const newState = { ...prev };
-                              delete newState[item.id!];
+                              delete newState[item.id];
                               return newState;
                             });
                           }
@@ -621,7 +805,7 @@ export default function Inventory() {
                         // Clear editing state after blur
                         setEditingStock((prev) => {
                           const newState = { ...prev };
-                          delete newState[item.id!];
+                          delete newState[item.id];
                           return newState;
                         });
                       }}
@@ -638,8 +822,58 @@ export default function Inventory() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {item.unit}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    Rs. {item.costPerUnit.toFixed(2)}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <span className="text-sm text-gray-900 mr-1">Rs.</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={
+                          editingPrice[item.id] !== undefined
+                            ? editingPrice[item.id]
+                            : item.costPerUnit.toString()
+                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setEditingPrice((prev) => ({
+                            ...prev,
+                            [item.id]: value,
+                          }));
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            updatePrice(item.id, 0.01);
+                          } else {
+                            const numValue = parseFloat(value);
+                            if (!isNaN(numValue) && numValue > 0) {
+                              updatePrice(item.id, numValue);
+                            } else {
+                              // Reset to original value if invalid
+                              setEditingPrice((prev) => {
+                                const newState = { ...prev };
+                                delete newState[item.id];
+                                return newState;
+                              });
+                            }
+                          }
+                          // Clear editing state after blur
+                          setEditingPrice((prev) => {
+                            const newState = { ...prev };
+                            delete newState[item.id];
+                            return newState;
+                          });
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.currentTarget.blur();
+                          }
+                        }}
+                        className="w-20 px-2 py-1 text-sm text-gray-900 bg-white border border-gray-300 rounded focus:ring-2 focus:ring-[#F4C753] focus:border-transparent focus:bg-white"
+                        placeholder="0.00"
+                      />
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     Rs. {item.totalValue.toFixed(2)}
@@ -668,7 +902,7 @@ export default function Inventory() {
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(item.id!)}
+                        onClick={() => handleDelete(item.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         ×
@@ -681,6 +915,29 @@ export default function Inventory() {
           </table>
         </div>
       </div>
+
+      {/* Notification Component */}
+      <Notification
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={() =>
+          setNotification((prev) => ({ ...prev, isVisible: false }))
+        }
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

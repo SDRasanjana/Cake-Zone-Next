@@ -43,3 +43,61 @@ export async function POST(req) {
     return NextResponse.json({ message: "Error adding cake", error: error.message }, { status: 500 });
   }
 }
+
+// PATCH: Update cake prices based on ingredient cost changes
+export async function PATCH(req) {
+  try {
+    const body = await req.json();
+    const { priceUpdates } = body; // Array of { name, newPrice }
+
+    if (!priceUpdates || !Array.isArray(priceUpdates)) {
+      return NextResponse.json({ message: "Invalid price updates format" }, { status: 400 });
+    }
+
+    const client = await clientPromise;
+    const db = client.db();
+    const cakesCollection = db.collection("cakes");
+
+    const updateResults = [];
+
+    // Update each cake price
+    for (const update of priceUpdates) {
+      const { name, newPrice } = update;
+
+      if (!name || typeof newPrice !== 'number' || newPrice <= 0) {
+        continue; // Skip invalid updates
+      }
+
+      const result = await cakesCollection.updateOne(
+        { name: { $regex: new RegExp(name, 'i') } }, // Case-insensitive name match
+        {
+          $set: {
+            price: newPrice,
+            updatedAt: new Date(),
+            lastPriceUpdate: new Date(),
+            priceUpdateReason: "Ingredient cost change"
+          }
+        }
+      );
+
+      updateResults.push({
+        cakeName: name,
+        newPrice: newPrice,
+        matched: result.matchedCount > 0,
+        modified: result.modifiedCount > 0
+      });
+    }
+
+    return NextResponse.json({
+      message: "Price updates processed",
+      results: updateResults,
+      totalUpdated: updateResults.filter(r => r.modified).length
+    });
+
+  } catch (error) {
+    return NextResponse.json({
+      message: "Error updating cake prices",
+      error: error.message
+    }, { status: 500 });
+  }
+}

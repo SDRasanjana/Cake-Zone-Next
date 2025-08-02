@@ -16,6 +16,7 @@ import Forecast from "@/components/dashboard/Forecast";
 import Expenses from "@/components/dashboard/Expenses";
 import Reports from "@/components/dashboard/Reports";
 import Advisor from "@/components/dashboard/Advisor";
+import CakePricing from "@/components/dashboard/CakePricing";
 
 // Loading component
 const LoadingSpinner = () => (
@@ -83,6 +84,8 @@ export default function OwnerDashboard() {
           return <Orders />;
         case "Inventory":
           return <Inventory />;
+        case "Cake Pricing":
+          return <CakePricing />;
         case "Price Forecasting":
           return <Forecast />;
         case "Expenses":
