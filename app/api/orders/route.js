@@ -6,22 +6,6 @@
 import clientPromise from "@/lib/mongodb";
 
 export async function POST(req) {
-  // Get deliveryDate from request body
-  const { cartItems, shipping, userId, total, deliveryDate } = await req.json();
-  const client = await clientPromise;
-  const db = client.db();
-  // Insert the order document using the native MongoDB driver
-  const result = await db.collection("orders").insertOne({
-    userId,
-    items: cartItems,
-    shipping,
-    total,
-    deliveryDate, // Store delivery date in DB
-    paymentStatus: "pending",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  return Response.json({ orderId: result.insertedId });
 }
 
 // Add GET handler to fetch orders
