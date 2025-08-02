@@ -85,14 +85,48 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({
 
         // Call backend to confirm order update after payment
         try {
-          await fetch(`/api/orders/${orderId}/confirm-payment`, {
+          const confirmResponse = await fetch(`/api/orders/${orderId}/confirm-payment`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
           });
+          
+          if (!confirmResponse.ok) {
+            // Try to parse error response
+            let errorMessage = `Payment confirmation failed with status: ${confirmResponse.status}`;
+            try {
+              const responseText = await confirmResponse.text();
+              if (responseText) {
+                const errorData = JSON.parse(responseText);
+                errorMessage = errorData.error || errorData.message || errorMessage;
+              }
+            } catch (parseError) {
+              // If JSON parsing fails, use the status-based message
+              console.error("Failed to parse error response:", parseError);
+            }
+            throw new Error(errorMessage);
+          }
+          
+          // Parse successful response with better error handling
+          try {
+            const responseText = await confirmResponse.text();
+            if (!responseText) {
+              console.warn("Empty response from payment confirmation");
+              // Don't throw error - payment succeeded on Stripe side
+            } else {
+              const confirmData = JSON.parse(responseText);
+              console.log("Payment confirmation successful:", confirmData);
+            }
+          } catch (parseError) {
+            console.error("Failed to parse confirmation response:", parseError);
+            // Don't throw error - payment succeeded on Stripe side
+          }
+          
         } catch (err) {
-          // Optionally handle error, but don't block user
+          // Log error but don't block user - payment succeeded on Stripe side
           console.error("Order payment confirmation failed:", err);
+          // Optionally set a warning message for the user
+          setError(`Payment successful, but there was an issue updating your order. Please contact support if needed. Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
 
         clearCart(); // Clear the cart on successful payment
@@ -259,12 +293,25 @@ const CheckoutPage: React.FC = () => {
         }),
       });
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(
-          errorData.error || `Failed to create order: ${res.status}`
-        );
+        let errorMessage = `Failed to create order: ${res.status}`;
+        try {
+          const responseText = await res.text();
+          if (responseText) {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error("Failed to parse error response:", parseError);
+        }
+        throw new Error(errorMessage);
       }
-      const data = await res.json();
+      
+      const responseText = await res.text();
+      if (!responseText) {
+        throw new Error("Empty response from server");
+      }
+      
+      const data = JSON.parse(responseText);
       setOrderId(data.orderId);
       setStep(2);
     } catch (err: any) {
@@ -292,12 +339,25 @@ const CheckoutPage: React.FC = () => {
     })
       .then(async (res) => {
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(
-            errorData.error || `Failed to create payment intent: ${res.status}`
-          );
+          let errorMessage = `Failed to create payment intent: ${res.status}`;
+          try {
+            const responseText = await res.text();
+            if (responseText) {
+              const errorData = JSON.parse(responseText);
+              errorMessage = errorData.error || errorMessage;
+            }
+          } catch (parseError) {
+            console.error("Failed to parse error response:", parseError);
+          }
+          throw new Error(errorMessage);
         }
-        return res.json();
+        
+        const responseText = await res.text();
+        if (!responseText) {
+          throw new Error("Empty response from payment service");
+        }
+        
+        return JSON.parse(responseText);
       })
       .then((data) => {
         setClientSecret(data.clientSecret);
