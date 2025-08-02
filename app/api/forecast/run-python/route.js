@@ -5,9 +5,11 @@ import path from 'path';
 
 export async function GET(request) {
     try {
-        // Get ingredient parameter from query string
+        // Get parameters from query string
         const { searchParams } = new URL(request.url);
         const ingredient = searchParams.get('ingredient') || 'flour';
+        const startDate = searchParams.get('startDate'); // Optional: YYYY-MM-DD format
+        const days = parseInt(searchParams.get('days') || '7'); // Default 7 days
 
         // Validate ingredient parameter
         const validIngredients = ['flour', 'sugar', 'eggs', 'butter'];
@@ -15,6 +17,24 @@ export async function GET(request) {
             return NextResponse.json({
                 success: false,
                 error: `Invalid ingredient. Must be one of: ${validIngredients.join(', ')}`,
+                timestamp: new Date().toISOString()
+            }, { status: 400 });
+        }
+
+        // Validate days parameter
+        if (days < 1 || days > 30) {
+            return NextResponse.json({
+                success: false,
+                error: 'Days must be between 1 and 30',
+                timestamp: new Date().toISOString()
+            }, { status: 400 });
+        }
+
+        // Validate start date if provided
+        if (startDate && !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+            return NextResponse.json({
+                success: false,
+                error: 'Start date must be in YYYY-MM-DD format',
                 timestamp: new Date().toISOString()
             }, { status: 400 });
         }
@@ -28,6 +48,12 @@ export async function GET(request) {
             throw new Error(`Python script not found at ${scriptPath}`);
         }
 
+        // Build command with optional parameters
+        let command = `python "${scriptPath}" --days ${days}`;
+        if (startDate) {
+            command += ` --start-date ${startDate}`;
+        }
+
         // Use a promise to handle the exec callback with improved error handling
         const runScript = new Promise((resolve, reject) => {
             // Set the working directory to the scripts directory
@@ -35,11 +61,13 @@ export async function GET(request) {
                 cwd: scriptsDir
             };
 
-            exec(`python "${scriptPath}"`, options, (error, stdout, stderr) => {
+            console.log(`Executing command: ${command}`);
+            exec(command, options, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing script: ${error.message}`);
                     console.error(`Script path: ${scriptPath}`);
                     console.error(`Working directory: ${scriptsDir}`);
+                    console.error(`Command: ${command}`);
                     return reject(new Error(`Failed to execute Python script: ${error.message}`));
                 }
                 if (stderr && stderr.trim() !== '') {
@@ -99,6 +127,12 @@ export async function GET(request) {
             insights: insights,
             forecastImageUrl: `/${ingredient}_price_forecast.png`,
             ingredient: ingredient,
+            parameters: {
+                startDate: startDate || new Date().toISOString().split('T')[0],
+                days: days,
+                actualStartDate: insights?.forecast_period?.start_date || null,
+                endDate: insights?.forecast_period?.end_date || null
+            },
             timestamp: new Date().toISOString()
         });
     } catch (error) {

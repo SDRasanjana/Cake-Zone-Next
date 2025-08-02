@@ -1,1 +1,35 @@
-{"trend": "decreasing", "percentage_change": -2.1, "highest_price": 582.46, "lowest_price": 559.09, "average_price": 569.13, "forecast_date": "2025-07-07", "current_price": 574.59, "forecasted_price": 562.54, "price_change": -12.05, "ingredient": "Eggs"}
+{
+  "forecast_period": {
+    "start_date": "2025-07-27",
+    "end_date": "2025-08-09",
+    "days": 14
+  },
+  "price_analysis": {
+    "current_trend": "stable",
+    "trend_strength": "stable",
+    "price_change_lkr": 0.0,
+    "percentage_change": 0.0,
+    "highest_price": 558.77,
+    "lowest_price": 558.77,
+    "average_price": 558.77,
+    "volatility": 0.0
+  },
+  "recommendations": {
+    "buy_timing": "Any Time",
+    "price_stability": "High",
+    "confidence_level": "High"
+  },
+  "metadata": {
+    "generated_at": "2025-07-25T08:58:15.171245",
+    "forecast_date": "2025-07-26",
+    "model_type": "Prophet",
+    "confidence_interval": "95%",
+    "ingredient": "Eggs"
+  },
+  "trend": "stable",
+  "percentage_change": 0.0,
+  "highest_price": 558.77,
+  "lowest_price": 558.77,
+  "average_price": 558.77,
+  "forecast_date": "2025-08-09"
+}
