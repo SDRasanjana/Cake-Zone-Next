@@ -6,6 +6,5 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
 export async function POST(req, { params }) {
-  
 }
 // Note: This version does not use Mongoose models, but updates the same structure.
