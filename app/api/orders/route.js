@@ -7,7 +7,6 @@ import clientPromise from "@/lib/mongodb";
 
 export async function POST(req) {
 }
-
 // Add GET handler to fetch orders
 // If userId is provided, fetch orders for that user
 // If admin=true is provided, fetch all orders, total users, and active users
