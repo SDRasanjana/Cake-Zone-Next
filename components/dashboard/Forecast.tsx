@@ -24,12 +24,40 @@ interface ForecastDataPoint {
 }
 
 interface InsightData {
-  trend: string;
-  percentage_change: number;
-  highest_price: number;
-  lowest_price: number;
-  average_price: number;
-  forecast_date: string;
+  forecast_period?: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  price_analysis?: {
+    current_trend: string;
+    trend_strength: string;
+    price_change_lkr: number;
+    percentage_change: number;
+    highest_price: number;
+    lowest_price: number;
+    average_price: number;
+    volatility: number;
+  };
+  recommendations?: {
+    buy_timing: string;
+    price_stability: string;
+    confidence_level: string;
+  };
+  metadata?: {
+    generated_at: string;
+    forecast_date: string;
+    model_type: string;
+    confidence_interval: string;
+    ingredient: string;
+  };
+  // Legacy properties for backward compatibility
+  trend?: string;
+  percentage_change?: number;
+  highest_price?: number;
+  lowest_price?: number;
+  average_price?: number;
+  forecast_date?: string;
 }
 
 interface IngredientData {
@@ -45,6 +73,14 @@ type IngredientType = "flour" | "sugar" | "eggs" | "butter";
 export default function Forecast() {
   const [selectedIngredient, setSelectedIngredient] =
     useState<IngredientType>("flour");
+  const [forecastDays, setForecastDays] = useState<number>(7);
+  const [startDate, setStartDate] = useState<string>(() => {
+    // Default to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  });
+  const [imageTimestamp, setImageTimestamp] = useState<number>(Date.now());
   const [ingredientsData, setIngredientsData] = useState<
     Record<IngredientType, IngredientData>
   >({
@@ -122,15 +158,30 @@ export default function Forecast() {
   };
 
   // Function to run Python forecast script for specific ingredient
-  const runPythonForecast = async (ingredient: IngredientType) => {
+  const runPythonForecast = async (
+    ingredient: IngredientType,
+    customDays?: number,
+    customStartDate?: string
+  ) => {
     setIngredientsData((prev) => ({
       ...prev,
       [ingredient]: { ...prev[ingredient], loading: true, error: null },
     }));
 
     try {
+      // Use custom parameters or component state
+      const days = customDays || forecastDays;
+      const forecastStartDate = customStartDate || startDate;
+
+      // Build query parameters
+      const params = new URLSearchParams({
+        ingredient,
+        days: days.toString(),
+        startDate: forecastStartDate,
+      });
+
       const response = await fetch(
-        `/api/forecast/run-python?ingredient=${ingredient}`
+        `/api/forecast/run-python?${params.toString()}`
       );
       const data = await response.json();
 
@@ -146,6 +197,8 @@ export default function Forecast() {
               lastUpdated: new Date().toLocaleString(),
             },
           }));
+          // Update image timestamp to force refresh
+          setImageTimestamp(Date.now());
         } else {
           setIngredientsData((prev) => ({
             ...prev,
@@ -181,10 +234,15 @@ export default function Forecast() {
   };
 
   // Function to run all forecasts
-  const runAllForecasts = async () => {
+  const runAllForecasts = async (
+    customDays?: number,
+    customStartDate?: string
+  ) => {
     const ingredients: IngredientType[] = ["flour", "sugar", "eggs", "butter"];
     await Promise.all(
-      ingredients.map((ingredient) => runPythonForecast(ingredient))
+      ingredients.map((ingredient) =>
+        runPythonForecast(ingredient, customDays, customStartDate)
+      )
     );
   };
 
@@ -197,22 +255,90 @@ export default function Forecast() {
         "eggs",
         "butter",
       ];
-      await Promise.all(
-        ingredients.map((ingredient) => runPythonForecast(ingredient))
-      );
+
+      // Load each ingredient with default 7-day forecast
+      for (const ingredient of ingredients) {
+        setIngredientsData((prev) => ({
+          ...prev,
+          [ingredient]: { ...prev[ingredient], loading: true, error: null },
+        }));
+
+        try {
+          const params = new URLSearchParams({
+            ingredient,
+            days: "7",
+            startDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0],
+          });
+
+          const response = await fetch(
+            `/api/forecast/run-python?${params.toString()}`
+          );
+          const data = await response.json();
+
+          if (
+            data.success &&
+            data.forecastData &&
+            Array.isArray(data.forecastData)
+          ) {
+            setIngredientsData((prev) => ({
+              ...prev,
+              [ingredient]: {
+                ...prev[ingredient],
+                data: data.forecastData,
+                insights: data.insights || null,
+                loading: false,
+                lastUpdated: new Date().toLocaleString(),
+              },
+            }));
+          } else {
+            setIngredientsData((prev) => ({
+              ...prev,
+              [ingredient]: {
+                ...prev[ingredient],
+                loading: false,
+                error: data.error || "Failed to generate initial forecast",
+              },
+            }));
+          }
+        } catch (err) {
+          setIngredientsData((prev) => ({
+            ...prev,
+            [ingredient]: {
+              ...prev[ingredient],
+              loading: false,
+              error:
+                "Error loading initial forecast: " +
+                (err instanceof Error ? err.message : "Unknown error"),
+            },
+          }));
+        }
+      }
     };
+
     loadInitialData();
-  }, []);
+  }, []); // Empty dependency array is intentional for initial load only
+
+  // Function to update forecast parameters and regenerate for selected ingredient
+  const updateForecastParameters = async () => {
+    await runPythonForecast(selectedIngredient, forecastDays, startDate);
+  };
+
+  // Function to update forecast parameters and regenerate for all ingredients
+  const updateAllForecastParameters = async () => {
+    await runAllForecasts(forecastDays, startDate);
+  };
 
   const currentData = ingredientsData[selectedIngredient];
   const config = ingredientConfig[selectedIngredient];
   const IconComponent = config.icon;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-8 p-6 bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <div className="flex items-center justify-between bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
+        <div className="flex items-center space-x-4">
           <div className="bg-blue-100 p-3 rounded-lg">
             <Activity className="h-6 w-6 text-blue-600" />
           </div>
@@ -220,18 +346,156 @@ export default function Forecast() {
             <h1 className="text-2xl font-bold text-gray-900">
               Price Forecasting
             </h1>
-            <p className="text-gray-500">
-              Machine learning predictions for ingredient prices
+            <p className="text-gray-600">
+              Statistical predictions for ingredient prices
             </p>
           </div>
         </div>
         <button
-          onClick={runAllForecasts}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 transition-colors"
+          onClick={updateAllForecastParameters}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm font-medium flex items-center space-x-2"
         >
           <RefreshCw className="h-4 w-4" />
           <span>Refresh All</span>
         </button>
+      </div>
+
+      {/* Dynamic Forecast Controls */}
+      <div className="bg-gradient-to-br from-white via-blue-50 to-green-50 rounded-2xl shadow-lg border-2 border-blue-200 p-6">
+        <div className="flex items-center space-x-4 mb-6">
+          <div className="bg-blue-100 p-3 rounded-lg">
+            <Calendar className="h-6 w-6 text-blue-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Forecast Parameters
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Start Date */}
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-800">
+              📅 Start Date
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            />
+            <p className="text-xs text-gray-600">
+              Forecast will start from:{" "}
+              {new Date(
+                new Date(startDate).getTime() + 24 * 60 * 60 * 1000
+              ).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+
+          {/* Forecast Days */}
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-800">
+              ⏱️ Forecast Days
+            </label>
+            <select
+              value={forecastDays}
+              onChange={(e) => setForecastDays(parseInt(e.target.value))}
+              className="w-full px-4 py-3 border-2 border-green-300 rounded-lg text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
+            >
+              <option value={3}>3 days</option>
+              <option value={7}>7 days (1 week)</option>
+              <option value={14}>14 days (2 weeks)</option>
+              <option value={21}>21 days (3 weeks)</option>
+              <option value={30}>30 days (1 month)</option>
+            </select>
+            <p className="text-xs text-gray-600">
+              End date:{" "}
+              {new Date(
+                new Date(startDate).getTime() +
+                  (forecastDays + 1) * 24 * 60 * 60 * 1000
+              ).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+
+          {/* Update Button */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Update Forecast
+            </label>
+            <button
+              onClick={updateForecastParameters}
+              disabled={currentData.loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-2"
+            >
+              <Target className="h-4 w-4" />
+              <span>
+                {currentData.loading ? "Updating..." : "Update Selected"}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Current Parameters Display */}
+        <div className="mt-6 p-6 bg-blue-50 rounded-lg border-2 border-blue-200">
+          <h3 className="text-lg font-bold text-gray-800 mb-3">
+            📊 Forecast Summary
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg border">
+              <h4 className="font-bold text-gray-700 mb-2">📅 Date Range</h4>
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">From:</span>
+                <br />
+                <span className="text-blue-600 font-bold">
+                  {new Date(
+                    new Date(startDate).getTime() + 24 * 60 * 60 * 1000
+                  ).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                <span className="font-medium">To:</span>
+                <br />
+                <span className="text-green-600 font-bold">
+                  {new Date(
+                    new Date(startDate).getTime() +
+                      (forecastDays + 1) * 24 * 60 * 60 * 1000
+                  ).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border">
+              <h4 className="font-bold text-gray-700 mb-2">⏱️ Duration</h4>
+              <p className="text-2xl font-bold text-purple-600">
+                {forecastDays} days
+              </p>
+              {currentData.insights?.forecast_period && (
+                <p className="text-sm text-green-600 font-medium mt-2">
+                  ✅ Ready - Generated forecast available
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Ingredient Tabs */}
@@ -247,7 +511,11 @@ export default function Forecast() {
               return (
                 <button
                   key={ingredient}
-                  onClick={() => setSelectedIngredient(ingredient)}
+                  onClick={() => {
+                    setSelectedIngredient(ingredient);
+                    // Update image timestamp to ensure fresh image load for each ingredient
+                    setImageTimestamp(Date.now());
+                  }}
                   className={`
                   flex flex-col items-center p-4 rounded-lg transition-all duration-200 relative
                   ${
@@ -262,6 +530,13 @@ export default function Forecast() {
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                     </div>
                   )}
+                  {ingredientData.insights?.forecast_period &&
+                    ingredientData.insights.forecast_period.days ===
+                      forecastDays && (
+                      <div className="absolute top-2 left-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      </div>
+                    )}
                   <IngredientIcon
                     className={`h-6 w-6 mb-2 ${
                       isSelected ? "" : "text-gray-400"
@@ -296,7 +571,12 @@ export default function Forecast() {
                   {config.name} Price Forecast
                 </h2>
                 <p className="text-gray-500">
-                  7-day price prediction using Prophet ML
+                  {forecastDays}-day price prediction using Prophet ML
+                  {currentData.insights?.forecast_period && (
+                    <span className="text-green-600 font-medium ml-2">
+                      • Active forecast ready
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -371,7 +651,8 @@ export default function Forecast() {
                 </h3>
                 <div className="relative h-64 flex items-center justify-center bg-gray-50 rounded-lg">
                   <Image
-                    src={`/${selectedIngredient}_price_forecast.png`}
+                    key={`${selectedIngredient}-${imageTimestamp}`}
+                    src={`/${selectedIngredient}_price_forecast.png?t=${imageTimestamp}`}
                     alt={`${config.name} Price Forecast Chart`}
                     width={400}
                     height={250}
@@ -400,44 +681,102 @@ export default function Forecast() {
                       <span className="text-gray-600">Current Trend</span>
                       <span
                         className={`font-semibold capitalize ${
-                          currentData.insights.trend === "increasing"
+                          (currentData.insights.price_analysis?.current_trend ||
+                            currentData.insights.trend) === "increasing"
                             ? "text-red-600"
-                            : currentData.insights.trend === "decreasing"
+                            : (currentData.insights.price_analysis
+                                ?.current_trend ||
+                                currentData.insights.trend) === "decreasing"
                             ? "text-green-600"
                             : "text-gray-600"
                         }`}
                       >
-                        {currentData.insights.trend}
+                        {currentData.insights.price_analysis?.current_trend ||
+                          currentData.insights.trend}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">Price Change</span>
                       <span
                         className={`font-semibold ${
-                          currentData.insights.percentage_change > 0
+                          (currentData.insights.price_analysis
+                            ?.percentage_change ??
+                            currentData.insights.percentage_change ??
+                            0) > 0
                             ? "text-red-600"
-                            : currentData.insights.percentage_change < 0
+                            : (currentData.insights.price_analysis
+                                ?.percentage_change ??
+                                currentData.insights.percentage_change ??
+                                0) < 0
                             ? "text-green-600"
                             : "text-gray-600"
                         }`}
                       >
-                        {currentData.insights.percentage_change > 0 ? "+" : ""}
-                        {currentData.insights.percentage_change.toFixed(1)}%
+                        {(currentData.insights.price_analysis
+                          ?.percentage_change ??
+                          currentData.insights.percentage_change ??
+                          0) > 0
+                          ? "+"
+                          : ""}
+                        {(
+                          currentData.insights.price_analysis
+                            ?.percentage_change ??
+                          currentData.insights.percentage_change ??
+                          0
+                        ).toFixed(1)}
+                        %
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">Average Price</span>
                       <span className="font-semibold text-gray-900">
-                        LKR {currentData.insights.average_price.toFixed(2)}
+                        LKR{" "}
+                        {(
+                          currentData.insights.price_analysis?.average_price ??
+                          currentData.insights.average_price ??
+                          0
+                        ).toFixed(2)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">Price Range</span>
                       <span className="font-semibold text-gray-900">
-                        LKR {currentData.insights.lowest_price.toFixed(2)} -{" "}
-                        {currentData.insights.highest_price.toFixed(2)}
+                        LKR{" "}
+                        {(
+                          currentData.insights.price_analysis?.lowest_price ??
+                          currentData.insights.lowest_price ??
+                          0
+                        ).toFixed(2)}{" "}
+                        -{" "}
+                        {(
+                          currentData.insights.price_analysis?.highest_price ??
+                          currentData.insights.highest_price ??
+                          0
+                        ).toFixed(2)}
                       </span>
                     </div>
+                    {currentData.insights.price_analysis?.volatility && (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-600">Volatility</span>
+                        <span className="font-semibold text-gray-900">
+                          LKR{" "}
+                          {currentData.insights.price_analysis.volatility.toFixed(
+                            2
+                          )}
+                        </span>
+                      </div>
+                    )}
+                    {currentData.insights.recommendations?.buy_timing && (
+                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <span className="text-gray-600">Recommendation</span>
+                        <span className="font-semibold text-blue-700 capitalize">
+                          {currentData.insights.recommendations.buy_timing.replace(
+                            "_",
+                            " "
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -445,7 +784,8 @@ export default function Forecast() {
               {/* Forecast Data Table */}
               <div className="lg:col-span-2 bg-white rounded-lg p-4 border border-gray-100">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  7-Day Forecast
+                  {currentData.insights?.forecast_period?.days || forecastDays}
+                  -Day Forecast
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -469,7 +809,7 @@ export default function Forecast() {
                       </tr>
                     </thead>
                     <tbody>
-                      {currentData.data.slice(0, 7).map((point, index) => (
+                      {currentData.data.map((point, index) => (
                         <tr
                           key={index}
                           className="border-b border-gray-100 hover:bg-gray-50"

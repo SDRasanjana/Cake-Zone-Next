@@ -1,1 +1,29 @@
-{"trend": "decreasing", "percentage_change": -0.01, "highest_price": 225.19103777352984, "lowest_price": 220.9200059492509, "average_price": 223.04507742127734, "forecast_date": "2025-06-28"}
+{
+  "forecast_period": {
+    "start_date": "2025-07-27",
+    "end_date": "2025-07-29",
+    "days": 3
+  },
+  "price_analysis": {
+    "current_trend": "stable",
+    "trend_strength": "stable",
+    "price_change_lkr": 0.0,
+    "percentage_change": 0.0,
+    "highest_price": 220.92,
+    "lowest_price": 220.92,
+    "average_price": 220.92,
+    "volatility": 0.0
+  },
+  "recommendations": {
+    "buy_timing": "any_time",
+    "price_stability": "high",
+    "confidence_level": "high"
+  },
+  "metadata": {
+    "generated_at": "2025-07-25T09:06:24.293064",
+    "forecast_date": "2025-07-26",
+    "model_type": "Facebook Prophet",
+    "confidence_interval": "95%",
+    "ingredient": "Flour"
+  }
+}

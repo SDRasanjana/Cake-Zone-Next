@@ -80,23 +80,9 @@ forecast = model.predict(future)
 print(f"Last historical date in data: {eggs_df['ds'].max()}")
 print(f"Starting forecast from user-specified date: {current_date_pd + timedelta(days=1)}")
 
-# Create forecast dates based on user-specified start date
-user_forecast_dates = pd.date_range(
-    start=current_date_pd + timedelta(days=1),
-    periods=forecast_days,
-    freq='D'
-)
-
-# Get forecast values for the user-specified dates by interpolating
-forecast_future = []
-for target_date in user_forecast_dates:
-    # Find the closest forecast date
-    closest_idx = (forecast['ds'] - target_date).abs().idxmin()
-    forecast_row = forecast.iloc[closest_idx].copy()
-    forecast_row['ds'] = target_date
-    forecast_future.append(forecast_row)
-
-forecast_future = pd.DataFrame(forecast_future)
+# Filter forecast for the future days only (from the last historical date)
+last_historical_date = eggs_df['ds'].max()
+forecast_future = forecast[forecast['ds'] > last_historical_date].head(forecast_days).copy()
 
 print(f"Forecast generated for {len(forecast_future)} days")
 
