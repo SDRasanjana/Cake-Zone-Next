@@ -72,9 +72,31 @@ const CakePricing: React.FC = () => {
   const [defaultProfitMargin, setDefaultProfitMargin] = useState(20);
   const [lastUpdated, setLastUpdated] = useState<string>("");
 
+  // Load default profit margin from localStorage on component mount
+  useEffect(() => {
+    const savedMargin = localStorage.getItem("defaultProfitMargin");
+    if (savedMargin) {
+      const margin = Number(savedMargin);
+      if (margin >= 0 && margin <= 100) {
+        setDefaultProfitMargin(margin);
+      }
+    }
+  }, []);
+
+  // Save default profit margin to localStorage whenever it changes
+  const updateDefaultProfitMargin = (newMargin: number) => {
+    setDefaultProfitMargin(newMargin);
+    localStorage.setItem("defaultProfitMargin", newMargin.toString());
+
+    // Show saved indicator briefly
+    setMarginSaved(true);
+    setTimeout(() => setMarginSaved(false), 2000);
+  };
+
   // UI State
   const [activeTab, setActiveTab] = useState<"recipes" | "pricing">("pricing");
   const [editingMargin, setEditingMargin] = useState<string | null>(null);
+  const [marginSaved, setMarginSaved] = useState(false);
 
   // Recipe form state
   const [newRecipe, setNewRecipe] = useState<CakeRecipe>({
@@ -99,7 +121,9 @@ const CakePricing: React.FC = () => {
       }
     } catch (err) {
       console.error("Error fetching ingredients:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch ingredients");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch ingredients"
+      );
     }
   }, []);
 
@@ -183,42 +207,61 @@ const CakePricing: React.FC = () => {
   ];
 
   // Calculate ingredient cost for a recipe
-  const calculateIngredientCost = useCallback((recipe: CakeRecipe): number => {
-    let totalCost = 0;
-    
-    recipe.ingredients.forEach((recipeIngredient) => {
-      const ingredient = ingredients.find(
-        (ing) => ing.name.toLowerCase() === recipeIngredient.name.toLowerCase()
-      );
-      
-      if (ingredient) {
-        let cost = 0;
-        
-        // Handle different units
-        if (ingredient.unit === "1 kg" && recipeIngredient.unit === "kg") {
-          cost = ingredient.currentPrice * recipeIngredient.quantity;
-        } else if (ingredient.unit === "Dozen" && recipeIngredient.unit === "pieces") {
-          cost = (ingredient.currentPrice / 12) * recipeIngredient.quantity;
-        } else if (ingredient.unit === "250 g" && recipeIngredient.unit === "kg") {
-          cost = (ingredient.currentPrice / 0.25) * recipeIngredient.quantity;
-        } else if (ingredient.unit === "400 g" && recipeIngredient.unit === "kg") {
-          cost = (ingredient.currentPrice / 0.4) * recipeIngredient.quantity;
-        } else if (ingredient.unit === "100 g" && recipeIngredient.unit === "kg") {
-          cost = (ingredient.currentPrice / 0.1) * recipeIngredient.quantity;
-        } else if (ingredient.unit === "10 ml" && recipeIngredient.unit === "kg") {
-          // Assuming 1 kg = 1000 ml for liquid ingredients
-          cost = (ingredient.currentPrice / 0.01) * recipeIngredient.quantity;
-        } else {
-          // Direct unit match or fallback
-          cost = ingredient.currentPrice * recipeIngredient.quantity;
+  const calculateIngredientCost = useCallback(
+    (recipe: CakeRecipe): number => {
+      let totalCost = 0;
+
+      recipe.ingredients.forEach((recipeIngredient) => {
+        const ingredient = ingredients.find(
+          (ing) =>
+            ing.name.toLowerCase() === recipeIngredient.name.toLowerCase()
+        );
+
+        if (ingredient) {
+          let cost = 0;
+
+          // Handle different units
+          if (ingredient.unit === "1 kg" && recipeIngredient.unit === "kg") {
+            cost = ingredient.currentPrice * recipeIngredient.quantity;
+          } else if (
+            ingredient.unit === "Dozen" &&
+            recipeIngredient.unit === "pieces"
+          ) {
+            cost = (ingredient.currentPrice / 12) * recipeIngredient.quantity;
+          } else if (
+            ingredient.unit === "250 g" &&
+            recipeIngredient.unit === "kg"
+          ) {
+            cost = (ingredient.currentPrice / 0.25) * recipeIngredient.quantity;
+          } else if (
+            ingredient.unit === "400 g" &&
+            recipeIngredient.unit === "kg"
+          ) {
+            cost = (ingredient.currentPrice / 0.4) * recipeIngredient.quantity;
+          } else if (
+            ingredient.unit === "100 g" &&
+            recipeIngredient.unit === "kg"
+          ) {
+            cost = (ingredient.currentPrice / 0.1) * recipeIngredient.quantity;
+          } else if (
+            ingredient.unit === "10 ml" &&
+            recipeIngredient.unit === "kg"
+          ) {
+            // Assuming 1 kg = 1000 ml for liquid ingredients
+            cost = (ingredient.currentPrice / 0.01) * recipeIngredient.quantity;
+          } else {
+            // Direct unit match or fallback
+            cost = ingredient.currentPrice * recipeIngredient.quantity;
+          }
+
+          totalCost += cost;
         }
-        
-        totalCost += cost;
-      }
-    });
-    
-    return totalCost;
-  }, [ingredients]);
+      });
+
+      return totalCost;
+    },
+    [ingredients]
+  );
 
   // Calculate pricing for all recipes
   const calculateAllPricings = useCallback(() => {
@@ -238,7 +281,7 @@ const CakePricing: React.FC = () => {
           total: Math.round(totalCost * 100) / 100,
         },
         profitMargin: defaultProfitMargin,
-        finalPrice: Math.round(finalPrice * 100) / 100,
+        finalPrice: Math.ceil(finalPrice), // Round up to nearest integer
         lastUpdated: new Date().toISOString(),
       };
     });
@@ -252,11 +295,12 @@ const CakePricing: React.FC = () => {
     setCakePricings((prev) =>
       prev.map((pricing) => {
         if (pricing.cakeId === cakeId) {
-          const finalPrice = pricing.costBreakdown.total * (1 + newMargin / 100);
+          const finalPrice =
+            pricing.costBreakdown.total * (1 + newMargin / 100);
           return {
             ...pricing,
             profitMargin: newMargin,
-            finalPrice: Math.round(finalPrice * 100) / 100,
+            finalPrice: Math.ceil(finalPrice), // Round up to nearest integer
             lastUpdated: new Date().toISOString(),
           };
         }
@@ -269,54 +313,61 @@ const CakePricing: React.FC = () => {
   const savePricingToDatabase = async () => {
     try {
       setLoading(true);
-      
+
       // Show confirmation dialog before updating database
       const confirmUpdate = window.confirm(
         `⚠️ DATABASE UPDATE CONFIRMATION ⚠️\n\n` +
-        `This will update prices for ${cakePricings.length} cakes in the database.\n\n` +
-        `Updated prices will be immediately visible to customers on the menu.\n\n` +
-        `Current pricing summary:\n` +
-        cakePricings.map(p => `• ${p.cakeName}: Rs. ${p.finalPrice.toFixed(2)}`).join('\n') +
-        `\n\nDo you want to proceed with the update?`
+          `This will update prices for ${cakePricings.length} cakes in the database.\n\n` +
+          `Updated prices will be immediately visible to customers on the menu.\n\n` +
+          `Current pricing summary:\n` +
+          cakePricings
+            .map((p) => `• ${p.cakeName}: Rs. ${p.finalPrice}`)
+            .join("\n") +
+          `\n\nDo you want to proceed with the update?`
       );
-      
+
       if (!confirmUpdate) {
         setLoading(false);
         return;
       }
-      
+
       // Validate prices before updating
-      const invalidPrices = cakePricings.filter(p => 
-        !p.finalPrice || p.finalPrice <= 0 || isNaN(p.finalPrice)
+      const invalidPrices = cakePricings.filter(
+        (p) => !p.finalPrice || p.finalPrice <= 0 || isNaN(p.finalPrice)
       );
-      
+
       if (invalidPrices.length > 0) {
-        alert(`⚠️ Invalid pricing detected for: ${invalidPrices.map(p => p.cakeName).join(', ')}\n\nPlease recalculate prices before saving.`);
+        alert(
+          `⚠️ Invalid pricing detected for: ${invalidPrices
+            .map((p) => p.cakeName)
+            .join(", ")}\n\nPlease recalculate prices before saving.`
+        );
         setLoading(false);
         return;
       }
-      
+
       const updateResults = [];
       let successCount = 0;
       let failCount = 0;
-      
+
       // Update each cake's price in the database with safety checks
       for (const pricing of cakePricings) {
         try {
           // First, verify the cake exists in database
           const checkResponse = await fetch(`/api/cakes`);
           const existingCakes: CakeFromDB[] = await checkResponse.json();
-          const cakeExists = existingCakes.some((cake: CakeFromDB) => 
-            cake.name.toLowerCase() === pricing.cakeName.toLowerCase()
+          const cakeExists = existingCakes.some(
+            (cake: CakeFromDB) =>
+              cake.name.toLowerCase() === pricing.cakeName.toLowerCase()
           );
-          
+
           if (!cakeExists) {
             console.warn(`Cake not found in database: ${pricing.cakeName}`);
-            updateResults.push({ cake: pricing.cakeName, status: 'not_found' });
+            updateResults.push({ cake: pricing.cakeName, status: "not_found" });
             failCount++;
             continue;
           }
-          
+
           // Update the cake price with validation
           const response = await fetch(`/api/cakes`, {
             method: "PATCH",
@@ -331,47 +382,58 @@ const CakePricing: React.FC = () => {
               // Add backup data for safety
               costBreakdown: pricing.costBreakdown,
               profitMargin: pricing.profitMargin,
-              lastUpdated: pricing.lastUpdated
+              lastUpdated: pricing.lastUpdated,
             }),
           });
 
           if (response.ok) {
-            updateResults.push({ cake: pricing.cakeName, status: 'success' });
+            updateResults.push({ cake: pricing.cakeName, status: "success" });
             successCount++;
           } else {
             const errorData = await response.json();
             console.error(`Failed to update ${pricing.cakeName}:`, errorData);
-            updateResults.push({ cake: pricing.cakeName, status: 'error', error: errorData });
+            updateResults.push({
+              cake: pricing.cakeName,
+              status: "error",
+              error: errorData,
+            });
             failCount++;
           }
         } catch (err) {
           console.error(`Error updating ${pricing.cakeName}:`, err);
-          updateResults.push({ 
-            cake: pricing.cakeName, 
-            status: 'error', 
-            error: err instanceof Error ? err.message : 'Unknown error'
+          updateResults.push({
+            cake: pricing.cakeName,
+            status: "error",
+            error: err instanceof Error ? err.message : "Unknown error",
           });
           failCount++;
         }
       }
 
       // Display results summary
-      const resultMessage = `✅ PRICING UPDATE COMPLETED\n\n` +
+      const resultMessage =
+        `✅ PRICING UPDATE COMPLETED\n\n` +
         `Successfully updated: ${successCount} cakes\n` +
         `Failed to update: ${failCount} cakes\n\n` +
-        (failCount > 0 ? 
-          `Failed updates:\n${updateResults.filter(r => r.status !== 'success').map(r => `• ${r.cake}: ${r.status}`).join('\n')}\n\n` : 
-          '') +
+        (failCount > 0
+          ? `Failed updates:\n${updateResults
+              .filter((r) => r.status !== "success")
+              .map((r) => `• ${r.cake}: ${r.status}`)
+              .join("\n")}\n\n`
+          : "") +
         `All successful updates are now live on the customer menu.`;
-      
+
       alert(resultMessage);
-      
+
       // Log detailed results for debugging
-      console.log('Price Update Results:', updateResults);
-      
+      console.log("Price Update Results:", updateResults);
     } catch (err) {
       console.error("Error saving pricing:", err);
-      alert(`❌ CRITICAL ERROR\n\nFailed to complete pricing update: ${err instanceof Error ? err.message : 'Unknown error'}\n\nNo changes have been made to the database.`);
+      alert(
+        `❌ CRITICAL ERROR\n\nFailed to complete pricing update: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }\n\nNo changes have been made to the database.`
+      );
     } finally {
       setLoading(false);
     }
@@ -382,38 +444,51 @@ const CakePricing: React.FC = () => {
     const loadData = async () => {
       setLoading(true);
       setError("");
-      
+
       try {
         console.log("🔄 Loading pricing system data...");
-        
+
         // Load ingredients and recipes with error handling
         const results = await Promise.allSettled([
           fetchIngredients(),
-          fetchCakeRecipes()
+          fetchCakeRecipes(),
         ]);
 
         // Check for failures
         const ingredientsResult = results[0];
         const recipesResult = results[1];
 
-        if (ingredientsResult.status === 'rejected') {
-          console.error("Failed to load ingredients:", ingredientsResult.reason);
-          setError("⚠️ Failed to load ingredient data. Using sample data for demonstration.");
+        if (ingredientsResult.status === "rejected") {
+          console.error(
+            "Failed to load ingredients:",
+            ingredientsResult.reason
+          );
+          setError(
+            "⚠️ Failed to load ingredient data. Using sample data for demonstration."
+          );
         }
 
-        if (recipesResult.status === 'rejected') {
+        if (recipesResult.status === "rejected") {
           console.error("Failed to load recipes:", recipesResult.reason);
-          console.log("📝 Using sample recipes. Consider running the safe seeding script.");
+          console.log(
+            "📝 Using sample recipes. Consider running the safe seeding script."
+          );
         }
 
         // Log successful data loading
-        if (ingredientsResult.status === 'fulfilled' && recipesResult.status === 'fulfilled') {
+        if (
+          ingredientsResult.status === "fulfilled" &&
+          recipesResult.status === "fulfilled"
+        ) {
           console.log("✅ All pricing data loaded successfully");
         }
-
       } catch (err) {
         console.error("Critical error loading data:", err);
-        setError(`❌ Critical error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        setError(
+          `❌ Critical error: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }`
+        );
       } finally {
         setLoading(false);
       }
@@ -433,10 +508,7 @@ const CakePricing: React.FC = () => {
   const addIngredientToRecipe = () => {
     setNewRecipe((prev) => ({
       ...prev,
-      ingredients: [
-        ...prev.ingredients,
-        { name: "", quantity: 0, unit: "kg" },
-      ],
+      ingredients: [...prev.ingredients, { name: "", quantity: 0, unit: "kg" }],
     }));
   };
 
@@ -464,7 +536,11 @@ const CakePricing: React.FC = () => {
 
   // Save new recipe
   const saveNewRecipe = () => {
-    if (!newRecipe.name || !newRecipe.category || newRecipe.ingredients.length === 0) {
+    if (
+      !newRecipe.name ||
+      !newRecipe.category ||
+      newRecipe.ingredients.length === 0
+    ) {
       alert("Please fill in all required fields");
       return;
     }
@@ -504,8 +580,12 @@ const CakePricing: React.FC = () => {
             <Calculator className="h-6 w-6 text-orange-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Cake Pricing Management</h1>
-            <p className="text-gray-600">Automated pricing based on ingredient costs</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Cake Pricing Management
+            </h1>
+            <p className="text-gray-600">
+              Automated pricing based on ingredient costs
+            </p>
           </div>
         </div>
         <div className="flex items-center space-x-4">
@@ -534,37 +614,22 @@ const CakePricing: React.FC = () => {
         </div>
       </div>
 
-      {/* Safety Notice */}
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-        <div className="flex items-center space-x-3">
-          <div className="bg-green-100 p-2 rounded-lg">
-            <AlertTriangle className="h-5 w-5 text-green-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-green-800">🛡️ Safe Mode Active</h3>
-            <p className="text-sm text-green-700 mt-1">
-              This pricing system is designed to protect your database. All price updates include validation, 
-              confirmation dialogs, and audit trails. Existing data will never be accidentally deleted or corrupted.
-            </p>
-          </div>
-          <div className="text-xs bg-green-100 px-2 py-1 rounded text-green-700">
-            v2.0 Safe
-          </div>
-        </div>
-      </div>
-
       {/* Default Profit Margin Setting */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Percent className="h-5 w-5 text-green-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Default Profit Margin</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Default Profit Margin
+            </h3>
           </div>
           <div className="flex items-center space-x-3">
             <input
               type="number"
               value={defaultProfitMargin}
-              onChange={(e) => setDefaultProfitMargin(Number(e.target.value))}
+              onChange={(e) =>
+                updateDefaultProfitMargin(Number(e.target.value))
+              }
               className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center text-gray-900 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
               min="0"
               max="100"
@@ -573,7 +638,15 @@ const CakePricing: React.FC = () => {
           </div>
         </div>
         <p className="text-sm text-gray-500 mt-2">
-          This margin will be applied to all cakes. You can adjust individual cake margins below.
+          This margin will be applied to all cakes. You can adjust individual
+          cake margins below.
+          {marginSaved ? (
+            <span className="text-green-600 font-medium ml-2">✓ Saved!</span>
+          ) : (
+            <span className="text-green-600 font-medium ml-2">
+              ✓ Auto-saved
+            </span>
+          )}
         </p>
       </div>
 
@@ -631,7 +704,7 @@ const CakePricing: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-green-600">
-                        Rs. {pricing.finalPrice.toFixed(2)}
+                        Rs. {pricing.finalPrice}
                       </div>
                       <div className="text-sm text-gray-500">Final Price</div>
                     </div>
@@ -639,25 +712,33 @@ const CakePricing: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div className="bg-orange-50 p-3 rounded-lg">
-                      <div className="text-sm text-orange-600 font-medium">Ingredients</div>
+                      <div className="text-sm text-orange-600 font-medium">
+                        Ingredients
+                      </div>
                       <div className="text-lg font-semibold text-orange-700">
                         Rs. {pricing.costBreakdown.ingredients.toFixed(2)}
                       </div>
                     </div>
                     <div className="bg-blue-50 p-3 rounded-lg">
-                      <div className="text-sm text-blue-600 font-medium">Labor</div>
+                      <div className="text-sm text-blue-600 font-medium">
+                        Labor
+                      </div>
                       <div className="text-lg font-semibold text-blue-700">
                         Rs. {pricing.costBreakdown.labor.toFixed(2)}
                       </div>
                     </div>
                     <div className="bg-purple-50 p-3 rounded-lg">
-                      <div className="text-sm text-purple-600 font-medium">Overhead</div>
+                      <div className="text-sm text-purple-600 font-medium">
+                        Overhead
+                      </div>
                       <div className="text-lg font-semibold text-purple-700">
                         Rs. {pricing.costBreakdown.overhead.toFixed(2)}
                       </div>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg">
-                      <div className="text-sm text-gray-600 font-medium">Total Cost</div>
+                      <div className="text-sm text-gray-600 font-medium">
+                        Total Cost
+                      </div>
                       <div className="text-lg font-semibold text-gray-700">
                         Rs. {pricing.costBreakdown.total.toFixed(2)}
                       </div>
@@ -666,7 +747,9 @@ const CakePricing: React.FC = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <span className="text-sm text-gray-600">Profit Margin:</span>
+                      <span className="text-sm text-gray-600">
+                        Profit Margin:
+                      </span>
                       {editingMargin === pricing.cakeId ? (
                         <div className="flex items-center space-x-2">
                           <input
@@ -677,7 +760,9 @@ const CakePricing: React.FC = () => {
                             max="100"
                             onKeyPress={(e) => {
                               if (e.key === "Enter") {
-                                const newMargin = Number((e.target as HTMLInputElement).value);
+                                const newMargin = Number(
+                                  (e.target as HTMLInputElement).value
+                                );
                                 updateCakePricing(pricing.cakeId, newMargin);
                                 setEditingMargin(null);
                               }
@@ -719,7 +804,9 @@ const CakePricing: React.FC = () => {
         {activeTab === "recipes" && (
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Cake Recipes</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Cake Recipes
+              </h3>
               <button
                 onClick={() => setShowRecipeForm(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -731,71 +818,127 @@ const CakePricing: React.FC = () => {
 
             {/* Recipe Form */}
             {showRecipeForm && (
-              <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="text-md font-semibold text-gray-900 mb-4">Add New Recipe</h4>
+              <div className="mb-6 p-6 bg-gradient-to-br from-blue-50 via-white to-blue-25 rounded-xl border-2 border-blue-200 shadow-lg">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <Plus className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900">
+                    Add New Recipe
+                  </h4>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <input
                     type="text"
                     placeholder="Cake Name"
                     value={newRecipe.name}
-                    onChange={(e) => setNewRecipe((prev) => ({ ...prev, name: e.target.value }))}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
+                    onChange={(e) =>
+                      setNewRecipe((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                   />
                   <select
                     value={newRecipe.category}
-                    onChange={(e) => setNewRecipe((prev) => ({ ...prev, category: e.target.value }))}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
+                    onChange={(e) =>
+                      setNewRecipe((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                      }))
+                    }
+                    className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                   >
-                    <option value="">Select Category</option>
-                    <option value="Classic">Classic</option>
-                    <option value="Chocolate">Chocolate</option>
-                    <option value="Fruit">Fruit</option>
-                    <option value="Specialty">Specialty</option>
+                    <option value="" className="text-gray-500">
+                      Select Category
+                    </option>
+                    <option value="Classic" className="text-gray-900">
+                      Classic
+                    </option>
+                    <option value="Chocolate" className="text-gray-900">
+                      Chocolate
+                    </option>
+                    <option value="Fruit" className="text-gray-900">
+                      Fruit
+                    </option>
+                    <option value="Specialty" className="text-gray-900">
+                      Specialty
+                    </option>
                   </select>
                   <input
                     type="number"
                     placeholder="Yield (kg)"
                     value={newRecipe.yield}
-                    onChange={(e) => setNewRecipe((prev) => ({ ...prev, yield: Number(e.target.value) }))}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
+                    onChange={(e) =>
+                      setNewRecipe((prev) => ({
+                        ...prev,
+                        yield: Number(e.target.value),
+                      }))
+                    }
+                    className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                     step="0.1"
                   />
                   <input
                     type="number"
                     placeholder="Labor Cost (Rs)"
                     value={newRecipe.laborCost}
-                    onChange={(e) => setNewRecipe((prev) => ({ ...prev, laborCost: Number(e.target.value) }))}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
+                    onChange={(e) =>
+                      setNewRecipe((prev) => ({
+                        ...prev,
+                        laborCost: Number(e.target.value),
+                      }))
+                    }
+                    className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                   />
                 </div>
                 <input
                   type="number"
                   placeholder="Overhead Cost (Rs)"
                   value={newRecipe.overheadCost}
-                  onChange={(e) => setNewRecipe((prev) => ({ ...prev, overheadCost: Number(e.target.value) }))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg mb-4 w-full md:w-auto"
+                  onChange={(e) =>
+                    setNewRecipe((prev) => ({
+                      ...prev,
+                      overheadCost: Number(e.target.value),
+                    }))
+                  }
+                  className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all mb-4 w-full md:w-auto"
                 />
 
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h5 className="font-medium text-gray-900">Ingredients</h5>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="font-semibold text-gray-900 text-lg">
+                      Ingredients
+                    </h5>
                     <button
                       onClick={addIngredientToRecipe}
-                      className="text-blue-600 hover:text-blue-700 text-sm"
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm"
                     >
-                      + Add Ingredient
+                      <Plus className="h-4 w-4" />
+                      <span>Add Ingredient</span>
                     </button>
                   </div>
                   {newRecipe.ingredients.map((ingredient, index) => (
-                    <div key={index} className="flex items-center space-x-2 mb-2">
+                    <div
+                      key={index}
+                      className="flex items-center space-x-3 mb-3 p-3 bg-blue-25 rounded-lg border border-blue-100"
+                    >
                       <select
                         value={ingredient.name}
-                        onChange={(e) => updateRecipeIngredient(index, "name", e.target.value)}
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        onChange={(e) =>
+                          updateRecipeIngredient(index, "name", e.target.value)
+                        }
+                        className="flex-1 px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                       >
-                        <option value="">Select Ingredient</option>
+                        <option value="" className="text-gray-500">
+                          Select Ingredient
+                        </option>
                         {ingredients.map((ing) => (
-                          <option key={ing._id} value={ing.name}>
+                          <option
+                            key={ing._id}
+                            value={ing.name}
+                            className="text-gray-900"
+                          >
                             {ing.name}
                           </option>
                         ))}
@@ -804,22 +947,37 @@ const CakePricing: React.FC = () => {
                         type="number"
                         placeholder="Quantity"
                         value={ingredient.quantity}
-                        onChange={(e) => updateRecipeIngredient(index, "quantity", Number(e.target.value))}
-                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                        onChange={(e) =>
+                          updateRecipeIngredient(
+                            index,
+                            "quantity",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="w-24 px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center font-medium"
                         step="0.01"
                       />
                       <select
                         value={ingredient.unit}
-                        onChange={(e) => updateRecipeIngredient(index, "unit", e.target.value)}
-                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                        onChange={(e) =>
+                          updateRecipeIngredient(index, "unit", e.target.value)
+                        }
+                        className="w-24 px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center font-medium"
                       >
-                        <option value="kg">kg</option>
-                        <option value="pieces">pieces</option>
-                        <option value="ml">ml</option>
+                        <option value="kg" className="text-gray-900">
+                          kg
+                        </option>
+                        <option value="pieces" className="text-gray-900">
+                          pieces
+                        </option>
+                        <option value="ml" className="text-gray-900">
+                          ml
+                        </option>
                       </select>
                       <button
                         onClick={() => removeIngredientFromRecipe(index)}
-                        className="p-1 text-red-500 hover:text-red-700"
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
+                        title="Remove ingredient"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -827,18 +985,20 @@ const CakePricing: React.FC = () => {
                   ))}
                 </div>
 
-                <div className="flex space-x-2">
+                <div className="flex space-x-3 pt-4 border-t border-blue-200">
                   <button
                     onClick={saveNewRecipe}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="flex items-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-sm font-medium"
                   >
-                    Save Recipe
+                    <Check className="h-4 w-4" />
+                    <span>Save Recipe</span>
                   </button>
                   <button
                     onClick={() => setShowRecipeForm(false)}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    className="flex items-center space-x-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all shadow-sm font-medium"
                   >
-                    Cancel
+                    <X className="h-4 w-4" />
+                    <span>Cancel</span>
                   </button>
                 </div>
               </div>
@@ -847,16 +1007,26 @@ const CakePricing: React.FC = () => {
             {/* Recipe List */}
             <div className="grid gap-4">
               {cakeRecipes.map((recipe) => (
-                <div key={recipe._id} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div
+                  key={recipe._id}
+                  className="bg-white border border-gray-200 rounded-lg p-4"
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h4 className="text-md font-semibold text-gray-900">{recipe.name}</h4>
-                      <span className="text-sm text-gray-500">{recipe.category}</span>
+                      <h4 className="text-md font-semibold text-gray-900">
+                        {recipe.name}
+                      </h4>
+                      <span className="text-sm text-gray-500">
+                        {recipe.category}
+                      </span>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-gray-600">Yield: {recipe.yield} kg</div>
                       <div className="text-sm text-gray-600">
-                        Labor: Rs. {recipe.laborCost} | Overhead: Rs. {recipe.overheadCost}
+                        Yield: {recipe.yield} kg
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Labor: Rs. {recipe.laborCost} | Overhead: Rs.{" "}
+                        {recipe.overheadCost}
                       </div>
                     </div>
                   </div>
