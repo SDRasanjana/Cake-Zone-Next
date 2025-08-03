@@ -118,6 +118,26 @@ export async function GET(req) {
         .sort({ createdAt: -1 })
         .toArray();
 
+      // Transform orders to match frontend interface
+      const transformedOrders = orders.map(order => ({
+        id: order._id.toString(),
+        customerName: order.shipping?.fullName || order.shipping?.firstName + ' ' + order.shipping?.lastName || 'Unknown Customer',
+        customerPhone: order.shipping?.phone || 'N/A',
+        customerEmail: order.shipping?.email || 'N/A',
+        cake: order.items?.[0]?.name || 'Unknown Cake',
+        cakeSize: order.items?.[0]?.size || 'Unknown Size',
+        quantity: order.items?.reduce((sum, item) => sum + item.quantity, 0) || 1,
+        specialInstructions: order.shipping?.specialInstructions || order.items?.[0]?.specialInstructions || '',
+        amount: order.total || 0,
+        orderDate: order.createdAt || new Date(),
+        deliveryDate: order.deliveryDate || new Date(Date.now() + 24 * 60 * 60 * 1000), // Default to tomorrow
+        deliveryAddress: `${order.shipping?.address || ''}, ${order.shipping?.city || ''}, ${order.shipping?.state || ''}`.trim().replace(/^,\s*|,\s*$/g, '') || 'N/A',
+        paymentMethod: order.paymentMethod || 'Unknown',
+        paymentStatus: order.paymentStatus || 'pending',
+        status: order.status || 'pending',
+        urgentOrder: order.urgentOrder || false,
+      }));
+
       // Fetch total users (assuming users are in 'users' collection)
       const totalUsers = await db.collection("users").countDocuments();
 
@@ -127,7 +147,7 @@ export async function GET(req) {
 
       // Return all orders, total users, and active users
       return new Response(
-        JSON.stringify({ orders, totalUsers, activeUsers }),
+        JSON.stringify({ orders: transformedOrders, totalUsers, activeUsers }),
         { status: 200 }
       );
     }
@@ -145,27 +165,27 @@ export async function GET(req) {
     return new Response(JSON.stringify({ orders }), { status: 200 });
   } catch (error) {
     console.error("Orders API Error:", error);
-    
+
     // Return error response instead of fallback data
     const { searchParams } = new URL(req.url);
     const admin = searchParams.get("admin");
-    
+
     if (admin === "true") {
       return new Response(
-        JSON.stringify({ 
-          error: "Database connection failed", 
-          orders: [], 
-          totalUsers: 0, 
-          activeUsers: 0 
+        JSON.stringify({
+          error: "Database connection failed",
+          orders: [],
+          totalUsers: 0,
+          activeUsers: 0
         }),
         { status: 500 }
       );
     } else {
       return new Response(
-        JSON.stringify({ 
-          error: "Database connection failed", 
-          orders: [] 
-        }), 
+        JSON.stringify({
+          error: "Database connection failed",
+          orders: []
+        }),
         { status: 500 }
       );
     }
