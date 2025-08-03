@@ -536,12 +536,34 @@ const CakePricing: React.FC = () => {
 
   // Save new recipe
   const saveNewRecipe = () => {
-    if (
-      !newRecipe.name ||
-      !newRecipe.category ||
-      newRecipe.ingredients.length === 0
-    ) {
-      alert("Please fill in all required fields");
+    // Enhanced validation with user-friendly messages
+    if (!newRecipe.name.trim()) {
+      alert("⚠️ Please enter a cake name\n\nExample: 'Classic Chocolate Cake' or 'Red Velvet Supreme'");
+      return;
+    }
+
+    if (!newRecipe.category) {
+      alert("⚠️ Please select a category\n\nChoose from: Classic, Chocolate, Fruit, or Specialty");
+      return;
+    }
+
+    if (newRecipe.ingredients.length === 0) {
+      alert("⚠️ Please add at least one ingredient\n\nClick 'Add Ingredient' to start building your recipe");
+      return;
+    }
+
+    // Check for incomplete ingredients
+    const incompleteIngredients = newRecipe.ingredients.filter(
+      (ing) => !ing.name || ing.quantity <= 0
+    );
+
+    if (incompleteIngredients.length > 0) {
+      alert("⚠️ Please complete all ingredient details\n\nMake sure each ingredient has:\n• Name selected\n• Quantity greater than 0");
+      return;
+    }
+
+    if (!newRecipe.yield || newRecipe.yield <= 0) {
+      alert("⚠️ Please enter a valid cake yield\n\nExample: 1.0 kg for a standard cake");
       return;
     }
 
@@ -560,6 +582,9 @@ const CakePricing: React.FC = () => {
       overheadCost: 0,
     });
     setShowRecipeForm(false);
+    
+    // Success message
+    alert(`✅ Recipe saved successfully!\n\n"${recipeWithId.name}" has been added to your recipe list and will be included in pricing calculations.`);
   };
 
   if (loading) {
@@ -828,88 +853,112 @@ const CakePricing: React.FC = () => {
                   </h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <input
-                    type="text"
-                    placeholder="Cake Name"
-                    value={newRecipe.name}
-                    onChange={(e) =>
-                      setNewRecipe((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                    className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                  />
-                  <select
-                    value={newRecipe.category}
-                    onChange={(e) =>
-                      setNewRecipe((prev) => ({
-                        ...prev,
-                        category: e.target.value,
-                      }))
-                    }
-                    className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                  >
-                    <option value="" className="text-gray-500">
-                      Select Category
-                    </option>
-                    <option value="Classic" className="text-gray-900">
-                      Classic
-                    </option>
-                    <option value="Chocolate" className="text-gray-900">
-                      Chocolate
-                    </option>
-                    <option value="Fruit" className="text-gray-900">
-                      Fruit
-                    </option>
-                    <option value="Specialty" className="text-gray-900">
-                      Specialty
-                    </option>
-                  </select>
-                  <input
-                    type="number"
-                    placeholder="Yield (kg)"
-                    value={newRecipe.yield}
-                    onChange={(e) =>
-                      setNewRecipe((prev) => ({
-                        ...prev,
-                        yield: Number(e.target.value),
-                      }))
-                    }
-                    className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                    step="0.1"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Labor Cost (Rs)"
-                    value={newRecipe.laborCost}
-                    onChange={(e) =>
-                      setNewRecipe((prev) => ({
-                        ...prev,
-                        laborCost: Number(e.target.value),
-                      }))
-                    }
-                    className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cake Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Classic Chocolate Cake"
+                      value={newRecipe.name}
+                      onChange={(e) =>
+                        setNewRecipe((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={newRecipe.category}
+                      onChange={(e) =>
+                        setNewRecipe((prev) => ({
+                          ...prev,
+                          category: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    >
+                      <option value="" className="text-gray-500">Choose cake category</option>
+                      <option value="Classic" className="text-gray-900">Classic</option>
+                      <option value="Chocolate" className="text-gray-900">Chocolate</option>
+                      <option value="Fruit" className="text-gray-900">Fruit</option>
+                      <option value="Specialty" className="text-gray-900">Specialty</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cake Yield (kg) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="1.0"
+                      value={newRecipe.yield}
+                      onChange={(e) =>
+                        setNewRecipe((prev) => ({
+                          ...prev,
+                          yield: Number(e.target.value),
+                        }))
+                      }
+                      className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      step="0.1"
+                      min="0.1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Final weight of the finished cake</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Labor Cost (Rs)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="500"
+                      value={newRecipe.laborCost}
+                      onChange={(e) =>
+                        setNewRecipe((prev) => ({
+                          ...prev,
+                          laborCost: Number(e.target.value),
+                        }))
+                      }
+                      className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      min="0"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Cost for baking work & time</p>
+                  </div>
                 </div>
-                <input
-                  type="number"
-                  placeholder="Overhead Cost (Rs)"
-                  value={newRecipe.overheadCost}
-                  onChange={(e) =>
-                    setNewRecipe((prev) => ({
-                      ...prev,
-                      overheadCost: Number(e.target.value),
-                    }))
-                  }
-                  className="px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all mb-4 w-full md:w-auto"
-                />
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Overhead Cost (Rs)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="200"
+                    value={newRecipe.overheadCost}
+                    onChange={(e) =>
+                      setNewRecipe((prev) => ({
+                        ...prev,
+                        overheadCost: Number(e.target.value),
+                      }))
+                    }
+                    className="w-full md:w-80 px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    min="0"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Electricity, gas, equipment usage & other operational costs</p>
+                </div>
 
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h5 className="font-semibold text-gray-900 text-lg">
-                      Ingredients
-                    </h5>
+                    <div>
+                      <h5 className="font-semibold text-gray-900 text-lg">
+                        Ingredients <span className="text-red-500">*</span>
+                      </h5>
+                      <p className="text-sm text-gray-600">Add all ingredients needed for this cake recipe</p>
+                    </div>
                     <button
                       onClick={addIngredientToRecipe}
                       className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm"
@@ -918,69 +967,93 @@ const CakePricing: React.FC = () => {
                       <span>Add Ingredient</span>
                     </button>
                   </div>
+                  {newRecipe.ingredients.length === 0 && (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                      <p className="text-gray-500 mb-2">No ingredients added yet</p>
+                      <p className="text-sm text-gray-400">Click &ldquo;Add Ingredient&rdquo; to start building your recipe</p>
+                    </div>
+                  )}
                   {newRecipe.ingredients.map((ingredient, index) => (
                     <div
                       key={index}
-                      className="flex items-center space-x-3 mb-3 p-3 bg-blue-25 rounded-lg border border-blue-100"
+                      className="flex items-center space-x-3 mb-3 p-4 bg-blue-25 rounded-lg border border-blue-100"
                     >
-                      <select
-                        value={ingredient.name}
-                        onChange={(e) =>
-                          updateRecipeIngredient(index, "name", e.target.value)
-                        }
-                        className="flex-1 px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      >
-                        <option value="" className="text-gray-500">
-                          Select Ingredient
-                        </option>
-                        {ingredients.map((ing) => (
-                          <option
-                            key={ing._id}
-                            value={ing.name}
-                            className="text-gray-900"
-                          >
-                            {ing.name}
+                      <div className="flex-1">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Ingredient
+                        </label>
+                        <select
+                          value={ingredient.name}
+                          onChange={(e) =>
+                            updateRecipeIngredient(index, "name", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        >
+                          <option value="" className="text-gray-500">
+                            Choose ingredient
                           </option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        placeholder="Quantity"
-                        value={ingredient.quantity}
-                        onChange={(e) =>
-                          updateRecipeIngredient(
-                            index,
-                            "quantity",
-                            Number(e.target.value)
-                          )
-                        }
-                        className="w-24 px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center font-medium"
-                        step="0.01"
-                      />
-                      <select
-                        value={ingredient.unit}
-                        onChange={(e) =>
-                          updateRecipeIngredient(index, "unit", e.target.value)
-                        }
-                        className="w-24 px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center font-medium"
-                      >
-                        <option value="kg" className="text-gray-900">
-                          kg
-                        </option>
-                        <option value="pieces" className="text-gray-900">
-                          pieces
-                        </option>
-                        <option value="ml" className="text-gray-900">
-                          ml
-                        </option>
-                      </select>
-                      <button
-                        onClick={() => removeIngredientFromRecipe(index)}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
-                        title="Remove ingredient"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                          {ingredients.map((ing) => (
+                            <option
+                              key={ing._id}
+                              value={ing.name}
+                              className="text-gray-900"
+                            >
+                              {ing.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="w-28">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Quantity
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="0.5"
+                          value={ingredient.quantity}
+                          onChange={(e) =>
+                            updateRecipeIngredient(
+                              index,
+                              "quantity",
+                              Number(e.target.value)
+                            )
+                          }
+                          className="w-full px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center font-medium"
+                          step="0.01"
+                          min="0"
+                        />
+                      </div>
+                      <div className="w-24">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Unit
+                        </label>
+                        <select
+                          value={ingredient.unit}
+                          onChange={(e) =>
+                            updateRecipeIngredient(index, "unit", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center font-medium"
+                        >
+                          <option value="kg" className="text-gray-900">
+                            kg
+                          </option>
+                          <option value="pieces" className="text-gray-900">
+                            pieces
+                          </option>
+                          <option value="ml" className="text-gray-900">
+                            ml
+                          </option>
+                        </select>
+                      </div>
+                      <div className="w-10 flex justify-center">
+                        <button
+                          onClick={() => removeIngredientFromRecipe(index)}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
+                          title="Remove this ingredient"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
