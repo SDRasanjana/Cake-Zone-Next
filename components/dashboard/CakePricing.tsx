@@ -538,17 +538,23 @@ const CakePricing: React.FC = () => {
   const saveNewRecipe = () => {
     // Enhanced validation with user-friendly messages
     if (!newRecipe.name.trim()) {
-      alert("⚠️ Please enter a cake name\n\nExample: 'Classic Chocolate Cake' or 'Red Velvet Supreme'");
+      alert(
+        "⚠️ Please enter a cake name\n\nExample: 'Classic Chocolate Cake' or 'Red Velvet Supreme'"
+      );
       return;
     }
 
     if (!newRecipe.category) {
-      alert("⚠️ Please select a category\n\nChoose from: Classic, Chocolate, Fruit, or Specialty");
+      alert(
+        "⚠️ Please select a category\n\nChoose from: Classic, Chocolate, Fruit, or Specialty"
+      );
       return;
     }
 
     if (newRecipe.ingredients.length === 0) {
-      alert("⚠️ Please add at least one ingredient\n\nClick 'Add Ingredient' to start building your recipe");
+      alert(
+        "⚠️ Please add at least one ingredient\n\nClick 'Add Ingredient' to start building your recipe"
+      );
       return;
     }
 
@@ -558,12 +564,16 @@ const CakePricing: React.FC = () => {
     );
 
     if (incompleteIngredients.length > 0) {
-      alert("⚠️ Please complete all ingredient details\n\nMake sure each ingredient has:\n• Name selected\n• Quantity greater than 0");
+      alert(
+        "⚠️ Please complete all ingredient details\n\nMake sure each ingredient has:\n• Name selected\n• Quantity greater than 0"
+      );
       return;
     }
 
     if (!newRecipe.yield || newRecipe.yield <= 0) {
-      alert("⚠️ Please enter a valid cake yield\n\nExample: 1.0 kg for a standard cake");
+      alert(
+        "⚠️ Please enter a valid cake yield\n\nExample: 1.0 kg for a standard cake"
+      );
       return;
     }
 
@@ -582,9 +592,11 @@ const CakePricing: React.FC = () => {
       overheadCost: 0,
     });
     setShowRecipeForm(false);
-    
+
     // Success message
-    alert(`✅ Recipe saved successfully!\n\n"${recipeWithId.name}" has been added to your recipe list and will be included in pricing calculations.`);
+    alert(
+      `✅ Recipe saved successfully!\n\n"${recipeWithId.name}" has been added to your recipe list and will be included in pricing calculations.`
+    );
   };
 
   if (loading) {
@@ -884,11 +896,21 @@ const CakePricing: React.FC = () => {
                       }
                       className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                     >
-                      <option value="" className="text-gray-500">Choose cake category</option>
-                      <option value="Classic" className="text-gray-900">Classic</option>
-                      <option value="Chocolate" className="text-gray-900">Chocolate</option>
-                      <option value="Fruit" className="text-gray-900">Fruit</option>
-                      <option value="Specialty" className="text-gray-900">Specialty</option>
+                      <option value="" className="text-gray-500">
+                        Choose cake category
+                      </option>
+                      <option value="Classic" className="text-gray-900">
+                        Classic
+                      </option>
+                      <option value="Chocolate" className="text-gray-900">
+                        Chocolate
+                      </option>
+                      <option value="Fruit" className="text-gray-900">
+                        Fruit
+                      </option>
+                      <option value="Specialty" className="text-gray-900">
+                        Specialty
+                      </option>
                     </select>
                   </div>
                   <div>
@@ -909,7 +931,9 @@ const CakePricing: React.FC = () => {
                       step="0.1"
                       min="0.1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Final weight of the finished cake</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Final weight of the finished cake
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -928,7 +952,9 @@ const CakePricing: React.FC = () => {
                       className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                       min="0"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Cost for baking work & time</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Cost for baking work & time
+                    </p>
                   </div>
                 </div>
                 <div className="mb-4">
@@ -948,7 +974,9 @@ const CakePricing: React.FC = () => {
                     className="w-full md:w-80 px-4 py-3 border-2 border-blue-200 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                     min="0"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Electricity, gas, equipment usage & other operational costs</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Electricity, gas, equipment usage & other operational costs
+                  </p>
                 </div>
 
                 <div className="mb-6">
@@ -957,7 +985,9 @@ const CakePricing: React.FC = () => {
                       <h5 className="font-semibold text-gray-900 text-lg">
                         Ingredients <span className="text-red-500">*</span>
                       </h5>
-                      <p className="text-sm text-gray-600">Add all ingredients needed for this cake recipe</p>
+                      <p className="text-sm text-gray-600">
+                        Add all ingredients needed for this cake recipe
+                      </p>
                     </div>
                     <button
                       onClick={addIngredientToRecipe}
@@ -969,8 +999,13 @@ const CakePricing: React.FC = () => {
                   </div>
                   {newRecipe.ingredients.length === 0 && (
                     <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                      <p className="text-gray-500 mb-2">No ingredients added yet</p>
-                      <p className="text-sm text-gray-400">Click &ldquo;Add Ingredient&rdquo; to start building your recipe</p>
+                      <p className="text-gray-500 mb-2">
+                        No ingredients added yet
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Click &ldquo;Add Ingredient&rdquo; to start building
+                        your recipe
+                      </p>
                     </div>
                   )}
                   {newRecipe.ingredients.map((ingredient, index) => (
@@ -985,7 +1020,11 @@ const CakePricing: React.FC = () => {
                         <select
                           value={ingredient.name}
                           onChange={(e) =>
-                            updateRecipeIngredient(index, "name", e.target.value)
+                            updateRecipeIngredient(
+                              index,
+                              "name",
+                              e.target.value
+                            )
                           }
                           className="w-full px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                         >
@@ -1030,7 +1069,11 @@ const CakePricing: React.FC = () => {
                         <select
                           value={ingredient.unit}
                           onChange={(e) =>
-                            updateRecipeIngredient(index, "unit", e.target.value)
+                            updateRecipeIngredient(
+                              index,
+                              "unit",
+                              e.target.value
+                            )
                           }
                           className="w-full px-3 py-2 border-2 border-blue-200 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center font-medium"
                         >
