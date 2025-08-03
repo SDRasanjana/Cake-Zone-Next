@@ -40,11 +40,21 @@ export async function POST(req) {
             return NextResponse.json({ success: false, error: 'Price must be a positive number' }, { status: 400 });
         }
 
+        // Validate quantity if provided
+        let quantity = 0;
+        if (data.quantity !== undefined && data.quantity !== null) {
+            quantity = parseFloat(data.quantity);
+            if (isNaN(quantity) || quantity < 0) {
+                console.log('Validation failed - invalid quantity:', quantity);
+                return NextResponse.json({ success: false, error: 'Quantity must be a non-negative number' }, { status: 400 });
+            }
+        }
+
         // Check if ingredient exists, if not create it
         let ingredient = await collection.findOne({ name: data.name });
 
         if (ingredient) {
-            // Add new price entry to existing ingredient
+            // Add new price entry to existing ingredient and update quantity
             const updatedIngredient = await collection.findOneAndUpdate(
                 { name: data.name },
                 {
@@ -58,6 +68,7 @@ export async function POST(req) {
                     },
                     $set: {
                         currentPrice: price,
+                        quantity: data.quantity !== undefined ? quantity : ingredient.quantity || 0,
                         updatedAt: new Date()
                     }
                 },
@@ -70,6 +81,7 @@ export async function POST(req) {
                 name: data.name,
                 category: data.category || 'Other',
                 currentPrice: price,
+                quantity: quantity,
                 unit: data.unit || 'kg',
                 priceHistory: [{
                     price: price,
