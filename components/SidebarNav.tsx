@@ -7,6 +7,7 @@ import {
   DollarSign,
   FileText,
   Brain,
+  Calculator,
 } from "lucide-react";
 
 interface SidebarNavProps {
@@ -22,6 +23,7 @@ export default function SidebarNav({
     { name: "Overview", icon: BarChart3 },
     { name: "Orders", icon: Package },
     { name: "Inventory", icon: Package },
+    { name: "Cake Pricing", icon: Calculator },
     { name: "Price Forecasting", icon: TrendingUp },
     { name: "Expenses", icon: DollarSign },
     { name: "Reports", icon: FileText },

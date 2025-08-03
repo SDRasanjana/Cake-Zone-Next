@@ -52,3 +52,118 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to create cake" }, { status: 500 });
   }
 }
+
+// PATCH: Update cake price (for cake pricing system) - SAFE MODE
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    console.log("API: Updating cake price:", body);
+    
+    const { action, cakeName, newPrice, category, costBreakdown, profitMargin } = body;
+    
+    // Validate action
+    if (action !== "updatePrice") {
+      return NextResponse.json({ 
+        error: "Invalid action", 
+        validActions: ["updatePrice"] 
+      }, { status: 400 });
+    }
+    
+    // Validate required fields
+    if (!cakeName || newPrice === undefined || newPrice === null) {
+      return NextResponse.json({ 
+        error: "Missing required fields",
+        required: ["cakeName", "newPrice"] 
+      }, { status: 400 });
+    }
+    
+    // Validate price is positive number
+    if (typeof newPrice !== 'number' || newPrice <= 0 || isNaN(newPrice)) {
+      return NextResponse.json({ 
+        error: "Invalid price value",
+        message: "Price must be a positive number",
+        receivedPrice: newPrice
+      }, { status: 400 });
+    }
+    
+    const client = await clientPromise;
+    const db = client.db("cakezone");
+    
+    // First, check if cake exists before updating
+    const filter = { name: { $regex: new RegExp(`^${cakeName}$`, 'i') } };
+    if (category) {
+      Object.assign(filter, { category: { $regex: new RegExp(`^${category}$`, 'i') } });
+    }
+    
+    const existingCake = await db.collection("cakes").findOne(filter);
+    
+    if (!existingCake) {
+      return NextResponse.json({ 
+        error: "Cake not found",
+        searchCriteria: { cakeName, category },
+        message: "No cake matches the provided name and category"
+      }, { status: 404 });
+    }
+    
+    // Store previous price for backup/audit
+    const previousPrice = existingCake.price;
+    
+    // Prepare update data with audit trail
+    const updateData = { 
+      price: newPrice,
+      updatedAt: new Date(),
+      priceHistory: {
+        previousPrice,
+        newPrice,
+        updatedBy: "pricing_system",
+        timestamp: new Date(),
+        ...(costBreakdown && { costBreakdown }),
+        ...(profitMargin && { profitMargin })
+      }
+    };
+    
+    // Add pricing metadata if provided
+    if (costBreakdown) {
+      Object.assign(updateData, { costBreakdown });
+    }
+    if (profitMargin) {
+      Object.assign(updateData, { profitMargin });
+    }
+    
+    // Perform the update with atomic operation
+    const updateResult = await db.collection("cakes").updateOne(
+      { _id: existingCake._id },
+      { 
+        $set: updateData
+      }
+    );
+    
+    if (updateResult.modifiedCount === 0) {
+      return NextResponse.json({ 
+        error: "Update failed",
+        message: "No changes were made to the database"
+      }, { status: 500 });
+    }
+    
+    console.log(`API: Successfully updated cake "${cakeName}" price from ${previousPrice} to ${newPrice}`);
+    
+    return NextResponse.json({ 
+      success: true, 
+      modifiedCount: updateResult.modifiedCount,
+      cakeId: existingCake._id,
+      cakeName: existingCake.name,
+      previousPrice,
+      newPrice,
+      timestamp: new Date().toISOString(),
+      message: "Price updated successfully"
+    });
+    
+  } catch (error) {
+    console.error("API: Error updating cake price:", error);
+    return NextResponse.json({ 
+      error: "Internal server error",
+      message: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
+  }
+}
