@@ -1,86 +1,44 @@
 [
   {
-    "ds": "2025-07-27",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
-    "ds": "2025-07-28",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
-    "ds": "2025-07-29",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
-    "ds": "2025-07-30",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
-    "ds": "2025-07-31",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
-    "ds": "2025-08-01",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
-    "ds": "2025-08-02",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
-    "ds": "2025-08-03",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
-    "ds": "2025-08-04",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
-  },
-  {
     "ds": "2025-08-05",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
+    "yhat": 562.54,
+    "yhat_lower": 537.11,
+    "yhat_upper": 588.97
   },
   {
     "ds": "2025-08-06",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
+    "yhat": 562.54,
+    "yhat_lower": 537.11,
+    "yhat_upper": 588.97
   },
   {
     "ds": "2025-08-07",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
+    "yhat": 562.54,
+    "yhat_lower": 537.11,
+    "yhat_upper": 588.97
   },
   {
     "ds": "2025-08-08",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
+    "yhat": 562.54,
+    "yhat_lower": 537.11,
+    "yhat_upper": 588.97
   },
   {
     "ds": "2025-08-09",
-    "yhat": 558.77,
-    "yhat_lower": 531.73,
-    "yhat_upper": 585.85
+    "yhat": 562.54,
+    "yhat_lower": 537.11,
+    "yhat_upper": 588.97
+  },
+  {
+    "ds": "2025-08-10",
+    "yhat": 562.54,
+    "yhat_lower": 537.11,
+    "yhat_upper": 588.97
+  },
+  {
+    "ds": "2025-08-11",
+    "yhat": 562.54,
+    "yhat_lower": 537.11,
+    "yhat_upper": 588.97
   }
 ]
