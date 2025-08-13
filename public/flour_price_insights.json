@@ -1,17 +1,17 @@
 {
   "forecast_period": {
-    "start_date": "2025-07-27",
-    "end_date": "2025-07-29",
-    "days": 3
+    "start_date": "2025-08-05",
+    "end_date": "2025-08-11",
+    "days": 7
   },
   "price_analysis": {
     "current_trend": "stable",
     "trend_strength": "stable",
     "price_change_lkr": 0.0,
     "percentage_change": 0.0,
-    "highest_price": 220.92,
-    "lowest_price": 220.92,
-    "average_price": 220.92,
+    "highest_price": 225.16,
+    "lowest_price": 225.16,
+    "average_price": 225.16,
     "volatility": 0.0
   },
   "recommendations": {
@@ -20,8 +20,8 @@
     "confidence_level": "high"
   },
   "metadata": {
-    "generated_at": "2025-07-25T09:06:24.293064",
-    "forecast_date": "2025-07-26",
+    "generated_at": "2025-08-03T19:37:44.499369",
+    "forecast_date": "2025-08-04",
     "model_type": "Facebook Prophet",
     "confidence_interval": "95%",
     "ingredient": "Flour"

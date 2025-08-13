@@ -1,17 +1,17 @@
 {
   "forecast_period": {
-    "start_date": "2025-07-27",
-    "end_date": "2025-08-09",
-    "days": 14
+    "start_date": "2025-08-05",
+    "end_date": "2025-08-11",
+    "days": 7
   },
   "price_analysis": {
     "current_trend": "stable",
     "trend_strength": "stable",
     "price_change_lkr": 0.0,
     "percentage_change": 0.0,
-    "highest_price": 252.69,
-    "lowest_price": 252.69,
-    "average_price": 252.69,
+    "highest_price": 252.76,
+    "lowest_price": 252.76,
+    "average_price": 252.76,
     "volatility": 0.0
   },
   "recommendations": {
@@ -20,8 +20,8 @@
     "confidence_level": "high"
   },
   "metadata": {
-    "generated_at": "2025-07-25T08:58:14.023871",
-    "forecast_date": "2025-07-26",
+    "generated_at": "2025-08-03T19:37:49.537315",
+    "forecast_date": "2025-08-04",
     "model_type": "Facebook Prophet",
     "confidence_interval": "95%",
     "ingredient": "Sugar"
