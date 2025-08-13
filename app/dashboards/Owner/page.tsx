@@ -12,6 +12,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import Overview from "@/components/dashboard/Overview";
 import Orders from "@/components/dashboard/Orders";
 import Inventory from "@/components/dashboard/Inventory";
+import CakePricing from "@/components/dashboard/CakePricing";
 import Forecast from "@/components/dashboard/Forecast";
 import Expenses from "@/components/dashboard/Expenses";
 import Reports from "@/components/dashboard/Reports";
@@ -83,6 +84,8 @@ export default function OwnerDashboard() {
           return <Orders />;
         case "Inventory":
           return <Inventory />;
+        case "Cake Pricing":
+          return <CakePricing />;
         case "Price Forecasting":
           return <Forecast />;
         case "Expenses":

@@ -11,6 +11,10 @@ import {
   DollarSign,
   Clipboard,
   AlertTriangle,
+  Target,
+  Brain,
+  Calendar,
+  ArrowUpRight,
 } from "lucide-react";
 
 // Define the expense type
@@ -24,56 +28,91 @@ interface Expense {
   updatedAt: string | Date;
 }
 
-
-// Define the advice type
+// Define the enhanced advice type
 interface FinancialAdvice {
   category: string;
-  type: 'warning' | 'opportunity' | 'insight';
+  type: "warning" | "opportunity" | "insight";
   message: string;
   savings: number;
+  source?: "AI" | "Analysis";
+}
+
+// Define business metrics interface
+interface BusinessMetrics {
+  revenue: number;
+  totalRevenue: number;
+  uniqueCustomers: number;
+  avgOrderValue: number;
+  profitMargin: number;
+  businessHealth: "healthy" | "moderate" | "needs_attention";
+  seasonalData: {
+    season: string;
+    factor: number;
+    events: string[];
+  };
+  ingredientTrends: Record<
+    string,
+    {
+      current: number;
+      trend: number;
+      status: "rising" | "falling" | "stable";
+    }
+  >;
+  expenseRatio: {
+    labour: number;
+    inventory: number;
+    utilities: number;
+    others: number;
+  };
 }
 
 export default function Advisor() {
   const [financialAdvice, setFinancialAdvice] = useState<FinancialAdvice[]>([]);
+  const [businessMetrics, setBusinessMetrics] =
+    useState<BusinessMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Get expense data using the hook
-  const {
-    loading: expensesLoading,
-    getExpensesByMonth,
-  } = useExpense() as {
+  const { loading: expensesLoading, getExpensesByMonth } = useExpense() as {
     expenses: Expense[];
     loading: boolean;
     error: string | null;
     getTotalByCategory: (category: string) => number;
     getExpensesByMonth: (month: number, year: number) => Expense[];
   };
-  
+
   // Get ingredient data using the hook
-  const {
-    loading: ingredientsLoading,
-  } = useIngredients();
+  const { loading: ingredientsLoading } = useIngredients();
 
   // Get the current month and year for calculations
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  
+
   // Function to fetch financial advice from our API
   const fetchFinancialAdvice = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Collect current month expenses data to send to the AI
-      const currentMonthExpenses = getExpensesByMonth(currentMonth, currentYear);
-      
+      const currentMonthExpenses = getExpensesByMonth(
+        currentMonth,
+        currentYear
+      );
+
       // Let's gather data from previous months for comparison
-      const previousMonthExpenses = getExpensesByMonth(currentMonth - 1, currentYear);
-      const twoMonthsAgoExpenses = getExpensesByMonth(currentMonth - 2, currentYear);
-      
+      const previousMonthExpenses = getExpensesByMonth(
+        currentMonth - 1,
+        currentYear
+      );
+      const twoMonthsAgoExpenses = getExpensesByMonth(
+        currentMonth - 2,
+        currentYear
+      );
+
       // Prepare the data structure for the API
       const expenseData = {
         currentMonth: {
@@ -137,6 +176,9 @@ export default function Advisor() {
 
       if (data.success && data.advice) {
         setFinancialAdvice(data.advice);
+        if (data.businessMetrics) {
+          setBusinessMetrics(data.businessMetrics);
+        }
       } else {
         throw new Error(data.error || "Failed to generate advice");
       }
@@ -146,28 +188,39 @@ export default function Advisor() {
         err instanceof Error ? err.message : "An unknown error occurred"
       );
 
-      // Provide fallback advice if API fails
+      // Provide enhanced fallback advice if API fails
       setFinancialAdvice([
         {
           category: "General",
           type: "warning",
           message:
-            "Based on current spending patterns, consider reviewing your monthly budget allocation.",
+            "Unable to connect to AI advisor. Based on current spending patterns, consider reviewing your monthly budget allocation and identifying areas for optimization.",
           savings: 0,
+          source: "Analysis",
         },
         {
           category: "Inventory",
           type: "opportunity",
           message:
-            "Flour prices are predicted to rise. Consider bulk purchasing in the next week to save on costs.",
+            "Seasonal ingredient price fluctuations are expected. Consider monitoring market trends and implementing strategic bulk purchasing for key ingredients like flour and sugar.",
           savings: 1250,
+          source: "Analysis",
         },
         {
           category: "Labour",
           type: "insight",
           message:
-            "Labor costs increased by 15% compared to last month. Consider optimizing staff scheduling.",
+            "Labor costs optimization can significantly impact profitability. Consider implementing performance metrics and optimizing staff scheduling during peak and non-peak hours.",
           savings: 3000,
+          source: "Analysis",
+        },
+        {
+          category: "Seasonal",
+          type: "opportunity",
+          message:
+            "August presents opportunities for back-to-school celebrations and birthday parties. Consider targeted promotions to capitalize on seasonal demand patterns.",
+          savings: 2500,
+          source: "Analysis",
         },
       ]);
     } finally {
@@ -203,6 +256,24 @@ export default function Advisor() {
     0
   );
 
+  // Get advice counts by type
+  const adviceCounts = {
+    warnings: financialAdvice.filter((advice) => advice.type === "warning")
+      .length,
+    opportunities: financialAdvice.filter(
+      (advice) => advice.type === "opportunity"
+    ).length,
+    insights: financialAdvice.filter((advice) => advice.type === "insight")
+      .length,
+    aiGenerated: financialAdvice.filter((advice) => advice.source === "AI")
+      .length,
+  };
+
+  // Get unique categories for filtering
+  const uniqueCategories = [
+    ...new Set(financialAdvice.map((advice) => advice.category)),
+  ].sort();
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -226,55 +297,125 @@ export default function Advisor() {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            <span>{refreshing ? "Refreshing" : "Refresh Advice"}</span>
+            <span>{refreshing ? "Analyzing..." : "Refresh Analysis"}</span>
           </button>
         </div>
       </div>
 
-      {/* Category filter pills */}
+      {/* Enhanced Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-blue-600 font-medium">
+                Total Insights
+              </p>
+              <p className="text-2xl font-bold text-blue-800">
+                {financialAdvice.length}
+              </p>
+            </div>
+            <BarChart4 className="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-green-600 font-medium">
+                Opportunities
+              </p>
+              <p className="text-2xl font-bold text-green-800">
+                {adviceCounts.opportunities}
+              </p>
+            </div>
+            <Lightbulb className="h-8 w-8 text-green-600" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-lg border border-amber-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-amber-600 font-medium">Warnings</p>
+              <p className="text-2xl font-bold text-amber-800">
+                {adviceCounts.warnings}
+              </p>
+            </div>
+            <AlertTriangle className="h-8 w-8 text-amber-600" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-purple-600 font-medium">AI Insights</p>
+              <p className="text-2xl font-bold text-purple-800">
+                {adviceCounts.aiGenerated}
+              </p>
+            </div>
+            <Brain className="h-8 w-8 text-purple-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Category filter pills */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setSelectedCategory(null)}
-          className={`px-3 py-1 rounded-full text-sm ${
+          className={`px-3 py-1 rounded-full text-sm transition-all ${
             selectedCategory === null
-              ? "bg-purple-600 text-white"
+              ? "bg-purple-600 text-white shadow-md"
               : "bg-gray-100 hover:bg-gray-200 text-gray-800"
           }`}
         >
-          All Insights
+          All Insights ({financialAdvice.length})
         </button>
-        {["General", "Inventory", "Labour", "Utilities", "Others"].map(
-          (category) => (
+        {uniqueCategories.map((category) => {
+          const categoryCount = financialAdvice.filter(
+            (advice) => advice.category === category
+          ).length;
+          return (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-3 py-1 rounded-full text-sm ${
+              className={`px-3 py-1 rounded-full text-sm transition-all ${
                 selectedCategory === category
-                  ? "bg-purple-600 text-white"
+                  ? "bg-purple-600 text-white shadow-md"
                   : "bg-gray-100 hover:bg-gray-200 text-gray-800"
               }`}
             >
-              {category}
+              {category} ({categoryCount})
             </button>
-          )
-        )}
+          );
+        })}
       </div>
 
-      {/* Summary card */}
-      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-100">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div>
-            <h3 className="text-lg font-semibold text-purple-800">
-              AI-Powered Financial Summary
+      {/* Enhanced Summary card */}
+      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-lg border border-purple-100 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-purple-800 flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              AI-Powered Financial Analysis
             </h3>
-            <p className="text-purple-600">
-              {financialAdvice.length} insights identified for your business
+            <p className="text-purple-600 mt-1">
+              {financialAdvice.length} comprehensive insights identified for
+              your business optimization
             </p>
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-purple-700">
+              <span>⚠️ {adviceCounts.warnings} Critical Areas</span>
+              <span>💡 {adviceCounts.opportunities} Growth Opportunities</span>
+              <span>📊 {adviceCounts.insights} Strategic Insights</span>
+            </div>
           </div>
-          <div className="mt-3 md:mt-0 bg-white py-2 px-4 rounded-lg border border-purple-200 shadow-sm">
-            <p className="text-sm text-purple-700">Potential monthly savings</p>
-            <p className="text-xl font-bold text-purple-900">
+          <div className="bg-white py-3 px-6 rounded-lg border border-purple-200 shadow-sm">
+            <p className="text-sm text-purple-700 font-medium">
+              Potential Monthly Savings
+            </p>
+            <p className="text-2xl font-bold text-purple-900 flex items-center gap-1">
               Rs. {totalPotentialSavings.toLocaleString()}
+              {totalPotentialSavings > 0 && (
+                <ArrowUpRight className="h-5 w-5 text-green-600" />
+              )}
             </p>
           </div>
         </div>
@@ -294,32 +435,32 @@ export default function Advisor() {
       {loading && (
         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
           <RefreshCw className="h-6 w-6 text-purple-600 animate-spin mr-3" />
-          <p>Generating financial insights...</p>
+          <p>Generating comprehensive financial insights...</p>
         </div>
       )}
 
-      {/* Financial advice cards */}
+      {/* Enhanced Financial advice cards */}
       {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredAdvice.map((advice, index) => (
             <div
               key={index}
-              className={`p-4 rounded-lg shadow-sm border ${
+              className={`p-5 rounded-xl shadow-sm border-2 transition-all hover:shadow-md ${
                 advice.type === "warning"
-                  ? "bg-amber-50 border-amber-200"
+                  ? "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 hover:border-amber-300"
                   : advice.type === "opportunity"
-                  ? "bg-green-50 border-green-200"
-                  : "bg-blue-50 border-blue-200"
+                  ? "bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:border-green-300"
+                  : "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:border-blue-300"
               }`}
             >
               <div className="flex items-start">
                 <div
-                  className={`p-2 rounded-full mr-3 ${
+                  className={`p-3 rounded-full mr-4 ${
                     advice.type === "warning"
-                      ? "bg-amber-100 text-amber-600"
+                      ? "bg-amber-200 text-amber-700"
                       : advice.type === "opportunity"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-blue-100 text-blue-600"
+                      ? "bg-green-200 text-green-700"
+                      : "bg-blue-200 text-blue-700"
                   }`}
                 >
                   {advice.type === "warning" ? (
@@ -331,17 +472,53 @@ export default function Advisor() {
                   )}
                 </div>
                 <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                      {advice.category}
-                    </span>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-600 bg-white px-2 py-1 rounded">
+                        {advice.category}
+                      </span>
+                      {advice.source === "AI" && (
+                        <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-1 rounded flex items-center gap-1">
+                          <Brain className="h-3 w-3" />
+                          AI
+                        </span>
+                      )}
+                    </div>
                     {advice.savings > 0 && (
-                      <span className="bg-white px-2 py-1 rounded text-xs font-medium text-green-700 shadow-sm border border-green-100">
+                      <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-green-700 shadow-sm border border-green-100">
                         Save Rs. {advice.savings.toLocaleString()}
                       </span>
                     )}
                   </div>
-                  <p className="mt-2 text-gray-700">{advice.message}</p>
+                  <p className="text-gray-800 leading-relaxed font-medium">
+                    {advice.message}
+                  </p>
+
+                  {/* Action priority indicator */}
+                  <div className="mt-3 flex items-center justify-between">
+                    <span
+                      className={`text-xs font-medium px-2 py-1 rounded ${
+                        advice.type === "warning"
+                          ? "bg-amber-200 text-amber-800"
+                          : advice.type === "opportunity"
+                          ? "bg-green-200 text-green-800"
+                          : "bg-blue-200 text-blue-800"
+                      }`}
+                    >
+                      {advice.type === "warning"
+                        ? "⚠️ Action Required"
+                        : advice.type === "opportunity"
+                        ? "💡 Growth Opportunity"
+                        : "📊 Strategic Insight"}
+                    </span>
+
+                    {advice.savings > 0 && (
+                      <div className="text-xs text-gray-600 flex items-center gap-1">
+                        <TrendingDown className="h-3 w-3" />
+                        Monthly Impact
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -349,48 +526,95 @@ export default function Advisor() {
         </div>
       )}
 
-      {/* Action plan section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Your Financial Action Plan
+      {/* Enhanced Action plan section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+          <Target className="h-6 w-6 text-purple-600" />
+          Your Strategic Action Plan
         </h3>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <div className="bg-purple-100 p-2 rounded-full text-purple-600">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex items-start gap-4 p-4 bg-purple-50 rounded-lg border border-purple-100">
+            <div className="bg-purple-200 p-2 rounded-full text-purple-700">
               <Clipboard className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-medium">
-                Review inventory procurement strategy
+              <p className="font-semibold text-gray-800">
+                Inventory Optimization
               </p>
-              <p className="text-sm text-gray-600">
-                Implement recommendations for optimal ingredient purchasing
+              <p className="text-sm text-gray-600 mt-1">
+                Implement AI recommendations for strategic ingredient
+                procurement and waste reduction
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <div className="bg-purple-100 p-2 rounded-full text-purple-600">
+
+          <div className="flex items-start gap-4 p-4 bg-green-50 rounded-lg border border-green-100">
+            <div className="bg-green-200 p-2 rounded-full text-green-700">
               <DollarSign className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-medium">Track monthly expense trends</p>
-              <p className="text-sm text-gray-600">
-                Monitor category spending to identify and address anomalies
+              <p className="font-semibold text-gray-800">Revenue Enhancement</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Capitalize on seasonal opportunities and optimize pricing
+                strategies for growth
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <div className="bg-purple-100 p-2 rounded-full text-purple-600">
+
+          <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <div className="bg-blue-200 p-2 rounded-full text-blue-700">
               <TrendingDown className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-medium">Implement cost reduction strategies</p>
-              <p className="text-sm text-gray-600">
-                Follow AI recommendations to optimize operations
+              <p className="font-semibold text-gray-800">Cost Optimization</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Monitor expense trends and implement efficiency improvements
+                across operations
               </p>
             </div>
           </div>
         </div>
+
+        {businessMetrics && (
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Current Business Context
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Season:</span>
+                <span className="ml-2 font-medium">
+                  {businessMetrics.seasonalData?.season}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Business Health:</span>
+                <span
+                  className={`ml-2 font-medium ${
+                    businessMetrics.businessHealth === "healthy"
+                      ? "text-green-600"
+                      : businessMetrics.businessHealth === "moderate"
+                      ? "text-yellow-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {businessMetrics.businessHealth === "healthy"
+                    ? "✅ Healthy"
+                    : businessMetrics.businessHealth === "moderate"
+                    ? "⚠️ Moderate"
+                    : "🚨 Needs Attention"}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Profit Margin:</span>
+                <span className="ml-2 font-medium">
+                  {businessMetrics.profitMargin?.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

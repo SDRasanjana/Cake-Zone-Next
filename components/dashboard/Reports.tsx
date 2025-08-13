@@ -20,8 +20,22 @@ interface Expense {
   [key: string]: unknown;
 }
 
+interface Ingredient {
+  _id: string;
+  name: string;
+  currentPrice: number;
+  unit: string;
+  category: string;
+  priceHistory?: Array<{
+    price: number;
+    date: string;
+    source?: string;
+  }>;
+  [key: string]: unknown;
+}
+
 export default function Reports() {
-  const [activeCard, setActiveCard] = useState<"orders" | "expenses" | null>(
+  const [activeCard, setActiveCard] = useState<"orders" | "expenses" | "inventory" | null>(
     null
   );
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -45,12 +59,14 @@ export default function Reports() {
   });
   const [orderSummary, setOrderSummary] = useState("Loading...");
   const [expensesSummary, setExpensesSummary] = useState("Loading...");
+  const [inventorySummary, setInventorySummary] = useState("Loading...");
 
   // Fetch summary data from database
   const fetchSummaryData = useCallback(async () => {
     try {
       setOrderSummary("Loading orders...");
       setExpensesSummary("Loading expenses...");
+      setInventorySummary("Loading inventory...");
 
       // Fetch orders summary by calling our existing orders API to get count
       try {
@@ -58,10 +74,13 @@ export default function Reports() {
         // Since we need all orders, we'll call the PDF endpoint with a HEAD request to get the data
         const ordersResponse = await fetch(`/api/orders`);
         const expensesResponse = await fetch(`/api/expenses`);
+        const inventoryResponse = await fetch(`/api/ingredients`);
 
         let orderCount = 0;
         let orderTotal = 0;
         let expenseTotal = 0;
+        let inventoryCount = 0;
+        let totalInventoryValue = 0;
 
         if (ordersResponse.ok) {
           const ordersData: Order[] = await ordersResponse.json();
@@ -96,11 +115,25 @@ export default function Reports() {
           );
         }
 
+        if (inventoryResponse.ok) {
+          const inventoryData = await inventoryResponse.json();
+          const ingredients: Ingredient[] = inventoryData.success ? inventoryData.data : inventoryData;
+          
+          inventoryCount = ingredients.length;
+          totalInventoryValue = ingredients.reduce(
+            (sum: number, ingredient: Ingredient) => sum + (ingredient.currentPrice || 0),
+            0
+          );
+        }
+
         setOrderSummary(
           `Total Orders: ${orderCount}\nTotal Amount: Rs. ${orderTotal.toLocaleString()}`
         );
         setExpensesSummary(
           `Total Expenses: Rs. ${expenseTotal.toLocaleString()}`
+        );
+        setInventorySummary(
+          `Total Ingredients: ${inventoryCount}\nTotal Value: Rs. ${totalInventoryValue.toLocaleString()}`
         );
       } catch (apiError) {
         console.error("Error fetching from API:", apiError);
@@ -111,11 +144,15 @@ export default function Reports() {
         setExpensesSummary(
           "Click 'View' or 'Download' to generate report\nReal database data will be shown in PDF"
         );
+        setInventorySummary(
+          "Click 'View' or 'Download' to generate report\nReal database data will be shown in PDF"
+        );
       }
     } catch (error) {
       console.error("Error fetching summary data:", error);
       setOrderSummary("Error loading data");
       setExpensesSummary("Error loading data");
+      setInventorySummary("Error loading data");
     }
   }, [period, selectedDate]);
 
@@ -197,6 +234,30 @@ export default function Reports() {
     }
   };
 
+  const handleInventoryDownload = async () => {
+    try {
+      const response = await fetch(
+        `/api/reports/pdf?type=inventory&period=${period}&date=${selectedDate}`
+      );
+      if (!response.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `inventory-report-${selectedDate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (error) {
+      console.error("Error downloading inventory report:", error);
+      alert("Failed to download inventory report. Please try again.");
+    }
+  };
+
   const handleOrderView = async () => {
     try {
       console.log('Fetching order PDF...');
@@ -267,6 +328,41 @@ export default function Reports() {
     }
   };
 
+  const handleInventoryView = async () => {
+    try {
+      console.log('Fetching inventory PDF...');
+      const response = await fetch(
+        `/api/reports/pdf?type=inventory&period=${period}&date=${selectedDate}`
+      );
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        throw new Error(`Failed to generate PDF: ${response.status} - ${errorText}`);
+      }
+
+      const blob = await response.blob();
+      console.log('Blob size:', blob.size);
+      console.log('Blob type:', blob.type);
+      
+      if (blob.size === 0) {
+        throw new Error('Generated PDF is empty');
+      }
+      
+      const url = URL.createObjectURL(blob);
+      console.log('PDF URL created:', url);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+      console.error("Error viewing inventory report:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`Failed to view inventory report: ${errorMessage}`);
+    }
+  };
+
   const closeModal = () => {
     setShowModal(false);
     if (pdfUrl) URL.revokeObjectURL(pdfUrl);
@@ -285,7 +381,7 @@ export default function Reports() {
         setPeriod={setPeriod}
         setSelectedDate={setSelectedDate}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div
           className={`bg-white border border-orange-200 rounded-lg shadow p-6 flex items-center space-x-4 transition cursor-pointer ${
             activeCard === "orders"
@@ -348,6 +444,37 @@ export default function Reports() {
             </div>
           </div>
         </div>
+        <div
+          className={`bg-white border border-orange-200 rounded-lg shadow p-6 flex items-center space-x-4 transition cursor-pointer ${
+            activeCard === "inventory"
+              ? "ring-2 ring-orange-500"
+              : "hover:shadow-lg hover:border-orange-400"
+          }`}
+          onClick={() => setActiveCard("inventory")}
+        >
+          <span className="bg-orange-100 p-3 rounded-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-orange-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
+          </span>
+          <div>
+            <div className="font-semibold text-gray-800 text-lg">Inventory</div>
+            <div className="text-sm text-gray-500">
+              View ingredients and stock
+            </div>
+          </div>
+        </div>
       </div>
       {/* Show summary and download/view for selected card */}
       {activeCard === "orders" && (
@@ -364,6 +491,14 @@ export default function Reports() {
           summary={expensesSummary}
           onDownload={handleExpensesDownload}
           onView={handleExpensesView}
+        />
+      )}
+      {activeCard === "inventory" && (
+        <ReportCard
+          title="Inventory Summary"
+          summary={inventorySummary}
+          onDownload={handleInventoryDownload}
+          onView={handleInventoryView}
         />
       )}
       {/* PDF Viewer Modal */}

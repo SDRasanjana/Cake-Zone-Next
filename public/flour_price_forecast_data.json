@@ -1,26 +1,58 @@
 [
   {
-    "ds": "2025-07-27",
-    "yhat": 220.9200059492509,
-    "yhat_lower": 208.87122722473887,
-    "yhat_upper": 232.221007426095,
-    "date_formatted": "Sunday, July 27, 2025",
+    "ds": "2025-08-15",
+    "yhat": 225.16198684224892,
+    "yhat_lower": 214.22521876807164,
+    "yhat_upper": 236.24937939312318,
+    "date_formatted": "Friday, August 15, 2025",
     "days_from_now": 1
   },
   {
-    "ds": "2025-07-28",
-    "yhat": 220.9200059492509,
-    "yhat_lower": 208.87122722473887,
-    "yhat_upper": 232.221007426095,
-    "date_formatted": "Monday, July 28, 2025",
+    "ds": "2025-08-16",
+    "yhat": 225.16198684224892,
+    "yhat_lower": 214.22521876807164,
+    "yhat_upper": 236.24937939312318,
+    "date_formatted": "Saturday, August 16, 2025",
     "days_from_now": 2
   },
   {
-    "ds": "2025-07-29",
-    "yhat": 220.9200059492509,
-    "yhat_lower": 208.87122722473887,
-    "yhat_upper": 232.221007426095,
-    "date_formatted": "Tuesday, July 29, 2025",
+    "ds": "2025-08-17",
+    "yhat": 225.16198684224892,
+    "yhat_lower": 214.22521876807164,
+    "yhat_upper": 236.24937939312318,
+    "date_formatted": "Sunday, August 17, 2025",
     "days_from_now": 3
+  },
+  {
+    "ds": "2025-08-18",
+    "yhat": 225.16198684224892,
+    "yhat_lower": 214.22521876807164,
+    "yhat_upper": 236.24937939312318,
+    "date_formatted": "Monday, August 18, 2025",
+    "days_from_now": 4
+  },
+  {
+    "ds": "2025-08-19",
+    "yhat": 225.16198684224892,
+    "yhat_lower": 214.22521876807164,
+    "yhat_upper": 236.24937939312318,
+    "date_formatted": "Tuesday, August 19, 2025",
+    "days_from_now": 5
+  },
+  {
+    "ds": "2025-08-20",
+    "yhat": 225.16198684224892,
+    "yhat_lower": 214.22521876807164,
+    "yhat_upper": 236.24937939312318,
+    "date_formatted": "Wednesday, August 20, 2025",
+    "days_from_now": 6
+  },
+  {
+    "ds": "2025-08-21",
+    "yhat": 225.16198684224892,
+    "yhat_lower": 214.22521876807164,
+    "yhat_upper": 236.24937939312318,
+    "date_formatted": "Thursday, August 21, 2025",
+    "days_from_now": 7
   }
 ]
