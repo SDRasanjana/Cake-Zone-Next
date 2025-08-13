@@ -1,7 +1,7 @@
 {
   "forecast_period": {
-    "start_date": "2025-08-05",
-    "end_date": "2025-08-11",
+    "start_date": "2025-08-15",
+    "end_date": "2025-08-21",
     "days": 7
   },
   "price_analysis": {
@@ -20,8 +20,8 @@
     "confidence_level": "High"
   },
   "metadata": {
-    "generated_at": "2025-08-03T19:37:54.034198",
-    "forecast_date": "2025-08-04",
+    "generated_at": "2025-08-13T12:44:37.858891",
+    "forecast_date": "2025-08-14",
     "model_type": "Prophet",
     "confidence_interval": "95%",
     "ingredient": "Eggs"
@@ -31,5 +31,5 @@
   "highest_price": 562.54,
   "lowest_price": 562.54,
   "average_price": 562.54,
-  "forecast_date": "2025-08-11"
+  "forecast_date": "2025-08-21"
 }
