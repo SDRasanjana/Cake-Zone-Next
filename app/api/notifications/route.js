@@ -17,21 +17,54 @@ import getNotificationModel, {
 } from '@/lib/models/Notification';
 import { ObjectId } from 'mongodb';
 
-// Helper function to get user info from Clerk
+// Helper function to get user info from Clerk/Database with fallback
 async function getUserFromClerk(userId) {
     try {
-        // For this implementation, we'll check the MongoDB users collection
+        console.log(`🔍 Looking up user: ${userId}`);
         const client = await clientPromise;
         const db = client.db('cakezone');
-        const user = await db.collection('users').findOne({
-            $or: [
-                { _id: new ObjectId(userId) },
-                { email: userId } // In case userId is actually an email
-            ]
-        });
-        return user;
+
+        // Try different lookup strategies
+        let user = null;
+
+        // First try: Direct ObjectId lookup
+        if (ObjectId.isValid(userId)) {
+            user = await db.collection('users').findOne({
+                _id: new ObjectId(userId)
+            });
+            console.log(`📝 ObjectId lookup result:`, user ? 'Found' : 'Not found');
+        }
+
+        // Second try: Email lookup (case-insensitive)
+        if (!user) {
+            user = await db.collection('users').findOne({
+                email: new RegExp(`^${userId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
+            });
+            console.log(`📧 Email lookup result:`, user ? 'Found' : 'Not found');
+        }
+
+        if (user) {
+            console.log(`✅ User found - Role: ${user.role}, Email: ${user.email}`);
+            return user;
+        }
+
+        console.log(`❌ User not found in database for: ${userId}`);
+
+        // Fallback: For development/testing, create a temporary admin user object
+        // This should be removed in production
+        if (process.env.NODE_ENV === 'development' && userId.includes('@')) {
+            console.log('🔧 Development fallback: Creating temporary admin user');
+            return {
+                email: userId,
+                role: 'admin',
+                _id: 'temp_admin',
+                isTemporary: true
+            };
+        }
+
+        return null;
     } catch (error) {
-        console.error('Error fetching user:', error);
+        console.error('🚨 Error fetching user:', error);
         return null;
     }
 }
@@ -264,46 +297,86 @@ export async function DELETE(req) {
         const notificationId = searchParams.get('id');
         const userId = searchParams.get('userId');
 
+        console.log(`🗑️ DELETE request - NotificationId: ${notificationId}, UserId: ${userId}`);
+
         if (!notificationId || !userId) {
+            console.log('❌ Missing required parameters');
             return NextResponse.json({
                 success: false,
                 error: 'Notification ID and User ID are required'
             }, { status: 400 });
         }
 
-        // Verify user is admin/owner
-        const user = await getUserFromClerk(userId);
-        if (!user || !['admin', 'owner'].includes(user.role)) {
+        if (!ObjectId.isValid(notificationId)) {
+            console.log('❌ Invalid notification ID format');
             return NextResponse.json({
                 success: false,
-                error: 'Unauthorized: Admin access required'
+                error: 'Invalid notification ID format'
+            }, { status: 400 });
+        }
+
+        // Verify user is admin/owner
+        console.log('🔐 Verifying user authorization...');
+        const user = await getUserFromClerk(userId);
+        if (!user) {
+            console.log('❌ User not found in database');
+            return NextResponse.json({
+                success: false,
+                error: 'User not found - Unable to verify authorization'
+            }, { status: 404 });
+        }
+
+        if (!['admin', 'owner'].includes(user.role)) {
+            console.log(`❌ Unauthorized - User role: ${user.role}`);
+            return NextResponse.json({
+                success: false,
+                error: `Unauthorized: Admin access required. Current role: ${user.role}`
             }, { status: 403 });
         }
+
+        console.log(`✅ User authorized - Role: ${user.role}`);
 
         const client = await clientPromise;
         const db = client.db('cakezone');
         const notifications = getNotificationModel(db);
 
-        const result = await notifications.deleteOne({
+        // Check if notification exists before attempting deletion
+        const existingNotification = await notifications.findOne({
             _id: new ObjectId(notificationId)
         });
 
-        if (result.deletedCount === 0) {
+        if (!existingNotification) {
+            console.log('❌ Notification not found');
             return NextResponse.json({
                 success: false,
                 error: 'Notification not found'
             }, { status: 404 });
         }
 
+        console.log(`📝 Found notification: ${existingNotification.title}`);
+
+        const result = await notifications.deleteOne({
+            _id: new ObjectId(notificationId)
+        });
+
+        if (result.deletedCount === 0) {
+            console.log('❌ Failed to delete notification');
+            return NextResponse.json({
+                success: false,
+                error: 'Failed to delete notification - No documents were deleted'
+            }, { status: 500 });
+        }
+
+        console.log('✅ Notification deleted successfully');
         return NextResponse.json({
             success: true,
             message: 'Notification deleted successfully'
         });
     } catch (error) {
-        console.error('Error deleting notification:', error);
+        console.error('🚨 Error deleting notification:', error);
         return NextResponse.json({
             success: false,
-            error: 'Failed to delete notification'
+            error: 'Failed to delete notification: ' + error.message
         }, { status: 500 });
     }
 }

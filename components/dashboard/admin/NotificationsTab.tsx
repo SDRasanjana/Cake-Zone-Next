@@ -224,32 +224,65 @@ const NotificationsTab: React.FC<NotificationsTabProps> = () => {
 
   // Confirm delete notification
   const confirmDelete = async () => {
-    if (!user?.emailAddresses?.[0]?.emailAddress) return;
+    if (!user?.emailAddresses?.[0]?.emailAddress) {
+      setError("❌ User authentication required");
+      return;
+    }
 
-    const { notificationId } = deleteConfirmation;
+    const { notificationId, notificationTitle } = deleteConfirmation;
     setIsSubmitting(true);
     setError("");
+    setSuccessMessage("");
 
     try {
+      console.log(
+        `🗑️ Attempting to delete notification: ${notificationTitle} (${notificationId})`
+      );
+
       const response = await fetch(
-        `/api/notifications?id=${notificationId}&userId=${user.emailAddresses[0].emailAddress}`,
-        { method: "DELETE" }
+        `/api/notifications?id=${notificationId}&userId=${encodeURIComponent(
+          user.emailAddresses[0].emailAddress
+        )}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       const data = await response.json();
+      console.log("Delete response:", data);
 
       if (data.success) {
         await fetchNotifications();
-        setSuccessMessage("🗑️ Notification deleted successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
+        setSuccessMessage(`🗑️ "${notificationTitle}" deleted successfully!`);
+        setTimeout(() => setSuccessMessage(""), 5000);
         setError("");
       } else {
-        setError(data.error || "Failed to delete notification");
+        // Provide specific error messages based on status code
+        let errorMessage = "Failed to delete notification";
+
+        if (response.status === 403) {
+          errorMessage =
+            "❌ Unauthorized: You don't have permission to delete notifications. Admin access required.";
+        } else if (response.status === 404) {
+          errorMessage =
+            "❌ Notification not found or may have already been deleted.";
+        } else if (response.status === 400) {
+          errorMessage = "❌ Invalid request: " + (data.error || "Bad request");
+        } else {
+          errorMessage =
+            "❌ " + (data.error || "Failed to delete notification");
+        }
+
+        setError(errorMessage);
+        console.error("Delete failed:", errorMessage);
       }
     } catch (err) {
       console.error("Error deleting notification:", err);
       setError(
-        "Network error: Failed to delete notification. Please try again."
+        "🌐 Network error: Failed to delete notification. Please check your connection and try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -467,9 +500,33 @@ const NotificationsTab: React.FC<NotificationsTabProps> = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          <span className="text-red-700">{error}</span>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="text-red-700 font-medium mb-1">Error</div>
+              <div className="text-red-600 text-sm whitespace-pre-wrap">
+                {error}
+              </div>
+            </div>
+            <button
+              onClick={() => setError("")}
+              className="text-red-400 hover:text-red-600 p-1"
+              title="Dismiss error"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {error.includes("Network error") && (
+            <div className="mt-3 pt-3 border-t border-red-200">
+              <button
+                onClick={fetchNotifications}
+                className="text-red-600 hover:text-red-800 text-sm font-medium underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
         </div>
       )}
 
