@@ -10,12 +10,12 @@ import SidebarNavigation from "@/components/dashboard/admin/SidebarNavigation";
 import MobileNavigation from "@/components/dashboard/admin/MobileNavigation";
 import AdminTopHeader from "@/components/dashboard/admin/AdminTopHeader";
 import ProductManagementTab from "@/components/dashboard/admin/ProductManagementTab";
+import ReportsTab from "@/components/dashboard/admin/ReportsTab";
 
 import {
   ShoppingCart,
   Package,
   Bell,
-  Settings,
   Users as UsersIcon,
   Box,
   BarChart,
@@ -141,7 +141,6 @@ export default function AdminDashboard() {
     { id: "products", label: "Product Management", icon: Box },
     { id: "reports", label: "Reports & Analytics", icon: BarChart },
     { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "settings", label: "System Settings", icon: Settings },
   ];
 
   // Responsive layout and navigation
@@ -173,7 +172,9 @@ export default function AdminDashboard() {
         <main className="flex-1 p-2 sm:p-4 lg:p-8 pb-20 lg:pb-8 w-full max-w-7xl mx-auto">
           <div className="mx-auto">
             {/* Render tab components based on activeTab */}
-            {activeTab === "overview" && <OverviewTab />}
+            {activeTab === "overview" && (
+              <OverviewTab onTabChange={setActiveTab} />
+            )}
             {activeTab === "users" && (
               <UsersTab
                 users={users}
@@ -190,7 +191,7 @@ export default function AdminDashboard() {
             )}
             {activeTab === "products" && <ProductManagementTab />}
             {activeTab === "notifications" && <NotificationsTab />}
-            {/* Add more tab components as needed for products, reports, settings, etc. */}
+            {activeTab === "reports" && <ReportsTab />}
           </div>
         </main>
       </div>
