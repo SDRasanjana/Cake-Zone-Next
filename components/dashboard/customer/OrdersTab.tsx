@@ -1,13 +1,64 @@
+/* eslint-disable @next/next/no-img-element */
+// Note: We use <img> tags for 3D cake snapshots (base64 data URIs)
+
 import React from "react";
 import { DashboardTab } from "@/contexts/DashboardTabContext";
 import { useUser } from "@clerk/nextjs";
 import { RefreshCw } from "lucide-react";
 
-const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
-  setActiveTab,
-}) => {
+// Helper functions to format IDs for better readability
+const formatOrderId = (id: string): string => {
+  if (!id) return "CZO001";
+  // Create a more predictable numeric ID based on the original ID
+  // Use the last few characters and convert to a number
+  const lastPart = id.slice(-8); // Take last 8 characters
+  let numericValue = 0;
+  
+  // Convert characters to numbers (letters become numbers too)
+  for (let i = 0; i < lastPart.length; i++) {
+    const char = lastPart[i];
+    if (char >= '0' && char <= '9') {
+      numericValue = numericValue * 10 + parseInt(char);
+    } else {
+      // Convert letters to numbers (a=1, b=2, etc.)
+      numericValue = numericValue * 10 + (char.toLowerCase().charCodeAt(0) - 96);
+    }
+  }
+  
+  // Ensure we get a 3-digit number between 001-999
+  const finalId = (Math.abs(numericValue) % 999) + 1;
+  return `CZO${finalId.toString().padStart(3, '0')}`;
+};
+
+interface OrderItem {
+  id?: string;
+  name: string;
+  price: number;
+  quantity: number;
+  imageUri?: string;
+  isCustom?: boolean;
+  flavor?: string;
+  layers?: number;
+  toppings?: string[];
+  frostingColor?: string;
+}
+
+interface Order {
+  _id: string;
+  items: OrderItem[];
+  total: number;
+  status?: string;
+  paymentStatus?: string;
+  createdAt: string;
+  deliveryDate?: string;
+  shipping?: {
+    address?: string;
+  };
+}
+
+const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = () => {
   // Fetch real orders for the logged-in user
-  const [orders, setOrders] = React.useState<any[]>([]);
+  const [orders, setOrders] = React.useState<Order[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string>("");
   const [refreshing, setRefreshing] = React.useState(false);
@@ -129,7 +180,7 @@ const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
                   {/* Show all cakes in the order, not just the first */}
                   <div className="flex flex-wrap gap-2 mr-4">
                     {order.items && order.items.length > 0 ? (
-                      order.items.map((item: any, idx: number) => (
+                      order.items.map((item: OrderItem, idx: number) => (
                         <div
                           key={item.id || idx}
                           className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-3xl"
@@ -138,7 +189,16 @@ const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
                             <img
                               src={item.imageUri}
                               alt={item.name}
-                              className="w-14 h-14 rounded"
+                              className="w-14 h-14 rounded object-cover"
+                              onError={(e) => {
+                                // Fallback to cake emoji if image fails to load
+                                e.currentTarget.style.display = 'none';
+                                const parent = e.currentTarget.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = '🎂';
+                                  parent.className = 'w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-3xl';
+                                }
+                              }}
                             />
                           ) : (
                             "🎂"
@@ -155,11 +215,11 @@ const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
                     {/* List all cake names in the order */}
                     <h4 className="font-semibold text-gray-800">
                       {order.items && order.items.length > 0
-                        ? order.items.map((item: any) => item.name).join(", ")
+                        ? order.items.map((item: OrderItem) => item.name).join(", ")
                         : "Cake Order"}
                     </h4>
                     <p className="text-sm text-gray-500">
-                      Order #{order._id?.toString().slice(-6)}
+                      Order {formatOrderId(order._id?.toString() || "N/A")}
                     </p>
                     <p className="text-sm text-gray-500">
                       Ordered on{" "}
@@ -199,7 +259,7 @@ const OrdersTab: React.FC<{ setActiveTab?: (tab: DashboardTab) => void }> = ({
               <div className="flex flex-wrap gap-2 mt-2">
                 {order.items &&
                   order.items.length > 0 &&
-                  order.items.map((item: any, idx: number) => (
+                  order.items.map((item: OrderItem, idx: number) => (
                     <div
                       key={item.id || idx}
                       className="border rounded p-2 bg-gray-50 text-xs"

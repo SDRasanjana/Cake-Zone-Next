@@ -1,3 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
+// Note: We intentionally use <img> tags for 3D cake snapshots (base64 data URIs)
+// because Next.js Image component doesn't optimize data URIs and they cause issues
+
 import React, { useEffect, useState } from "react";
 // For PDF export
 import jsPDF from "jspdf";
@@ -72,11 +76,72 @@ interface Order {
   updatedAt?: string;
 }
 
-interface OrdersTabProps {
-  getStatusColor: (status: string) => string;
-}
+// Helper functions to format IDs for better readability
+const formatOrderId = (id: string): string => {
+  if (!id) return "CZO001";
+  // Create a more predictable numeric ID based on the original ID
+  // Use the last few characters and convert to a number
+  const lastPart = id.slice(-8); // Take last 8 characters
+  let numericValue = 0;
+  
+  // Convert characters to numbers (letters become numbers too)
+  for (let i = 0; i < lastPart.length; i++) {
+    const char = lastPart[i];
+    if (char >= '0' && char <= '9') {
+      numericValue = numericValue * 10 + parseInt(char);
+    } else {
+      // Convert letters to numbers (a=1, b=2, etc.)
+      numericValue = numericValue * 10 + (char.toLowerCase().charCodeAt(0) - 96);
+    }
+  }
+  
+  // Ensure we get a 3-digit number between 001-999
+  const finalId = (Math.abs(numericValue) % 999) + 1;
+  return `CZO${finalId.toString().padStart(3, '0')}`;
+};
 
-const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
+const formatUserId = (id: string): string => {
+  if (!id) return "CZC001";
+  // Create a more predictable numeric ID based on the original ID
+  const lastPart = id.slice(-8); // Take last 8 characters
+  let numericValue = 0;
+  
+  // Convert characters to numbers (letters become numbers too)
+  for (let i = 0; i < lastPart.length; i++) {
+    const char = lastPart[i];
+    if (char >= '0' && char <= '9') {
+      numericValue = numericValue * 10 + parseInt(char);
+    } else {
+      // Convert letters to numbers (a=1, b=2, etc.)
+      numericValue = numericValue * 10 + (char.toLowerCase().charCodeAt(0) - 96);
+    }
+  }
+  
+  // Ensure we get a 3-digit number between 001-999
+  const finalId = (Math.abs(numericValue) % 999) + 1;
+  return `CZC${finalId.toString().padStart(3, '0')}`;
+};
+
+// Helper function to get status color classes
+const getStatusColor = (status: string): string => {
+  switch (status?.toLowerCase()) {
+    case "completed":
+    case "paid":
+    case "delivered":
+      return "bg-green-100 text-green-700";
+    case "processing":
+    case "confirmed":
+      return "bg-blue-100 text-blue-700";
+    case "cancelled":
+    case "failed":
+      return "bg-red-100 text-red-700";
+    case "pending":
+    default:
+      return "bg-yellow-100 text-yellow-700";
+  }
+};
+
+const OrdersTab: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -99,23 +164,41 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
         // Handle the transformed order format from the API
         const transformedOrders = (data.orders || []).map(
           (order: Record<string, unknown>) => {
+            // Use the preserved items array from API if available, otherwise create fallback
+            const items = Array.isArray(order.items) && order.items.length > 0
+              ? order.items.map((item: OrderItem) => ({
+                  name: item.name || 'Unknown Item',
+                  price: item.price || order.amount || order.total || 0,
+                  quantity: item.quantity || 1,
+                  size: item.size,
+                  imageUri: item.imageUri || '/default-cake.png', // Preserve original imageUri
+                  // Preserve custom cake properties
+                  flavor: item.flavor,
+                  shape: item.shape,
+                  layers: item.layers,
+                  frostingColor: item.frostingColor,
+                  toppings: item.toppings,
+                  isCustom: item.isCustom,
+                  // Preserve predefined cake properties
+                  category: item.category,
+                  weight: item.weight,
+                  ingredients: item.ingredients,
+                }))
+              : (order.cake
+                ? [{
+                    name: order.cake,
+                    price: order.amount || order.total || 0,
+                    quantity: order.quantity || 1,
+                    size: order.cakeSize,
+                    imageUri: '/default-cake.png', // Fallback for old orders
+                  }]
+                : []);
+            
             // Map the transformed format back to the expected format
             const transformedOrder = {
               _id: order.id || order._id,
               userId: order.userId || "unknown",
-              items:
-                order.items ||
-                (order.cake
-                  ? [
-                      {
-                        name: order.cake,
-                        price: order.amount || order.total || 0,
-                        quantity: order.quantity || 1,
-                        size: order.cakeSize,
-                        imageUri: "/default-cake.png", // Default image
-                      },
-                    ]
-                  : []),
+              items: items,
               shipping: {
                 fullName: order.customerName,
                 phone: order.customerPhone,
@@ -169,7 +252,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
     let y = 30;
     doc.setFontSize(12);
     // Order meta info, spaced out and aligned
-    doc.text(`Order ID: ${order._id || order.id || "N/A"}`, 14, y);
+    doc.text(`Order Reference: ${formatOrderId(order._id || order.id || "N/A")}`, 14, y);
     y += 8;
     doc.text(`User ID: ${order.userId || "N/A"}`, 14, y);
     y += 8;
@@ -253,7 +336,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
   // Download PDF for a single order
   const handleDownloadOrderPDF = async (order: Order) => {
     const doc = await generateSingleOrderPDF(order);
-    doc.save(`cakezone_order_${order._id || order.id}.pdf`);
+    doc.save(`cakezone_${formatOrderId(order._id || order.id || "unknown")}.pdf`);
   };
 
   // Handle status change
@@ -358,18 +441,18 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
                   <div className="space-y-2 text-sm text-gray-800">
                     <p>
                       <span className="font-medium text-gray-900">
-                        Order ID:
+                        Order Reference:
                       </span>{" "}
                       <span className="text-gray-700">
-                        {selectedOrder._id || selectedOrder.id}
+                        {formatOrderId(selectedOrder._id || selectedOrder.id || "unknown")}
                       </span>
                     </p>
                     <p>
                       <span className="font-medium text-gray-900">
-                        User ID:
+                        Customer ID:
                       </span>{" "}
                       <span className="text-gray-700">
-                        {selectedOrder.userId}
+                        {formatUserId(selectedOrder.userId || "unknown")}
                       </span>
                     </p>
                     <p>
@@ -526,6 +609,9 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
                                 src={item.imageUri}
                                 alt={item.name}
                                 className="w-16 h-16 object-cover rounded border"
+                                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                  (e.target as HTMLImageElement).src = "/default-cake.png";
+                                }}
                               />
                             ) : (
                               <div className="w-16 h-16 flex items-center justify-center bg-gray-200 rounded border text-xs text-gray-500">
@@ -700,10 +786,10 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
                         className="hover:bg-[#F8F9FB] transition-colors"
                       >
                         <td className="px-4 py-3 font-medium text-gray-900 text-sm">
-                          {order._id || order.id || "N/A"}
+                          {formatOrderId(order._id || order.id || "N/A")}
                         </td>
                         <td className="px-4 py-3 text-gray-800">
-                          {order.userId || "N/A"}
+                          {formatUserId(order.userId || "N/A")}
                         </td>
                         <td className="px-4 py-3 text-gray-800">
                           {(order.items || []).map((item, idx) => (
@@ -720,15 +806,21 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
                                   key={idx}
                                   src={item.imageUri}
                                   alt={item.name}
-                                  className="w-10 h-10 object-cover rounded border"
+                                  className="w-12 h-12 object-cover rounded border"
+                                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                    // Handle failed 3D snapshot loading
+                                    console.warn('Failed to load image for:', item.name, item.imageUri);
+                                    (e.target as HTMLImageElement).src = '/default-cake.png';
+                                  }}
                                 />
                               ) : (
-                                <span
+                                <div
                                   key={idx}
-                                  className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded border text-xs text-gray-500"
+                                  className="w-12 h-12 flex items-center justify-center bg-gray-200 rounded border text-xs text-gray-500"
+                                  title={`${item.name} - No preview available`}
                                 >
-                                  No Image
-                                </span>
+                                  🎂
+                                </div>
                               )
                             )}
                           </div>
@@ -823,10 +915,10 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 text-sm truncate">
-                        Order #{(order._id || order.id || "unknown").slice(-8)}
+                        Order {formatOrderId(order._id || order.id || "unknown")}
                       </h3>
                       <p className="text-xs text-gray-700 mt-1">
-                        User: {(order.userId || "unknown").slice(-8)}
+                        Customer: {formatUserId(order.userId || "unknown")}
                       </p>
                     </div>
                     <div className="flex-shrink-0">
@@ -879,10 +971,15 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
                                 src={item.imageUri}
                                 alt={item.name}
                                 className="w-12 h-12 object-cover rounded border"
+                                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                  // Handle failed 3D snapshot loading in mobile view
+                                  console.warn('Mobile view - Failed to load image for:', item.name, item.imageUri);
+                                  (e.target as HTMLImageElement).src = '/default-cake.png';
+                                }}
                               />
                             ) : (
-                              <div className="w-12 h-12 flex items-center justify-center bg-gray-200 rounded border text-xs text-gray-500">
-                                No Image
+                              <div className="w-12 h-12 flex items-center justify-center bg-gray-200 rounded border text-lg">
+                                🎂
                               </div>
                             )}
                           </div>
@@ -917,10 +1014,13 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ getStatusColor }) => {
                   {/* Full Order ID */}
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <div className="text-gray-800 text-xs font-semibold uppercase tracking-wide mb-1">
-                      Full Order ID
+                      Order Reference
                     </div>
                     <p className="text-xs text-gray-700 font-mono break-all">
-                      {order._id || order.id || "N/A"}
+                      {formatOrderId(order._id || order.id || "N/A")}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Full ID: {order._id || order.id || "N/A"}
                     </p>
                   </div>
 
