@@ -1,58 +1,58 @@
 [
   {
-    "ds": "2025-09-22",
+    "ds": "2025-09-29",
     "yhat": 415.6877433617882,
-    "yhat_lower": 383.8356862118126,
-    "yhat_upper": 445.5616778057254,
-    "date_formatted": "Monday, September 22, 2025",
+    "yhat_lower": 385.33522105697494,
+    "yhat_upper": 447.12877135732134,
+    "date_formatted": "Monday, September 29, 2025",
     "days_from_now": 1
   },
   {
-    "ds": "2025-09-23",
+    "ds": "2025-09-30",
     "yhat": 415.6877433617882,
-    "yhat_lower": 383.8356862118126,
-    "yhat_upper": 445.5616778057254,
-    "date_formatted": "Tuesday, September 23, 2025",
+    "yhat_lower": 385.33522105697494,
+    "yhat_upper": 447.12877135732134,
+    "date_formatted": "Tuesday, September 30, 2025",
     "days_from_now": 2
   },
   {
-    "ds": "2025-09-24",
+    "ds": "2025-10-01",
     "yhat": 415.6877433617882,
-    "yhat_lower": 383.8356862118126,
-    "yhat_upper": 445.5616778057254,
-    "date_formatted": "Wednesday, September 24, 2025",
+    "yhat_lower": 385.33522105697494,
+    "yhat_upper": 447.12877135732134,
+    "date_formatted": "Wednesday, October 01, 2025",
     "days_from_now": 3
   },
   {
-    "ds": "2025-09-25",
+    "ds": "2025-10-02",
     "yhat": 415.6877433617882,
-    "yhat_lower": 383.8356862118126,
-    "yhat_upper": 445.5616778057254,
-    "date_formatted": "Thursday, September 25, 2025",
+    "yhat_lower": 385.33522105697494,
+    "yhat_upper": 447.12877135732134,
+    "date_formatted": "Thursday, October 02, 2025",
     "days_from_now": 4
   },
   {
-    "ds": "2025-09-26",
+    "ds": "2025-10-03",
     "yhat": 415.6877433617882,
-    "yhat_lower": 383.8356862118126,
-    "yhat_upper": 445.5616778057254,
-    "date_formatted": "Friday, September 26, 2025",
+    "yhat_lower": 385.33522105697494,
+    "yhat_upper": 447.12877135732134,
+    "date_formatted": "Friday, October 03, 2025",
     "days_from_now": 5
   },
   {
-    "ds": "2025-09-27",
+    "ds": "2025-10-04",
     "yhat": 415.6877433617882,
-    "yhat_lower": 383.8356862118126,
-    "yhat_upper": 445.5616778057254,
-    "date_formatted": "Saturday, September 27, 2025",
+    "yhat_lower": 385.33522105697494,
+    "yhat_upper": 447.12877135732134,
+    "date_formatted": "Saturday, October 04, 2025",
     "days_from_now": 6
   },
   {
-    "ds": "2025-09-28",
+    "ds": "2025-10-05",
     "yhat": 415.6877433617882,
-    "yhat_lower": 383.8356862118126,
-    "yhat_upper": 445.5616778057254,
-    "date_formatted": "Sunday, September 28, 2025",
+    "yhat_lower": 385.33522105697494,
+    "yhat_upper": 447.12877135732134,
+    "date_formatted": "Sunday, October 05, 2025",
     "days_from_now": 7
   }
 ]

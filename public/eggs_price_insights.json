@@ -1,17 +1,17 @@
 {
   "forecast_period": {
-    "start_date": "2025-09-22",
-    "end_date": "2025-09-28",
-    "days": 7
+    "start_date": "2025-09-29",
+    "end_date": "2025-10-12",
+    "days": 14
   },
   "price_analysis": {
     "current_trend": "stable",
     "trend_strength": "stable",
     "price_change_lkr": 0.0,
     "percentage_change": 0.0,
-    "highest_price": 562.54,
-    "lowest_price": 562.54,
-    "average_price": 562.54,
+    "highest_price": 558.77,
+    "lowest_price": 558.77,
+    "average_price": 558.77,
     "volatility": 0.0
   },
   "recommendations": {
@@ -20,16 +20,16 @@
     "confidence_level": "High"
   },
   "metadata": {
-    "generated_at": "2025-09-20T09:59:48.504118",
-    "forecast_date": "2025-09-21",
+    "generated_at": "2025-09-27T19:50:30.598977",
+    "forecast_date": "2025-09-28",
     "model_type": "Prophet",
     "confidence_interval": "95%",
     "ingredient": "Eggs"
   },
   "trend": "stable",
   "percentage_change": 0.0,
-  "highest_price": 562.54,
-  "lowest_price": 562.54,
-  "average_price": 562.54,
-  "forecast_date": "2025-09-28"
+  "highest_price": 558.77,
+  "lowest_price": 558.77,
+  "average_price": 558.77,
+  "forecast_date": "2025-10-12"
 }
