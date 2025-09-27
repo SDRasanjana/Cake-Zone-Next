@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 // Types
 export interface ForecastData {
@@ -11,8 +11,8 @@ export interface ForecastData {
 }
 
 export interface ForecastInsights {
-  trend: 'increasing' | 'decreasing' | 'stable';
-  trend_strength: 'stable' | 'moderate' | 'significant';
+  trend: "increasing" | "decreasing" | "stable";
+  trend_strength: "stable" | "moderate" | "significant";
   price_change_amount: number;
   price_change_percentage: number;
   average_price: number;
@@ -20,7 +20,7 @@ export interface ForecastInsights {
   lowest_price: number;
   price_volatility: number;
   recommendation: string;
-  confidence_level: 'high' | 'medium' | 'low';
+  confidence_level: "high" | "medium" | "low";
 }
 
 export interface ForecastMetadata {
@@ -78,7 +78,7 @@ export const usePriceForecast = (
     days = 7,
     startDate = null,
     autoFetch = true,
-    refreshInterval
+    refreshInterval,
   } = options;
 
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
@@ -90,61 +90,75 @@ export const usePriceForecast = (
     setError(null);
   }, []);
 
-  const fetchForecast = useCallback(async (fetchOptions?: { days?: number; startDate?: string }) => {
-    if (!ingredient?.trim()) {
-      setError('Ingredient name is required');
-      return;
-    }
-
-    const fetchDays = fetchOptions?.days ?? days;
-    const fetchStartDate = fetchOptions?.startDate ?? startDate;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      console.log(`🔮 Fetching forecast for ${ingredient} (${fetchDays} days)`);
-
-      // Build query parameters
-      const searchParams = new URLSearchParams({
-        days: fetchDays.toString(),
-      });
-
-      if (fetchStartDate) {
-        searchParams.append('startDate', fetchStartDate);
+  const fetchForecast = useCallback(
+    async (fetchOptions?: { days?: number; startDate?: string }) => {
+      if (!ingredient?.trim()) {
+        setError("Ingredient name is required");
+        return;
       }
 
-      // Make API request
-      const response = await fetch(`/api/forecast/${encodeURIComponent(ingredient)}?${searchParams}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const fetchDays = fetchOptions?.days ?? days;
+      const fetchStartDate = fetchOptions?.startDate ?? startDate;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log(
+          `🔮 Fetching forecast for ${ingredient} (${fetchDays} days)`
+        );
+
+        // Build query parameters
+        const searchParams = new URLSearchParams({
+          days: fetchDays.toString(),
+        });
+
+        if (fetchStartDate) {
+          searchParams.append("startDate", fetchStartDate);
+        }
+
+        // Make API request
+        const response = await fetch(
+          `/api/forecast/${encodeURIComponent(ingredient)}?${searchParams}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || `HTTP error! status: ${response.status}`
+          );
+        }
+
+        const result: ApiResponse = await response.json();
+
+        if (result.success && result.data) {
+          setForecast(result.data);
+          setLastUpdated(new Date());
+          console.log(`✅ Successfully fetched forecast for ${ingredient}`);
+        } else {
+          throw new Error(result.error || "Failed to fetch forecast data");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch forecast";
+        console.error(
+          `❌ Error fetching forecast for ${ingredient}:`,
+          errorMessage
+        );
+        setError(errorMessage);
+        setForecast(null);
+      } finally {
+        setLoading(false);
       }
-
-      const result: ApiResponse = await response.json();
-
-      if (result.success && result.data) {
-        setForecast(result.data);
-        setLastUpdated(new Date());
-        console.log(`✅ Successfully fetched forecast for ${ingredient}`);
-      } else {
-        throw new Error(result.error || 'Failed to fetch forecast data');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch forecast';
-      console.error(`❌ Error fetching forecast for ${ingredient}:`, errorMessage);
-      setError(errorMessage);
-      setForecast(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [ingredient, days, startDate]);
+    },
+    [ingredient, days, startDate]
+  );
 
   // Auto-fetch on mount and dependency changes
   useEffect(() => {
@@ -168,11 +182,16 @@ export const usePriceForecast = (
   }, [refreshInterval, autoFetch, ingredient, loading, fetchForecast]);
 
   // Calculate if data is stale (older than 30 minutes)
-  const isStale = lastUpdated ? (Date.now() - lastUpdated.getTime()) > 30 * 60 * 1000 : true;
+  const isStale = lastUpdated
+    ? Date.now() - lastUpdated.getTime() > 30 * 60 * 1000
+    : true;
 
-  const refetch = useCallback(async (refetchOptions?: { days?: number; startDate?: string }) => {
-    await fetchForecast(refetchOptions);
-  }, [fetchForecast]);
+  const refetch = useCallback(
+    async (refetchOptions?: { days?: number; startDate?: string }) => {
+      await fetchForecast(refetchOptions);
+    },
+    [fetchForecast]
+  );
 
   return {
     forecast,
@@ -181,7 +200,7 @@ export const usePriceForecast = (
     refetch,
     clearError,
     isStale,
-    lastUpdated
+    lastUpdated,
   };
 };
 
@@ -190,7 +209,9 @@ export const useMultiplePriceForecasts = (
   ingredients: string[],
   options: UsePriceForecastOptions = {}
 ) => {
-  const [forecasts, setForecasts] = useState<Record<string, ForecastResult>>({});
+  const [forecasts, setForecasts] = useState<Record<string, ForecastResult>>(
+    {}
+  );
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -209,19 +230,22 @@ export const useMultiplePriceForecasts = (
           });
 
           if (options.startDate) {
-            searchParams.append('startDate', options.startDate);
+            searchParams.append("startDate", options.startDate);
           }
 
-          const response = await fetch(`/api/forecast/${encodeURIComponent(ingredient)}?${searchParams}`);
+          const response = await fetch(
+            `/api/forecast/${encodeURIComponent(ingredient)}?${searchParams}`
+          );
           const result: ApiResponse = await response.json();
 
           if (result.success && result.data) {
             newForecasts[ingredient] = result.data;
           } else {
-            newErrors[ingredient] = result.error || 'Failed to fetch forecast';
+            newErrors[ingredient] = result.error || "Failed to fetch forecast";
           }
         } catch (err) {
-          newErrors[ingredient] = err instanceof Error ? err.message : 'Network error';
+          newErrors[ingredient] =
+            err instanceof Error ? err.message : "Network error";
         }
       })
     );
@@ -241,7 +265,7 @@ export const useMultiplePriceForecasts = (
     forecasts,
     loading,
     errors,
-    refetch: fetchMultipleForecasts
+    refetch: fetchMultipleForecasts,
   };
 };
 
@@ -260,11 +284,14 @@ export interface RecipeData {
 export interface RecipeCostForecast {
   date: string;
   total_cost: number;
-  ingredient_costs: Record<string, {
-    unit_price: number;
-    quantity: number;
-    total_cost: number;
-  }>;
+  ingredient_costs: Record<
+    string,
+    {
+      unit_price: number;
+      quantity: number;
+      total_cost: number;
+    }
+  >;
   days_from_now: number;
 }
 
@@ -291,15 +318,15 @@ export const useRecipeCostForecast = (
 
     try {
       const response = await fetch(`/api/forecast/recipe`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           recipeData: recipe,
           days: options.days || 7,
-          startDate: options.startDate
-        })
+          startDate: options.startDate,
+        }),
       });
 
       const result = await response.json();
@@ -307,10 +334,12 @@ export const useRecipeCostForecast = (
       if (result.success && result.data) {
         setForecast(result.data);
       } else {
-        throw new Error(result.error || 'Failed to fetch recipe forecast');
+        throw new Error(result.error || "Failed to fetch recipe forecast");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch recipe forecast');
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch recipe forecast"
+      );
     } finally {
       setLoading(false);
     }
@@ -326,6 +355,6 @@ export const useRecipeCostForecast = (
     forecast,
     loading,
     error,
-    refetch: fetchRecipeForecast
+    refetch: fetchRecipeForecast,
   };
 };

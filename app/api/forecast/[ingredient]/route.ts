@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { spawn, ChildProcess } from 'child_process';
-import path from 'path';
-import { ForecastResult } from '@/hooks/usePriceForecast';
+import { NextRequest, NextResponse } from "next/server";
+import { spawn, ChildProcess } from "child_process";
+import path from "path";
+import { ForecastResult } from "@/hooks/usePriceForecast";
 
 interface PythonScriptResult {
   output: string;
@@ -20,37 +20,40 @@ interface RecipeRequestData {
   ingredients: RecipeIngredient[];
 }
 
-function executePythonScript(command: string, args: string[]): Promise<PythonScriptResult> {
+function executePythonScript(
+  command: string,
+  args: string[]
+): Promise<PythonScriptResult> {
   return new Promise((resolve) => {
-    const childProcess: ChildProcess = spawn(command, args, { 
+    const childProcess: ChildProcess = spawn(command, args, {
       shell: true,
-      cwd: process.cwd()
+      cwd: process.cwd(),
     });
-    
-    let output = '';
-    let error = '';
 
-    childProcess.stdout?.on('data', (data: Buffer) => {
+    let output = "";
+    let error = "";
+
+    childProcess.stdout?.on("data", (data: Buffer) => {
       output += data.toString();
     });
 
-    childProcess.stderr?.on('data', (data: Buffer) => {
+    childProcess.stderr?.on("data", (data: Buffer) => {
       error += data.toString();
     });
 
-    childProcess.on('close', (code: number | null) => {
-      resolve({ 
-        output: output.trim(), 
-        error: error.trim() || null, 
-        code: code || 0 
+    childProcess.on("close", (code: number | null) => {
+      resolve({
+        output: output.trim(),
+        error: error.trim() || null,
+        code: code || 0,
       });
     });
 
-    childProcess.on('error', (err: Error) => {
-      resolve({ 
-        output: '', 
-        error: `Process error: ${err.message}`, 
-        code: 1 
+    childProcess.on("error", (err: Error) => {
+      resolve({
+        output: "",
+        error: `Process error: ${err.message}`,
+        code: 1,
       });
     });
   });
@@ -63,20 +66,20 @@ export async function GET(
   try {
     const searchParams = request.nextUrl.searchParams;
     const ingredient = params.ingredient;
-    const days = parseInt(searchParams.get('days') || '7');
-    const startDate = searchParams.get('startDate') || null;
+    const days = parseInt(searchParams.get("days") || "7");
+    const startDate = searchParams.get("startDate") || null;
 
     // Validate parameters
     if (!ingredient) {
       return NextResponse.json(
-        { success: false, error: 'Ingredient parameter required' },
+        { success: false, error: "Ingredient parameter required" },
         { status: 400 }
       );
     }
 
     if (days > 30 || days < 1) {
       return NextResponse.json(
-        { success: false, error: 'Days parameter must be between 1 and 30' },
+        { success: false, error: "Days parameter must be between 1 and 30" },
         { status: 400 }
       );
     }
@@ -86,65 +89,82 @@ export async function GET(
       try {
         const date = new Date(startDate);
         if (isNaN(date.getTime())) {
-          throw new Error('Invalid date');
+          throw new Error("Invalid date");
         }
       } catch {
         return NextResponse.json(
-          { success: false, error: 'Invalid date format. Use YYYY-MM-DD' },
+          { success: false, error: "Invalid date format. Use YYYY-MM-DD" },
           { status: 400 }
         );
       }
     }
 
-    console.log(`🔮 Forecasting ${ingredient} prices for ${days} days${startDate ? ` from ${startDate}` : ''}`);
+    console.log(
+      `🔮 Forecasting ${ingredient} prices for ${days} days${
+        startDate ? ` from ${startDate}` : ""
+      }`
+    );
 
     // Path to Python script
-    const scriptPath = path.join(process.cwd(), 'scripts', 'forecast_ingredient_price.py');
-    
+    const scriptPath = path.join(
+      process.cwd(),
+      "scripts",
+      "forecast_ingredient_price.py"
+    );
+
     // Arguments for Python script
     const args = [
       scriptPath,
-      '--ingredient', ingredient,
-      '--days', days.toString(),
-      '--output-format', 'json'
+      "--ingredient",
+      ingredient,
+      "--days",
+      days.toString(),
+      "--output-format",
+      "json",
     ];
-    
+
     if (startDate) {
-      args.push('--start-date', startDate);
+      args.push("--start-date", startDate);
     }
 
-    console.log(`🐍 Executing Python script: python ${args.join(' ')}`);
+    console.log(`🐍 Executing Python script: python ${args.join(" ")}`);
 
     // Execute Python script
-    const pythonResult = await executePythonScript('python', args);
-    
+    const pythonResult = await executePythonScript("python", args);
+
     console.log(`📊 Python script completed with code: ${pythonResult.code}`);
-    
+
     if (pythonResult.code !== 0) {
-      console.error('❌ Python script error:', pythonResult.error);
-      
+      console.error("❌ Python script error:", pythonResult.error);
+
       // Check for common Python/dependency issues
-      if (pythonResult.error?.includes('ModuleNotFoundError')) {
-        throw new Error('Python dependencies missing. Please run: pip install prophet pandas numpy matplotlib');
-      } else if (pythonResult.error?.includes('prophet')) {
-        throw new Error('Prophet library not found. Please install with: pip install prophet');
-      } else if (pythonResult.error?.includes('No such file or directory')) {
-        throw new Error('Python not found. Please ensure Python is installed and in your PATH');
+      if (pythonResult.error?.includes("ModuleNotFoundError")) {
+        throw new Error(
+          "Python dependencies missing. Please run: pip install prophet pandas numpy matplotlib"
+        );
+      } else if (pythonResult.error?.includes("prophet")) {
+        throw new Error(
+          "Prophet library not found. Please install with: pip install prophet"
+        );
+      } else if (pythonResult.error?.includes("No such file or directory")) {
+        throw new Error(
+          "Python not found. Please ensure Python is installed and in your PATH"
+        );
       }
-      
-      throw new Error(pythonResult.error || 'Python script execution failed');
+
+      throw new Error(pythonResult.error || "Python script execution failed");
     }
 
     if (!pythonResult.output) {
-      throw new Error('No output received from Python script');
+      throw new Error("No output received from Python script");
     }
 
     try {
       // Parse JSON output from Python script
       const forecastData = JSON.parse(pythonResult.output);
-      
+
       if (!forecastData.success) {
-        throw new Error(forecastData.error || 'Forecast generation failed');
+        throw new Error(forecastData.error || "Forecast generation failed");
       }
 
       console.log(`✅ Successfully generated forecast for ${ingredient}`);
@@ -153,23 +173,26 @@ export async function GET(
         success: true,
         data: forecastData.data,
         generated_at: new Date().toISOString(),
-        processing_time: pythonResult.output.includes('Processing time') ? 
-          pythonResult.output.match(/Processing time: ([\d.]+)s/)?.[1] : null
+        processing_time: pythonResult.output.includes("Processing time")
+          ? pythonResult.output.match(/Processing time: ([\d.]+)s/)?.[1]
+          : null,
       });
-
     } catch (parseError) {
-      console.error('❌ Failed to parse Python script output:', parseError);
-      console.error('Raw output:', pythonResult.output);
-      throw new Error(`Failed to parse forecast data: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+      console.error("❌ Failed to parse Python script output:", parseError);
+      console.error("Raw output:", pythonResult.output);
+      throw new Error(
+        `Failed to parse forecast data: ${
+          parseError instanceof Error ? parseError.message : "Unknown error"
+        }`
+      );
     }
-
   } catch (error) {
-    console.error('❌ Forecast API error:', error);
+    console.error("❌ Forecast API error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Internal server error',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Internal server error",
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
@@ -193,58 +216,74 @@ export async function POST(
     // Otherwise, handle single ingredient forecast
     const searchParams = new URLSearchParams({
       days: days.toString(),
-      ...(startDate && { startDate })
+      ...(startDate && { startDate }),
     });
 
-    const url = new URL(`/api/forecast/${ingredient}?${searchParams}`, request.url);
+    const url = new URL(
+      `/api/forecast/${ingredient}?${searchParams}`,
+      request.url
+    );
     const getRequest = new NextRequest(url);
-    
-    return await GET(getRequest, { params });
 
+    return await GET(getRequest, { params });
   } catch (error) {
-    console.error('❌ POST forecast API error:', error);
+    console.error("❌ POST forecast API error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Internal server error',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Internal server error",
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
   }
 }
 
-async function handleRecipeCostForecast(recipeData: RecipeRequestData, days: number, startDate: string | null) {
+async function handleRecipeCostForecast(
+  recipeData: RecipeRequestData,
+  days: number,
+  startDate: string | null
+) {
   const ingredients = recipeData.ingredients;
   const forecasts: Record<string, ForecastResult> = {};
   const totalCostForecast: Array<{
     date: string;
     total_cost: number;
-    ingredient_costs: Record<string, {
-      unit_price: number;
-      quantity: number;
-      total_cost: number;
-    }>;
+    ingredient_costs: Record<
+      string,
+      {
+        unit_price: number;
+        quantity: number;
+        total_cost: number;
+      }
+    >;
     days_from_now: number;
   }> = [];
 
   try {
     // Get forecasts for all ingredients
     for (const ingredient of ingredients) {
-      const scriptPath = path.join(process.cwd(), 'scripts', 'forecast_ingredient_price.py');
+      const scriptPath = path.join(
+        process.cwd(),
+        "scripts",
+        "forecast_ingredient_price.py"
+      );
       const args = [
         scriptPath,
-        '--ingredient', ingredient.name,
-        '--days', days.toString(),
-        '--output-format', 'json'
+        "--ingredient",
+        ingredient.name,
+        "--days",
+        days.toString(),
+        "--output-format",
+        "json",
       ];
-      
+
       if (startDate) {
-        args.push('--start-date', startDate);
+        args.push("--start-date", startDate);
       }
 
-      const result = await executePythonScript('python', args);
-      
+      const result = await executePythonScript("python", args);
+
       if (result.code === 0 && result.output) {
         const parsedResult = JSON.parse(result.output);
         if (parsedResult.success) {
@@ -259,11 +298,14 @@ async function handleRecipeCostForecast(recipeData: RecipeRequestData, days: num
       for (let i = 0; i < firstForecast.forecast_data.length; i++) {
         const dayData = firstForecast.forecast_data[i];
         let totalCost = 0;
-        const ingredientCosts: Record<string, {
-          unit_price: number;
-          quantity: number;
-          total_cost: number;
-        }> = {};
+        const ingredientCosts: Record<
+          string,
+          {
+            unit_price: number;
+            quantity: number;
+            total_cost: number;
+          }
+        > = {};
 
         // Calculate cost for each ingredient on this day
         for (const ingredient of ingredients) {
@@ -272,12 +314,12 @@ async function handleRecipeCostForecast(recipeData: RecipeRequestData, days: num
             const unitPrice = forecast.forecast_data[i].predicted_price;
             const quantity = ingredient.quantity;
             const cost = unitPrice * quantity;
-            
+
             totalCost += cost;
             ingredientCosts[ingredient.name] = {
               unit_price: unitPrice,
               quantity: quantity,
-              total_cost: Math.round(cost * 100) / 100
+              total_cost: Math.round(cost * 100) / 100,
             };
           }
         }
@@ -286,7 +328,7 @@ async function handleRecipeCostForecast(recipeData: RecipeRequestData, days: num
           date: dayData.date,
           total_cost: Math.round(totalCost * 100) / 100,
           ingredient_costs: ingredientCosts,
-          days_from_now: dayData.days_from_now
+          days_from_now: dayData.days_from_now,
         });
       }
     }
@@ -294,20 +336,22 @@ async function handleRecipeCostForecast(recipeData: RecipeRequestData, days: num
     return NextResponse.json({
       success: true,
       data: {
-        recipe_name: recipeData.name || 'Custom Recipe',
+        recipe_name: recipeData.name || "Custom Recipe",
         total_cost_forecast: totalCostForecast,
         ingredient_forecasts: forecasts,
-        generated_at: new Date().toISOString()
-      }
+        generated_at: new Date().toISOString(),
+      },
     });
-
   } catch (error) {
-    console.error('❌ Recipe cost forecast error:', error);
+    console.error("❌ Recipe cost forecast error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Recipe cost forecast failed',
-        timestamp: new Date().toISOString()
+        error:
+          error instanceof Error
+            ? error.message
+            : "Recipe cost forecast failed",
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
