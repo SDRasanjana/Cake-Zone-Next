@@ -306,7 +306,7 @@ function generateSeasonalAdvice(businessMetrics, currentMonth) {
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const currentMonthName = monthNames[currentMonth];
-    
+
     // Dynamic revenue potential calculation
     const revenueBoost = businessMetrics.seasonalData.factor > 1.2 ? "high-demand" : businessMetrics.seasonalData.factor > 1.0 ? "moderate-demand" : "steady-demand";
     const potentialIncrease = Math.round((businessMetrics.seasonalData.factor - 1) * 100);
@@ -332,7 +332,7 @@ function generateProfitabilityAdvice(businessMetrics) {
     const avgOrderValue = businessMetrics.avgOrderValue || 0;
     const uniqueCustomers = businessMetrics.uniqueCustomers || 0;
     const monthlyRevenue = businessMetrics.revenue || 0;
-    
+
     // Calculate industry benchmark comparisons
     const industryAvgMargin = 18; // Bakery industry average
     const marginGap = profitMargin - industryAvgMargin;
@@ -405,7 +405,7 @@ function generateProfitabilityAdvice(businessMetrics) {
 function generateCostStructureAdvice(businessMetrics) {
     const { labour, inventory, utilities, others } = businessMetrics.expenseRatio;
     const totalExpenses = businessMetrics.totalExpenses;
-    
+
     // Industry benchmarks for bakeries
     const benchmarks = {
         labour: { min: 25, max: 35, optimal: 30 },
@@ -413,7 +413,7 @@ function generateCostStructureAdvice(businessMetrics) {
         utilities: { min: 8, max: 12, optimal: 10 },
         others: { min: 10, max: 15, optimal: 12 }
     };
-    
+
     // Identify the most critical area
     const deviations = {
         labour: { value: labour, deviation: labour - benchmarks.labour.optimal, severity: Math.abs(labour - benchmarks.labour.optimal) },
@@ -421,10 +421,10 @@ function generateCostStructureAdvice(businessMetrics) {
         utilities: { value: utilities, deviation: utilities - benchmarks.utilities.optimal, severity: Math.abs(utilities - benchmarks.utilities.optimal) },
         others: { value: others, deviation: others - benchmarks.others.optimal, severity: Math.abs(others - benchmarks.others.optimal) }
     };
-    
+
     // Find the category with highest deviation
-    const mostCritical = Object.entries(deviations).reduce((max, [key, data]) => 
-        data.severity > max.severity ? { category: key, ...data } : max, 
+    const mostCritical = Object.entries(deviations).reduce((max, [key, data]) =>
+        data.severity > max.severity ? { category: key, ...data } : max,
         { category: 'labour', severity: 0 }
     );
 
