@@ -1,6 +1,7 @@
 "use client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
+import PromoBanner from "@/components/PromoBanner";
 import { CartProvider } from "@/contexts/CartContext";
 import { Toaster } from "react-hot-toast";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,6 +19,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/sign-in") ||
     pathname.startsWith("/sign-up"); // Hide Navbar on checkout, sign-in, sign-up
   const hideFooter = pathname.startsWith("/dashboards/customer") || hideNav; // Hide Footer on customer dashboard, admin/owner pages, checkout, sign-in, sign-up
+
+  // Show promo banner on public pages for customers only
+  const showPromoBanner =
+    !hideNav &&
+    isSignedIn &&
+    user?.publicMetadata?.role === "customer" &&
+    ["/", "/menu", "/about", "/contact"].includes(pathname);
 
   // Client-side redirect for admin/owner users on customer/public pages
   useEffect(() => {
@@ -43,6 +51,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <CartProvider>
       {!hideNav && <Navbar />}
+      {showPromoBanner && <PromoBanner />}
       {children}
       {!hideFooter && <Footer />}
       <Toaster position="bottom-right" />

@@ -9,13 +9,19 @@ import { updateClerkUserRoleByEmail, createClerkUser } from '@/lib/clerkApi';
 // GET /api/auth/users - List all users (for admin dashboard)
 export async function GET() {
   try {
+    console.log("📋 Fetching users from MongoDB...");
     const client = await clientPromise;
     const db = client.db('cakezone');
     const users = getUserModel(db);
     const allUsers = await users.find({}, { projection: { password: 0 } }).toArray(); // Hide password
+    console.log(`✅ Found ${allUsers.length} users in MongoDB`);
     return NextResponse.json({ success: true, data: allUsers });
   } catch (err) {
-    return NextResponse.json({ success: false, error: 'Failed to fetch users' }, { status: 500 });
+    console.error("❌ Failed to fetch users:", err);
+    return NextResponse.json({ 
+      success: false, 
+      error: `Failed to fetch users: ${err.message}` 
+    }, { status: 500 });
   }
 }
 

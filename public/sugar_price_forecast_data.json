@@ -1,58 +1,170 @@
 [
   {
-    "ds": "2025-08-05",
-    "yhat": 252.76033607184718,
-    "yhat_lower": 232.50486891385665,
-    "yhat_upper": 272.2997215351241,
-    "date_formatted": "Tuesday, August 05, 2025",
+    "ds": "2025-09-30",
+    "yhat": 298.55,
+    "yhat_lower": 268.7,
+    "yhat_upper": 328.41,
+    "date_formatted": "Tuesday, September 30, 2025",
     "days_from_now": 1
   },
   {
-    "ds": "2025-08-06",
-    "yhat": 252.76033607184718,
-    "yhat_lower": 232.50486891385665,
-    "yhat_upper": 272.2997215351241,
-    "date_formatted": "Wednesday, August 06, 2025",
+    "ds": "2025-10-01",
+    "yhat": 324.29,
+    "yhat_lower": 291.86,
+    "yhat_upper": 356.71,
+    "date_formatted": "Wednesday, October 01, 2025",
     "days_from_now": 2
   },
   {
-    "ds": "2025-08-07",
-    "yhat": 252.76033607184718,
-    "yhat_lower": 232.50486891385665,
-    "yhat_upper": 272.2997215351241,
-    "date_formatted": "Thursday, August 07, 2025",
+    "ds": "2025-10-02",
+    "yhat": 288.02,
+    "yhat_lower": 259.22,
+    "yhat_upper": 316.82,
+    "date_formatted": "Thursday, October 02, 2025",
     "days_from_now": 3
   },
   {
-    "ds": "2025-08-08",
-    "yhat": 252.76033607184718,
-    "yhat_lower": 232.50486891385665,
-    "yhat_upper": 272.2997215351241,
-    "date_formatted": "Friday, August 08, 2025",
+    "ds": "2025-10-03",
+    "yhat": 235.05,
+    "yhat_lower": 211.55,
+    "yhat_upper": 258.56,
+    "date_formatted": "Friday, October 03, 2025",
     "days_from_now": 4
   },
   {
-    "ds": "2025-08-09",
-    "yhat": 252.76033607184718,
-    "yhat_lower": 232.50486891385665,
-    "yhat_upper": 272.2997215351241,
-    "date_formatted": "Saturday, August 09, 2025",
+    "ds": "2025-10-04",
+    "yhat": 224.81,
+    "yhat_lower": 202.33,
+    "yhat_upper": 247.29,
+    "date_formatted": "Saturday, October 04, 2025",
     "days_from_now": 5
   },
   {
-    "ds": "2025-08-10",
-    "yhat": 252.76033607184718,
-    "yhat_lower": 232.50486891385665,
-    "yhat_upper": 272.2997215351241,
-    "date_formatted": "Sunday, August 10, 2025",
+    "ds": "2025-10-05",
+    "yhat": 243.13,
+    "yhat_lower": 218.81,
+    "yhat_upper": 267.44,
+    "date_formatted": "Sunday, October 05, 2025",
     "days_from_now": 6
   },
   {
-    "ds": "2025-08-11",
-    "yhat": 252.76033607184718,
-    "yhat_lower": 232.50486891385665,
-    "yhat_upper": 272.2997215351241,
-    "date_formatted": "Monday, August 11, 2025",
+    "ds": "2025-10-06",
+    "yhat": 255.1,
+    "yhat_lower": 229.59,
+    "yhat_upper": 280.61,
+    "date_formatted": "Monday, October 06, 2025",
     "days_from_now": 7
+  },
+  {
+    "ds": "2025-10-07",
+    "yhat": 273.19,
+    "yhat_lower": 245.87,
+    "yhat_upper": 300.51,
+    "date_formatted": "Tuesday, October 07, 2025",
+    "days_from_now": 8
+  },
+  {
+    "ds": "2025-10-08",
+    "yhat": 263.36,
+    "yhat_lower": 237.02,
+    "yhat_upper": 289.69,
+    "date_formatted": "Wednesday, October 08, 2025",
+    "days_from_now": 9
+  },
+  {
+    "ds": "2025-10-09",
+    "yhat": 211.72,
+    "yhat_lower": 190.55,
+    "yhat_upper": 232.89,
+    "date_formatted": "Thursday, October 09, 2025",
+    "days_from_now": 10
+  },
+  {
+    "ds": "2025-10-10",
+    "yhat": 206.64,
+    "yhat_lower": 185.97,
+    "yhat_upper": 227.3,
+    "date_formatted": "Friday, October 10, 2025",
+    "days_from_now": 11
+  },
+  {
+    "ds": "2025-10-11",
+    "yhat": 215.07,
+    "yhat_lower": 193.57,
+    "yhat_upper": 236.58,
+    "date_formatted": "Saturday, October 11, 2025",
+    "days_from_now": 12
+  },
+  {
+    "ds": "2025-10-12",
+    "yhat": 239.47,
+    "yhat_lower": 215.53,
+    "yhat_upper": 263.42,
+    "date_formatted": "Sunday, October 12, 2025",
+    "days_from_now": 13
+  },
+  {
+    "ds": "2025-10-13",
+    "yhat": 288.39,
+    "yhat_lower": 259.55,
+    "yhat_upper": 317.23,
+    "date_formatted": "Monday, October 13, 2025",
+    "days_from_now": 14
+  },
+  {
+    "ds": "2025-10-14",
+    "yhat": 336.25,
+    "yhat_lower": 302.62,
+    "yhat_upper": 369.87,
+    "date_formatted": "Tuesday, October 14, 2025",
+    "days_from_now": 15
+  },
+  {
+    "ds": "2025-10-15",
+    "yhat": 325.33,
+    "yhat_lower": 292.8,
+    "yhat_upper": 357.87,
+    "date_formatted": "Wednesday, October 15, 2025",
+    "days_from_now": 16
+  },
+  {
+    "ds": "2025-10-16",
+    "yhat": 265.8,
+    "yhat_lower": 239.22,
+    "yhat_upper": 292.38,
+    "date_formatted": "Thursday, October 16, 2025",
+    "days_from_now": 17
+  },
+  {
+    "ds": "2025-10-17",
+    "yhat": 230.92,
+    "yhat_lower": 207.83,
+    "yhat_upper": 254.01,
+    "date_formatted": "Friday, October 17, 2025",
+    "days_from_now": 18
+  },
+  {
+    "ds": "2025-10-18",
+    "yhat": 200.45,
+    "yhat_lower": 180.4,
+    "yhat_upper": 220.49,
+    "date_formatted": "Saturday, October 18, 2025",
+    "days_from_now": 19
+  },
+  {
+    "ds": "2025-10-19",
+    "yhat": 207.25,
+    "yhat_lower": 186.53,
+    "yhat_upper": 227.98,
+    "date_formatted": "Sunday, October 19, 2025",
+    "days_from_now": 20
+  },
+  {
+    "ds": "2025-10-20",
+    "yhat": 256.16,
+    "yhat_lower": 230.54,
+    "yhat_upper": 281.77,
+    "date_formatted": "Monday, October 20, 2025",
+    "days_from_now": 21
   }
 ]

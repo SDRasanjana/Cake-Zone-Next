@@ -20,6 +20,10 @@ export async function POST(req) {
       }
     } else if (event.type === 'user.created') {
       const email = event.data.email_addresses?.[0]?.email_address;
+      const firstName = event.data.first_name || '';
+      const lastName = event.data.last_name || '';
+      const imageUrl = event.data.image_url || '';
+      const name = `${firstName} ${lastName}`.trim() || email?.split('@')[0];
       console.log('User created event received for email:', email);
       if (email) {
         const client = await clientPromise;
@@ -30,7 +34,12 @@ export async function POST(req) {
           const now = new Date();
           const user = {
             email,
+            name,
+            firstName,
+            lastName,
+            imageUrl,
             role: 'customer',
+            status: 'Active',
             createdAt: now,
             updatedAt: now
           };
