@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import CakePreview3D from "@/components/dashboard/customer/CakePreview3D";
 import SidebarNavigation from "@/components/dashboard/customer/SidebarNavigation";
 import MobileNavigation from "@/components/dashboard/customer/MobileNavigation";
@@ -30,9 +31,61 @@ import { useSearchParams, useRouter } from "next/navigation";
 type BudgetKey = "1500" | "2000" | "2000+";
 
 const CustomerDashboardContent = () => {
+  const { isLoaded, isSignedIn, user } = useUser();
   const [selectedCake, setSelectedCake] = useState<number | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<BudgetKey>("1500");
   const [notifications] = useState(3);
+
+  // Handle user registration on first dashboard access
+  useEffect(() => {
+    const registerUserIfNeeded = async () => {
+      if (isLoaded && isSignedIn && user && user.emailAddresses && user.emailAddresses.length > 0) {
+        const email = user.emailAddresses[0].emailAddress;
+        
+        // Check if user is already registered in MongoDB
+        if (!sessionStorage.getItem(`mongo-registered-${email}`)) {
+          console.log("🔄 Registering new user in MongoDB:", {
+            email,
+            fullName: user.fullName,
+            firstName: user.firstName,
+            lastName: user.lastName,
+          });
+
+          try {
+            const registrationData = {
+              email,
+              name: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || email.split('@')[0],
+              firstName: user.firstName || '',
+              lastName: user.lastName || '',
+              imageUrl: user.imageUrl || '',
+              password: "clerk-oauth",
+            };
+
+            const response = await fetch("/api/auth/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(registrationData),
+            });
+
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+              console.log("✅ User successfully registered in MongoDB");
+              sessionStorage.setItem(`mongo-registered-${email}`, "true");
+            } else {
+              console.log("ℹ️ User might already exist:", result.error);
+              // Mark as registered even if user exists to avoid repeated calls
+              sessionStorage.setItem(`mongo-registered-${email}`, "true");
+            }
+          } catch (error) {
+            console.error("❌ Registration error:", error);
+          }
+        }
+      }
+    };
+
+    registerUserIfNeeded();
+  }, [isLoaded, isSignedIn, user]);
 
   //preview
   const [showPreview, setShowPreview] = useState(false);
