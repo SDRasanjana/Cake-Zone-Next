@@ -89,10 +89,12 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   {productImage.startsWith("data:image") ||
                   productImage.startsWith("http") ||
                   productImage.startsWith("/") ? (
-                    <img
+                    <Image
                       src={productImage}
                       alt={productName}
-                      className="w-12 h-12 object-cover rounded border"
+                      width={48}
+                      height={48}
+                      className="object-cover rounded border"
                     />
                   ) : (
                     <div className="w-12 h-12 flex items-center justify-center bg-gray-200 rounded border text-xs text-gray-500">
@@ -217,8 +219,8 @@ const ProductManagementTab: React.FC = () => {
       if (!res.ok) throw new Error("Failed to fetch cakes");
       const data = await res.json();
       setCakes(data);
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -263,7 +265,7 @@ const ProductManagementTab: React.FC = () => {
         try {
           const errorData = await res.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
-        } catch (e) {
+        } catch {
           // If JSON parsing fails, get text response
           const errorText = await res.text();
           if (errorText.includes("<!DOCTYPE")) {
@@ -283,9 +285,9 @@ const ProductManagementTab: React.FC = () => {
       setIngredientsInput("");
       setEditId(null);
       fetchCakes();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Form submission error:", err);
-      setFormError(err.message || "Failed to save cake");
+      setFormError(err instanceof Error ? err.message : "Failed to save cake");
     } finally {
       setFormLoading(false);
     }
@@ -301,15 +303,6 @@ const ProductManagementTab: React.FC = () => {
     );
     setEditId(cake._id || null);
     setShowAdd(true);
-  };
-
-  // Handle cancel
-  const handleCancel = () => {
-    setShowAdd(false);
-    setForm(initialForm);
-    setIngredientsInput("");
-    setEditId(null);
-    setFormError("");
   };
 
   // Handle delete button click
@@ -341,7 +334,7 @@ const ProductManagementTab: React.FC = () => {
         try {
           const errorData = await res.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
-        } catch (e) {
+        } catch {
           const errorText = await res.text();
           if (errorText.includes("<!DOCTYPE")) {
             errorMessage = `Server error: ${res.status}. Please check if the API endpoint exists.`;
@@ -443,10 +436,12 @@ const ProductManagementTab: React.FC = () => {
             typeof form.image === "string" &&
             form.image.startsWith("data:image") && (
               <div className="flex justify-center sm:justify-start">
-                <img
+                <Image
                   src={form.image}
                   alt="Preview"
-                  className="w-16 h-16 md:w-20 md:h-20 object-cover rounded border"
+                  width={80}
+                  height={80}
+                  className="object-cover rounded border"
                 />
               </div>
             )}
@@ -598,7 +593,7 @@ const ProductManagementTab: React.FC = () => {
                         {cake.image && typeof cake.image === "string" ? (
                           cake.image.startsWith("data:image") ||
                           cake.image.startsWith("http") ? (
-                            <img
+                            <Image
                               src={cake.image}
                               alt={cake.name}
                               width={48}
@@ -607,7 +602,7 @@ const ProductManagementTab: React.FC = () => {
                               style={{ minWidth: 48, minHeight: 48 }}
                             />
                           ) : cake.image.startsWith("/") ? (
-                            <img
+                            <Image
                               src={cake.image}
                               alt={cake.name}
                               width={48}
@@ -678,7 +673,7 @@ const ProductManagementTab: React.FC = () => {
                     {cake.image && typeof cake.image === "string" ? (
                       cake.image.startsWith("data:image") ||
                       cake.image.startsWith("http") ? (
-                        <img
+                        <Image
                           src={cake.image}
                           alt={cake.name}
                           width={64}
@@ -686,7 +681,7 @@ const ProductManagementTab: React.FC = () => {
                           className="rounded-lg border object-cover"
                         />
                       ) : cake.image.startsWith("/") ? (
-                        <img
+                        <Image
                           src={cake.image}
                           alt={cake.name}
                           width={64}

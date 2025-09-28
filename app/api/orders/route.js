@@ -50,6 +50,8 @@ export async function GET(req) {
       // Transform orders to match frontend interface
       const transformedOrders = orders.map(order => ({
         id: order._id.toString(),
+        userId: order.userId,
+        items: order.items || [], // Preserve complete items array with imageUri
         customerName: order.shipping?.fullName || order.shipping?.firstName + ' ' + order.shipping?.lastName || 'Unknown Customer',
         customerPhone: order.shipping?.phone || 'N/A',
         customerEmail: order.shipping?.email || 'N/A',
@@ -65,6 +67,9 @@ export async function GET(req) {
         paymentStatus: order.paymentStatus || 'pending',
         status: order.status || 'pending',
         urgentOrder: order.urgentOrder || false,
+        shipping: order.shipping, // Preserve shipping info
+        total: order.total || 0, // Add total field
+        createdAt: order.createdAt || new Date(),
       }));
 
       // Fetch total users (assuming users are in 'users' collection)

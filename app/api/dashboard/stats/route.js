@@ -6,11 +6,20 @@ export const runtime = 'nodejs';
 import clientPromise from "@/lib/mongodb";
 
 export async function GET(request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const period = searchParams.get('period') || 'current'; // 'current' or 'last'
+    const { searchParams } = new URL(request.url);
+    const period = searchParams.get('period') || 'current'; // 'current' or 'last'
 
-        const client = await clientPromise;
+    try {
+        // Add connection timeout and better error handling
+        console.log("Attempting to connect to MongoDB...");
+        const client = await Promise.race([
+            clientPromise,
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("MongoDB connection timeout after 10 seconds")), 10000)
+            )
+        ]);
+
+        console.log("Connected to MongoDB successfully");
         const db = client.db("cakezone");
 
         // Get current date and calculate date ranges
@@ -155,11 +164,18 @@ export async function GET(request) {
 
     } catch (error) {
         console.error("Dashboard Stats API Error:", error);
+        console.error("Error type:", error.constructor.name);
+        console.error("MongoDB URI exists:", !!process.env.MONGODB_URI);
+        console.error("MongoDB URI format:", process.env.MONGODB_URI ? "Valid" : "Missing");
+
+        // Return appropriate error status based on error type
+        const status = error.message.includes("timeout") ? 504 : 500;
 
         // Return fallback data if database fails
         return Response.json({
             success: false,
             error: error.message,
+            errorType: error.constructor.name,
             data: {
                 period,
                 totalSales: period === 'last' ? 38000 : 45000,
@@ -184,6 +200,6 @@ export async function GET(request) {
                 },
                 recentActivity: []
             }
-        }, { status: 500 });
+        }, { status });
     }
 }

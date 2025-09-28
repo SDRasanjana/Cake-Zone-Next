@@ -1,18 +1,18 @@
 {
   "forecast_period": {
-    "start_date": "2025-08-15",
-    "end_date": "2025-08-21",
-    "days": 7
+    "start_date": "2025-09-30",
+    "end_date": "2025-10-20",
+    "days": 21
   },
   "price_analysis": {
-    "current_trend": "stable",
+    "current_trend": "decreasing",
     "trend_strength": "stable",
-    "price_change_lkr": 0.0,
-    "percentage_change": 0.0,
-    "highest_price": 225.16,
-    "lowest_price": 225.16,
-    "average_price": 225.16,
-    "volatility": 0.0
+    "price_change_lkr": -1.38,
+    "percentage_change": -0.65,
+    "highest_price": 216.18,
+    "lowest_price": 204.44,
+    "average_price": 211.07,
+    "volatility": 2.91
   },
   "recommendations": {
     "buy_timing": "any_time",
@@ -20,8 +20,8 @@
     "confidence_level": "high"
   },
   "metadata": {
-    "generated_at": "2025-08-13T12:44:30.328752",
-    "forecast_date": "2025-08-14",
+    "generated_at": "2025-09-28T13:16:47.441601",
+    "forecast_date": "2025-09-29",
     "model_type": "Facebook Prophet",
     "confidence_interval": "95%",
     "ingredient": "Flour"

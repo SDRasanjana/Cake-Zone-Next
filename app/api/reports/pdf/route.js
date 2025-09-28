@@ -38,9 +38,9 @@ export async function GET(request) {
 
         const currentDate = selectedDate || new Date().toISOString().slice(0, 10);
 
-        if (!type || (type !== 'orders' && type !== 'expenses' && type !== 'inventory')) {
+        if (!type || (type !== 'orders' && type !== 'expenses')) {
             console.log('Invalid type parameter:', type);
-            return new Response(JSON.stringify({ message: 'Invalid report type. Use "orders", "expenses", or "inventory"' }), {
+            return new Response(JSON.stringify({ message: 'Invalid report type. Use "orders" or "expenses"' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -89,7 +89,7 @@ export async function GET(request) {
             headers = ['Order ID', 'Date', 'Customer', 'Amount'];
             totalAmount = orders.reduce((sum, order) => sum + (order.total || 0), 0);
 
-        } else if (type === 'expenses') {
+        } else {
             console.log('Fetching expenses from database...');
 
             // First, let's check if there are any expenses at all
@@ -120,33 +120,6 @@ export async function GET(request) {
             title = 'Expenses Report';
             headers = ['Expense ID', 'Date', 'Category', 'Amount'];
             totalAmount = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
-
-        } else {
-            console.log('Fetching inventory from database...');
-
-            // Fetch ingredients from database
-            const ingredientsCollection = db.collection("ingredients");
-            const allIngredients = await ingredientsCollection.find({}).limit(5).toArray();
-            console.log('Sample ingredients in database:', allIngredients.length > 0 ? allIngredients[0] : 'No ingredients found');
-
-            // Fetch all ingredients (inventory doesn't need date filtering like orders/expenses)
-            const ingredients = await ingredientsCollection.find({}).sort({ name: 1 }).toArray();
-
-            console.log(`Found ${ingredients.length} ingredients in inventory`);
-            if (ingredients.length > 0) {
-                console.log('First ingredient:', ingredients[0]);
-            }
-
-            data = ingredients.map(ingredient => [
-                ingredient.name || 'Unknown',
-                ingredient.category || 'General',
-                ingredient.unit || 'kg',
-                `Rs. ${(ingredient.currentPrice || 0).toLocaleString()}`
-            ]);
-
-            title = 'Inventory Report';
-            headers = ['Ingredient', 'Category', 'Unit', 'Current Price'];
-            totalAmount = ingredients.reduce((sum, ingredient) => sum + (ingredient.currentPrice || 0), 0);
         }
 
         console.log('Starting PDF generation...');

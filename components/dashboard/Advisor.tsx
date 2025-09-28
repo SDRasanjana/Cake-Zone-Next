@@ -34,7 +34,31 @@ interface FinancialAdvice {
   type: "warning" | "opportunity" | "insight";
   message: string;
   savings: number;
-  source?: "AI" | "Analysis";
+  source?: "AI" | "Analysis" | "Expert Analysis";
+  priority?: "HIGH" | "MEDIUM" | "LOW" | "OPTIMIZE" | "EXPANSION";
+  benchmarkData?: {
+    current: string;
+    industry?: number;
+    gap?: string;
+    target?: string;
+    performance?: string;
+  };
+  costBreakdown?: {
+    current?: string;
+    optimal?: string;
+    excess?: string;
+    monthlyCost?: number;
+    labour?: string;
+    inventory?: string;
+    utilities?: string;
+    status?: string;
+  };
+  marketData?: {
+    seasonalFactor: number;
+    demandLevel: string;
+    potentialGrowth: string;
+    monthName: string;
+  };
 }
 
 // Define business metrics interface
@@ -439,6 +463,275 @@ export default function Advisor() {
         </div>
       )}
 
+      {/* Enhanced Business Health Dashboard */}
+      {businessMetrics && (
+        <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <BarChart4 className="h-5 w-5 text-blue-600" />
+              Business Health Dashboard
+            </h3>
+            <div
+              className={`px-3 py-1 rounded-full text-sm font-bold ${
+                businessMetrics.businessHealth === "healthy"
+                  ? "bg-green-100 text-green-700"
+                  : businessMetrics.businessHealth === "moderate"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {businessMetrics.businessHealth === "healthy"
+                ? "🟢 Healthy"
+                : businessMetrics.businessHealth === "moderate"
+                ? "🟡 Moderate"
+                : "🔴 Needs Attention"}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-lg border border-blue-100">
+              <div className="text-xs text-blue-600 font-medium mb-1">
+                Monthly Revenue
+              </div>
+              <div className="text-xl font-bold text-blue-800">
+                Rs. {businessMetrics.revenue.toLocaleString()}
+              </div>
+              {businessMetrics.seasonalData && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {businessMetrics.seasonalData.season} Factor:{" "}
+                  {businessMetrics.seasonalData.factor}x
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white p-4 rounded-lg border border-green-100">
+              <div className="text-xs text-green-600 font-medium mb-1">
+                Profit Margin
+              </div>
+              <div className="text-xl font-bold text-green-800">
+                {businessMetrics.profitMargin.toFixed(1)}%
+              </div>
+              <div
+                className={`text-xs mt-1 ${
+                  businessMetrics.profitMargin >= 18
+                    ? "text-green-600"
+                    : businessMetrics.profitMargin >= 12
+                    ? "text-yellow-600"
+                    : "text-red-600"
+                }`}
+              >
+                {businessMetrics.profitMargin >= 18
+                  ? "Above Industry Avg"
+                  : businessMetrics.profitMargin >= 12
+                  ? "Near Industry Avg"
+                  : "Below Industry Avg"}
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg border border-purple-100">
+              <div className="text-xs text-purple-600 font-medium mb-1">
+                Customers
+              </div>
+              <div className="text-xl font-bold text-purple-800">
+                {businessMetrics.uniqueCustomers}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Avg: Rs. {businessMetrics.avgOrderValue.toFixed(0)}/order
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg border border-orange-100">
+              <div className="text-xs text-orange-600 font-medium mb-1">
+                Cost Efficiency
+              </div>
+              <div className="text-xl font-bold text-orange-800">
+                {businessMetrics.expenseRatio
+                  ? (
+                      (businessMetrics.expenseRatio.labour +
+                        businessMetrics.expenseRatio.inventory) /
+                      2
+                    ).toFixed(1)
+                  : "0"}
+                %
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Labor + Inventory
+              </div>
+            </div>
+          </div>
+
+          {/* Expense Ratio Breakdown */}
+          {businessMetrics.expenseRatio && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Cost Structure Analysis
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="text-center">
+                  <div
+                    className={`text-lg font-bold ${
+                      businessMetrics.expenseRatio.labour <= 35
+                        ? "text-green-600"
+                        : businessMetrics.expenseRatio.labour <= 40
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {businessMetrics.expenseRatio.labour.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-gray-600">Labour</div>
+                  <div className="text-xs text-gray-500">(Target: 25-35%)</div>
+                </div>
+                <div className="text-center">
+                  <div
+                    className={`text-lg font-bold ${
+                      businessMetrics.expenseRatio.inventory <= 38
+                        ? "text-green-600"
+                        : businessMetrics.expenseRatio.inventory <= 45
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {businessMetrics.expenseRatio.inventory.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-gray-600">Inventory</div>
+                  <div className="text-xs text-gray-500">(Target: 28-38%)</div>
+                </div>
+                <div className="text-center">
+                  <div
+                    className={`text-lg font-bold ${
+                      businessMetrics.expenseRatio.utilities <= 12
+                        ? "text-green-600"
+                        : businessMetrics.expenseRatio.utilities <= 15
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {businessMetrics.expenseRatio.utilities.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-gray-600">Utilities</div>
+                  <div className="text-xs text-gray-500">(Target: 8-12%)</div>
+                </div>
+                <div className="text-center">
+                  <div
+                    className={`text-lg font-bold ${
+                      businessMetrics.expenseRatio.others <= 15
+                        ? "text-green-600"
+                        : businessMetrics.expenseRatio.others <= 18
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {businessMetrics.expenseRatio.others.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-gray-600">Others</div>
+                  <div className="text-xs text-gray-500">(Target: 10-15%)</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Ingredient Trends Dashboard */}
+      {businessMetrics && businessMetrics.ingredientTrends && (
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl shadow-sm border border-orange-200 mb-6">
+          <h3 className="text-lg font-semibold text-orange-800 mb-4 flex items-center gap-2">
+            <TrendingDown className="h-5 w-5" />
+            Ingredient Price Trends
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(businessMetrics.ingredientTrends).map(
+              ([ingredient, data]) => (
+                <div
+                  key={ingredient}
+                  className="bg-white p-4 rounded-lg border border-orange-100 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-semibold text-gray-800">
+                      {ingredient}
+                    </div>
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        data.status === "rising"
+                          ? "bg-red-400"
+                          : data.status === "falling"
+                          ? "bg-green-400"
+                          : "bg-gray-400"
+                      }`}
+                    ></div>
+                  </div>
+                  <div className="text-lg font-bold text-gray-800 mb-1">
+                    Rs. {data.current.toFixed(0)}
+                  </div>
+                  <div
+                    className={`text-sm font-medium ${
+                      data.trend > 5
+                        ? "text-red-600"
+                        : data.trend < -5
+                        ? "text-green-600"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    {data.trend > 0 ? "+" : ""}
+                    {data.trend.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-gray-500 capitalize mt-1">
+                    {data.status === "rising"
+                      ? "↗️ Rising"
+                      : data.status === "falling"
+                      ? "↘️ Falling"
+                      : "→ Stable"}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+
+          {/* Ingredient Strategy Summary */}
+          <div className="mt-4 p-4 bg-white rounded-lg border border-orange-200">
+            <h4 className="text-sm font-semibold text-orange-700 mb-2">
+              💡 Strategic Recommendations
+            </h4>
+            <div className="text-sm text-gray-700">
+              {Object.entries(businessMetrics.ingredientTrends).some(
+                ([, data]) => data.status === "rising"
+              ) && (
+                <div className="mb-2">
+                  <span className="font-medium text-red-600">
+                    Rising Prices:
+                  </span>
+                  <span className="ml-1">
+                    Consider bulk purchasing for{" "}
+                    {Object.entries(businessMetrics.ingredientTrends)
+                      .filter(([, data]) => data.status === "rising")
+                      .map(([name]) => name)
+                      .join(", ")}
+                  </span>
+                </div>
+              )}
+              {Object.entries(businessMetrics.ingredientTrends).some(
+                ([, data]) => data.status === "falling"
+              ) && (
+                <div>
+                  <span className="font-medium text-green-600">
+                    Falling Prices:
+                  </span>
+                  <span className="ml-1">
+                    Excellent time to stock up on{" "}
+                    {Object.entries(businessMetrics.ingredientTrends)
+                      .filter(([, data]) => data.status === "falling")
+                      .map(([name]) => name)
+                      .join(", ")}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Financial advice cards */}
       {!loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -473,7 +766,7 @@ export default function Advisor() {
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-bold uppercase tracking-wider text-gray-600 bg-white px-2 py-1 rounded">
                         {advice.category}
                       </span>
@@ -483,16 +776,149 @@ export default function Advisor() {
                           AI
                         </span>
                       )}
+                      {advice.priority && (
+                        <span
+                          className={`text-xs font-bold px-2 py-1 rounded ${
+                            advice.priority === "HIGH"
+                              ? "bg-red-100 text-red-700"
+                              : advice.priority === "MEDIUM"
+                              ? "bg-orange-100 text-orange-700"
+                              : advice.priority === "EXPANSION"
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {advice.priority === "HIGH"
+                            ? "🚨 HIGH"
+                            : advice.priority === "MEDIUM"
+                            ? "⚠️ MEDIUM"
+                            : advice.priority === "EXPANSION"
+                            ? "🚀 GROWTH"
+                            : "📊 OPTIMIZE"}
+                        </span>
+                      )}
                     </div>
                     {advice.savings > 0 && (
-                      <span className="bg-white px-3 py-1 rounded-full text-sm font-bold text-green-700 shadow-sm border border-green-100">
-                        Save Rs. {advice.savings.toLocaleString()}
+                      <span className="bg-gradient-to-r from-green-100 to-green-200 px-3 py-1 rounded-full text-sm font-bold text-green-800 shadow-sm border border-green-200">
+                        💰 Save Rs. {advice.savings.toLocaleString()}
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-800 leading-relaxed font-medium">
+
+                  <p className="text-gray-800 leading-relaxed font-medium mb-3">
                     {advice.message}
                   </p>
+
+                  {/* Benchmark Data Display */}
+                  {advice.benchmarkData && (
+                    <div className="bg-gray-50 p-3 rounded-lg mb-3 border border-gray-200">
+                      <h4 className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
+                        <BarChart4 className="h-3 w-3" />
+                        Performance Metrics
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-gray-500">Current:</span>
+                          <span className="font-semibold ml-1 text-gray-800">
+                            {advice.benchmarkData.current}
+                          </span>
+                        </div>
+                        {advice.benchmarkData.industry && (
+                          <div>
+                            <span className="text-gray-500">Industry:</span>
+                            <span className="font-semibold ml-1 text-gray-800">
+                              {advice.benchmarkData.industry}%
+                            </span>
+                          </div>
+                        )}
+                        {advice.benchmarkData.gap && (
+                          <div>
+                            <span className="text-gray-500">Gap:</span>
+                            <span
+                              className={`font-semibold ml-1 ${
+                                advice.benchmarkData.gap.startsWith("+")
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {advice.benchmarkData.gap} pts
+                            </span>
+                          </div>
+                        )}
+                        {advice.benchmarkData.target && (
+                          <div>
+                            <span className="text-gray-500">Target:</span>
+                            <span className="font-semibold ml-1 text-blue-600">
+                              {advice.benchmarkData.target}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cost Breakdown Display */}
+                  {advice.costBreakdown && (
+                    <div className="bg-blue-50 p-3 rounded-lg mb-3 border border-blue-200">
+                      <h4 className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1">
+                        <DollarSign className="h-3 w-3" />
+                        Cost Analysis
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {advice.costBreakdown.current && (
+                          <div>
+                            <span className="text-blue-600">Current:</span>
+                            <span className="font-semibold ml-1 text-gray-800">
+                              {advice.costBreakdown.current}
+                            </span>
+                          </div>
+                        )}
+                        {advice.costBreakdown.optimal && (
+                          <div>
+                            <span className="text-blue-600">Optimal:</span>
+                            <span className="font-semibold ml-1 text-green-600">
+                              {advice.costBreakdown.optimal}
+                            </span>
+                          </div>
+                        )}
+                        {advice.costBreakdown.monthlyCost && (
+                          <div className="col-span-2">
+                            <span className="text-blue-600">Monthly Cost:</span>
+                            <span className="font-semibold ml-1 text-gray-800">
+                              Rs.{" "}
+                              {advice.costBreakdown.monthlyCost.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Market Data Display */}
+                  {advice.marketData && (
+                    <div className="bg-purple-50 p-3 rounded-lg mb-3 border border-purple-200">
+                      <h4 className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {advice.marketData.monthName} Market Insights
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-purple-600">Demand Level:</span>
+                          <span className="font-semibold ml-1 text-gray-800 capitalize">
+                            {advice.marketData.demandLevel}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-purple-600">
+                            Growth Potential:
+                          </span>
+                          <span className="font-semibold ml-1 text-green-600">
+                            {advice.marketData.potentialGrowth}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Action priority indicator */}
                   <div className="mt-3 flex items-center justify-between">

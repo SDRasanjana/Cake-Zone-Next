@@ -5,7 +5,6 @@ import {
   Package,
   Bell,
   User,
-  Settings,
   Users as UsersIcon,
   Box,
   BarChart,
@@ -19,7 +18,6 @@ const sidebarItems = [
   { id: "products", label: "Product Management", icon: Box },
   { id: "reports", label: "Reports & Analytics", icon: BarChart },
   { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "settings", label: "System Settings", icon: Settings },
   { id: "profile", label: "Profile", icon: User },
 ];
 

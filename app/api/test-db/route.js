@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import dbConnect from '@/lib/dbConnect';  
 
 // Force Node.js runtime to support MongoDB connections
 export const runtime = 'nodejs';
@@ -11,7 +10,7 @@ export async function GET() {
         const client = await clientPromise;
         console.log('Client connected successfully');
 
-        const db = client.db("CakeZone");
+        const db = client.db("cakezone");
         console.log('Database accessed successfully');
 
         // Test if we can access the database
