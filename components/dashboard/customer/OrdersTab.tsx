@@ -70,7 +70,8 @@ interface Order {
 
 const OrdersTab: React.FC<{
   setActiveTab?: (tab: DashboardTab) => void;
-}> = () => {
+  getStatusColor?: (status: string) => string;
+}> = ({ getStatusColor }) => {
   // Fetch real orders for the logged-in user
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -282,8 +283,12 @@ const OrdersTab: React.FC<{
                   </p>
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      order.paymentStatus === "paid" ||
-                      order.status === "delivered"
+                      getStatusColor
+                        ? getStatusColor(
+                            order.paymentStatus || order.status || "pending"
+                          )
+                        : order.paymentStatus === "paid" ||
+                          order.status === "delivered"
                         ? "bg-green-100 text-green-800"
                         : order.paymentStatus === "pending" ||
                           order.status === "processing"
