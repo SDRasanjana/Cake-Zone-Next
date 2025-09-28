@@ -83,21 +83,22 @@ const formatOrderId = (id: string): string => {
   // Use the last few characters and convert to a number
   const lastPart = id.slice(-8); // Take last 8 characters
   let numericValue = 0;
-  
+
   // Convert characters to numbers (letters become numbers too)
   for (let i = 0; i < lastPart.length; i++) {
     const char = lastPart[i];
-    if (char >= '0' && char <= '9') {
+    if (char >= "0" && char <= "9") {
       numericValue = numericValue * 10 + parseInt(char);
     } else {
       // Convert letters to numbers (a=1, b=2, etc.)
-      numericValue = numericValue * 10 + (char.toLowerCase().charCodeAt(0) - 96);
+      numericValue =
+        numericValue * 10 + (char.toLowerCase().charCodeAt(0) - 96);
     }
   }
-  
+
   // Ensure we get a 3-digit number between 001-999
   const finalId = (Math.abs(numericValue) % 999) + 1;
-  return `CZO${finalId.toString().padStart(3, '0')}`;
+  return `CZO${finalId.toString().padStart(3, "0")}`;
 };
 
 const formatUserId = (id: string): string => {
@@ -105,49 +106,56 @@ const formatUserId = (id: string): string => {
   // Create a more predictable numeric ID based on the original ID
   const lastPart = id.slice(-8); // Take last 8 characters
   let numericValue = 0;
-  
+
   // Convert characters to numbers (letters become numbers too)
   for (let i = 0; i < lastPart.length; i++) {
     const char = lastPart[i];
-    if (char >= '0' && char <= '9') {
+    if (char >= "0" && char <= "9") {
       numericValue = numericValue * 10 + parseInt(char);
     } else {
       // Convert letters to numbers (a=1, b=2, etc.)
-      numericValue = numericValue * 10 + (char.toLowerCase().charCodeAt(0) - 96);
+      numericValue =
+        numericValue * 10 + (char.toLowerCase().charCodeAt(0) - 96);
     }
   }
-  
+
   // Ensure we get a 3-digit number between 001-999
   const finalId = (Math.abs(numericValue) % 999) + 1;
-  return `CZC${finalId.toString().padStart(3, '0')}`;
+  return `CZC${finalId.toString().padStart(3, "0")}`;
 };
 
-// Helper function to get status color classes
-const getStatusColor = (status: string): string => {
-  switch (status?.toLowerCase()) {
-    case "completed":
-    case "paid":
-    case "delivered":
-      return "bg-green-100 text-green-700";
-    case "processing":
-    case "confirmed":
-      return "bg-blue-100 text-blue-700";
-    case "cancelled":
-    case "failed":
-      return "bg-red-100 text-red-700";
-    case "pending":
-    default:
-      return "bg-yellow-100 text-yellow-700";
-  }
-};
-
-const OrdersTab: React.FC = () => {
+const OrdersTab: React.FC<{
+  getStatusColor?: (status: string) => string;
+}> = ({ getStatusColor }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All Orders");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+
+  // Helper function to get status color classes - use prop if provided, otherwise default logic
+  const getStatusColorClass = (status: string): string => {
+    if (getStatusColor) {
+      return getStatusColor(status);
+    }
+    // Default fallback logic
+    switch (status?.toLowerCase()) {
+      case "completed":
+      case "paid":
+      case "delivered":
+        return "bg-green-100 text-green-700";
+      case "processing":
+      case "confirmed":
+        return "bg-blue-100 text-blue-700";
+      case "cancelled":
+      case "failed":
+        return "bg-red-100 text-red-700";
+      case "pending":
+      default:
+        return "bg-yellow-100 text-yellow-700";
+    }
+  };
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -165,35 +173,38 @@ const OrdersTab: React.FC = () => {
         const transformedOrders = (data.orders || []).map(
           (order: Record<string, unknown>) => {
             // Use the preserved items array from API if available, otherwise create fallback
-            const items = Array.isArray(order.items) && order.items.length > 0
-              ? order.items.map((item: OrderItem) => ({
-                  name: item.name || 'Unknown Item',
-                  price: item.price || order.amount || order.total || 0,
-                  quantity: item.quantity || 1,
-                  size: item.size,
-                  imageUri: item.imageUri || '/default-cake.png', // Preserve original imageUri
-                  // Preserve custom cake properties
-                  flavor: item.flavor,
-                  shape: item.shape,
-                  layers: item.layers,
-                  frostingColor: item.frostingColor,
-                  toppings: item.toppings,
-                  isCustom: item.isCustom,
-                  // Preserve predefined cake properties
-                  category: item.category,
-                  weight: item.weight,
-                  ingredients: item.ingredients,
-                }))
-              : (order.cake
-                ? [{
-                    name: order.cake,
-                    price: order.amount || order.total || 0,
-                    quantity: order.quantity || 1,
-                    size: order.cakeSize,
-                    imageUri: '/default-cake.png', // Fallback for old orders
-                  }]
-                : []);
-            
+            const items =
+              Array.isArray(order.items) && order.items.length > 0
+                ? order.items.map((item: OrderItem) => ({
+                    name: item.name || "Unknown Item",
+                    price: item.price || order.amount || order.total || 0,
+                    quantity: item.quantity || 1,
+                    size: item.size,
+                    imageUri: item.imageUri || "/default-cake.png", // Preserve original imageUri
+                    // Preserve custom cake properties
+                    flavor: item.flavor,
+                    shape: item.shape,
+                    layers: item.layers,
+                    frostingColor: item.frostingColor,
+                    toppings: item.toppings,
+                    isCustom: item.isCustom,
+                    // Preserve predefined cake properties
+                    category: item.category,
+                    weight: item.weight,
+                    ingredients: item.ingredients,
+                  }))
+                : order.cake
+                ? [
+                    {
+                      name: order.cake,
+                      price: order.amount || order.total || 0,
+                      quantity: order.quantity || 1,
+                      size: order.cakeSize,
+                      imageUri: "/default-cake.png", // Fallback for old orders
+                    },
+                  ]
+                : [];
+
             // Map the transformed format back to the expected format
             const transformedOrder = {
               _id: order.id || order._id,
@@ -252,7 +263,11 @@ const OrdersTab: React.FC = () => {
     let y = 30;
     doc.setFontSize(12);
     // Order meta info, spaced out and aligned
-    doc.text(`Order Reference: ${formatOrderId(order._id || order.id || "N/A")}`, 14, y);
+    doc.text(
+      `Order Reference: ${formatOrderId(order._id || order.id || "N/A")}`,
+      14,
+      y
+    );
     y += 8;
     doc.text(`User ID: ${order.userId || "N/A"}`, 14, y);
     y += 8;
@@ -336,7 +351,9 @@ const OrdersTab: React.FC = () => {
   // Download PDF for a single order
   const handleDownloadOrderPDF = async (order: Order) => {
     const doc = await generateSingleOrderPDF(order);
-    doc.save(`cakezone_${formatOrderId(order._id || order.id || "unknown")}.pdf`);
+    doc.save(
+      `cakezone_${formatOrderId(order._id || order.id || "unknown")}.pdf`
+    );
   };
 
   // Handle status change
@@ -444,7 +461,9 @@ const OrdersTab: React.FC = () => {
                         Order Reference:
                       </span>{" "}
                       <span className="text-gray-700">
-                        {formatOrderId(selectedOrder._id || selectedOrder.id || "unknown")}
+                        {formatOrderId(
+                          selectedOrder._id || selectedOrder.id || "unknown"
+                        )}
                       </span>
                     </p>
                     <p>
@@ -458,7 +477,7 @@ const OrdersTab: React.FC = () => {
                     <p>
                       <span className="font-medium text-gray-900">Status:</span>
                       <span
-                        className={`ml-2 px-2 py-1 rounded-full text-xs ${getStatusColor(
+                        className={`ml-2 px-2 py-1 rounded-full text-xs ${getStatusColorClass(
                           selectedOrder.paymentStatus ||
                             selectedOrder.status ||
                             "pending"
@@ -609,8 +628,14 @@ const OrdersTab: React.FC = () => {
                                 src={item.imageUri}
                                 alt={item.name}
                                 className="w-16 h-16 object-cover rounded border"
-                                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                                  (e.target as HTMLImageElement).src = "/default-cake.png";
+                                onError={(
+                                  e: React.SyntheticEvent<
+                                    HTMLImageElement,
+                                    Event
+                                  >
+                                ) => {
+                                  (e.target as HTMLImageElement).src =
+                                    "/default-cake.png";
                                 }}
                               />
                             ) : (
@@ -807,10 +832,20 @@ const OrdersTab: React.FC = () => {
                                   src={item.imageUri}
                                   alt={item.name}
                                   className="w-12 h-12 object-cover rounded border"
-                                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                  onError={(
+                                    e: React.SyntheticEvent<
+                                      HTMLImageElement,
+                                      Event
+                                    >
+                                  ) => {
                                     // Handle failed 3D snapshot loading
-                                    console.warn('Failed to load image for:', item.name, item.imageUri);
-                                    (e.target as HTMLImageElement).src = '/default-cake.png';
+                                    console.warn(
+                                      "Failed to load image for:",
+                                      item.name,
+                                      item.imageUri
+                                    );
+                                    (e.target as HTMLImageElement).src =
+                                      "/default-cake.png";
                                   }}
                                 />
                               ) : (
@@ -830,7 +865,7 @@ const OrdersTab: React.FC = () => {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(
                               order.paymentStatus || order.status || "pending"
                             )}`}
                           >
@@ -915,7 +950,8 @@ const OrdersTab: React.FC = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 text-sm truncate">
-                        Order {formatOrderId(order._id || order.id || "unknown")}
+                        Order{" "}
+                        {formatOrderId(order._id || order.id || "unknown")}
                       </h3>
                       <p className="text-xs text-gray-700 mt-1">
                         Customer: {formatUserId(order.userId || "unknown")}
@@ -923,7 +959,7 @@ const OrdersTab: React.FC = () => {
                     </div>
                     <div className="flex-shrink-0">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClass(
                           order.paymentStatus || order.status || "pending"
                         )}`}
                       >
@@ -971,10 +1007,20 @@ const OrdersTab: React.FC = () => {
                                 src={item.imageUri}
                                 alt={item.name}
                                 className="w-12 h-12 object-cover rounded border"
-                                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                onError={(
+                                  e: React.SyntheticEvent<
+                                    HTMLImageElement,
+                                    Event
+                                  >
+                                ) => {
                                   // Handle failed 3D snapshot loading in mobile view
-                                  console.warn('Mobile view - Failed to load image for:', item.name, item.imageUri);
-                                  (e.target as HTMLImageElement).src = '/default-cake.png';
+                                  console.warn(
+                                    "Mobile view - Failed to load image for:",
+                                    item.name,
+                                    item.imageUri
+                                  );
+                                  (e.target as HTMLImageElement).src =
+                                    "/default-cake.png";
                                 }}
                               />
                             ) : (
