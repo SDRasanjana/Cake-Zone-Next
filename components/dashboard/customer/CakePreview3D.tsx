@@ -674,13 +674,14 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b">
+        <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-orange-50 to-orange-100">
           <h2 className="text-xl font-bold text-gray-800">3D Cake Preview</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors z-30 bg-white shadow-sm border"
+            title="Close Preview"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-gray-600" />
           </button>
         </div>
 
@@ -710,47 +711,47 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
 
             {/* Controls */}
             {!isLoading && (
-              <div className="absolute bottom-4 left-4 flex gap-2">
+              <div className="absolute bottom-4 left-4 flex gap-2 z-20">
                 <button
                   onClick={() => handleZoom("in")}
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                  className="p-3 bg-white rounded-full shadow-xl hover:bg-gray-50 transition-all hover:scale-105 border-2 border-gray-200"
                   title="Zoom In"
                 >
-                  <ZoomIn className="w-4 h-4" />
+                  <ZoomIn className="w-5 h-5 text-gray-700" />
                 </button>
                 <button
                   onClick={() => handleZoom("out")}
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                  className="p-3 bg-white rounded-full shadow-xl hover:bg-gray-50 transition-all hover:scale-105 border-2 border-gray-200"
                   title="Zoom Out"
                 >
-                  <ZoomOut className="w-4 h-4" />
+                  <ZoomOut className="w-5 h-5 text-gray-700" />
                 </button>
                 <button
                   onClick={() => setIsAutoRotating(!isAutoRotating)}
-                  className={`p-2 rounded-full shadow-lg transition-colors ${
+                  className={`p-3 rounded-full shadow-xl transition-all hover:scale-105 border-2 ${
                     isAutoRotating
-                      ? "bg-orange-500 text-white"
-                      : "bg-white hover:bg-gray-50"
+                      ? "bg-orange-500 text-white border-orange-400"
+                      : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
                   }`}
                   title="Toggle Auto Rotation"
                 >
-                  <RotateCw className="w-4 h-4" />
+                  <RotateCw className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() =>
                     setControlMode(controlMode === "rotate" ? "pan" : "rotate")
                   }
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                  className="p-3 bg-white rounded-full shadow-xl hover:bg-gray-50 transition-all hover:scale-105 border-2 border-gray-200"
                   title={`Mode: ${controlMode}`}
                 >
-                  <Move className="w-4 h-4" />
+                  <Move className="w-5 h-5 text-gray-700" />
                 </button>
                 <button
                   onClick={resetView}
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                  className="p-3 bg-white rounded-full shadow-xl hover:bg-gray-50 transition-all hover:scale-105 border-2 border-gray-200"
                   title="Reset View"
                 >
-                  <RotateCw className="w-4 h-4" />
+                  <RotateCw className="w-5 h-5 text-gray-700" />
                 </button>
               </div>
             )}
@@ -758,8 +759,6 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
 
           {/* Info Panel */}
           <div className="w-full lg:w-80 p-6 border-l bg-gray-50">
-            <h3 className="text-lg font-semibold mb-4">Cake Configuration</h3>
-
             <div className="space-y-3 mb-6 text-black">
               <div>
                 <span className="font-semibold text-black">Shape:</span>{" "}
@@ -811,9 +810,9 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
               <button
                 onClick={handleAddToCart}
                 disabled={isLoading}
-                className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+                className="w-full bg-orange-500 text-white py-4 rounded-lg hover:bg-orange-600 transition-all hover:scale-105 disabled:bg-gray-400 disabled:hover:scale-100 flex items-center justify-center gap-2 shadow-lg font-semibold text-lg"
               >
-                <ShoppingCart className="w-5 h-5" />
+                <ShoppingCart className="w-6 h-6" />
                 Add to Cart
               </button>
             </div>

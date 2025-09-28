@@ -16,8 +16,6 @@ import {
   Calendar,
   DollarSign,
   Bell,
-  User,
-  Settings,
   ChefHat,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -138,8 +136,6 @@ const CustomerDashboardContent = () => {
     { id: "customize", label: "Customize Cake", icon: ChefHat },
     { id: "orders", label: "My Orders", icon: ShoppingCart },
     { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "profile", label: "Profile", icon: User },
-    { id: "settings", label: "Settings", icon: Settings },
   ] as const;
 
   const budgetSuggestions = {

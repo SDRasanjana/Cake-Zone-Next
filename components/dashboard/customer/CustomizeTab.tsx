@@ -68,8 +68,6 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
 }) => {
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [suggestionsLoaded, setSuggestionsLoaded] = useState(false);
-  const [aiBaseConfig, setAiBaseConfig] = useState<any | null>(null); // Store base config for selected AI suggestion
-  const [aiBasePrice, setAiBasePrice] = useState<number | null>(null); // Store base price for selected AI suggestion
   const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
@@ -95,15 +93,13 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
         handleConfigChange("layers", data.suggestions[0].layers);
         handleConfigChange("frostingColor", data.suggestions[0].frostingColor);
         handleConfigChange("toppings", data.suggestions[0].toppings);
-        setAiBaseConfig(data.suggestions[0]);
-        setAiBasePrice(data.suggestions[0].price);
       }
     }
     fetchSuggestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBudget]);
 
-  // When a suggestion is clicked, update base config/price
+  // When a suggestion is clicked, update the configuration
   const handleSuggestionClick = (cake: any) => {
     setSelectedCake(cake.id);
     handleConfigChange("shape", cake.shape);
@@ -111,27 +107,11 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
     handleConfigChange("layers", cake.layers);
     handleConfigChange("frostingColor", cake.frostingColor);
     handleConfigChange("toppings", cake.toppings);
-    setAiBaseConfig(cake);
-    setAiBasePrice(cake.price);
   };
 
   // Calculate price based on current config and AI base config
   const calculatePrice = () => {
-    if (aiBaseConfig && aiBasePrice != null) {
-      // Calculate extras
-      let extraLayers = customCakeConfig.layers - aiBaseConfig.layers;
-      let extraToppings =
-        customCakeConfig.toppings.length - aiBaseConfig.toppings.length;
-      // Only count extra if positive
-      extraLayers = Math.max(0, extraLayers);
-      extraToppings = Math.max(0, extraToppings);
-      return (
-        aiBasePrice +
-        extraLayers * AI_LAYER_PRICE +
-        extraToppings * AI_TOPPING_PRICE
-      );
-    }
-    // Default pricing
+    // Use consistent pricing logic for all calculations
     return (
       BASE_PRICE +
       (customCakeConfig.layers || 1) * AI_LAYER_PRICE +
@@ -193,7 +173,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
         <div className="flex items-center mb-4">
           <Sparkles className="w-5 h-5 text-purple-600 mr-2" />
           <h3 className="text-lg font-semibold text-gray-800">
-            AI Budget Suggestions for Rs. {selectedBudget}
+            Budget Suggestions for Rs. {selectedBudget}
           </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -216,9 +196,9 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                   {cake.image || "🎂"}
                 </div>
                 <h4 className="font-semibold text-gray-800 mb-2">
-                  {cake.name}
+                  {cake.layers} Layer {cake.flavor || cake.name.split(" ")[0]}{" "}
+                  Cake
                 </h4>
-                <p className="text-sm text-gray-600 mb-3">{cake.description}</p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center text-sm text-gray-500">
                     <Layers className="w-4 h-4 mr-1" />
@@ -228,11 +208,6 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                     Rs. {cake.price}
                   </span>
                 </div>
-                {selectedCake === cake.id && (
-                  <button className="w-full mt-3 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors">
-                    Customize Further
-                  </button>
-                )}
               </div>
             ))
           )}
@@ -372,27 +347,12 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             </div>
           </div>
         </div>
-        <div className="mt-6 flex flex-col sm:flex-row gap-4">
+        <div className="mt-6">
           <button
             onClick={() => setShowPreview(true)}
-            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
           >
             Generate 3D Preview
-          </button>
-          <button
-            onClick={() =>
-              handleAddToCart({
-                id: Date.now(),
-                name: `Custom ${customCakeConfig.flavor} Cake`,
-                ...customCakeConfig,
-                price: calculatePrice(), // Use dynamic price
-                image: "🎂",
-                isCustom: true,
-              })
-            }
-            className="flex-1 bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors"
-          >
-            Add to Cart
           </button>
         </div>
       </div>

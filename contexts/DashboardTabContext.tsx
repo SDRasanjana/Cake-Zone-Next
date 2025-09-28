@@ -6,9 +6,7 @@ export type DashboardTab =
   | "overview"
   | "customize"
   | "orders"
-  | "notifications"
-  | "profile"
-  | "settings";
+  | "notifications";
 
 interface DashboardTabContextType {
   activeTab: DashboardTab;
