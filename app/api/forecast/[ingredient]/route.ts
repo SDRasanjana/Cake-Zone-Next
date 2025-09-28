@@ -59,13 +59,13 @@ function executePythonScript(
   });
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { ingredient: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const ingredient = params.ingredient;
+    // Extract ingredient from the URL pathname
+    // /api/forecast/[ingredient] => ingredient is the last segment
+    const segments = request.nextUrl.pathname.split("/");
+    const ingredient = segments[segments.length - 1];
     const days = parseInt(searchParams.get("days") || "7");
     const startDate = searchParams.get("startDate") || null;
 
@@ -199,13 +199,12 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { ingredient: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const ingredient = params.ingredient;
+    // Extract ingredient from the URL pathname
+    const segments = request.nextUrl.pathname.split("/");
+    const ingredient = segments[segments.length - 1];
     const { days = 7, startDate = null, recipeData = null } = body;
 
     // If recipe data is provided, calculate total cost forecast
@@ -224,8 +223,7 @@ export async function POST(
       request.url
     );
     const getRequest = new NextRequest(url);
-
-    return await GET(getRequest, { params });
+    return await GET(getRequest);
   } catch (error) {
     console.error("❌ POST forecast API error:", error);
     return NextResponse.json(
