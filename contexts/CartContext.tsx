@@ -74,11 +74,19 @@ const cartReducer = (state: CartState, action: CartAction | any): CartState => {
         deliveryDate: action.payload.deliveryDate || null,
       };
     case "ADD_TO_CART": {
+      // For custom cakes, always treat as unique items (each has its own 3D preview image)
+      if (action.payload.isCustom) {
+        return { ...state, items: [...state.items, action.payload] };
+      }
+
+      // For non-custom cakes, check for existing items with same configuration
       const existingItemIndex = state.items.findIndex(
         (item) =>
-          item.name === action.payload.name && // Simple check: same name and config
+          !item.isCustom && // Only merge non-custom items
+          item.name === action.payload.name &&
           item.layers === action.payload.layers &&
           item.flavor === action.payload.flavor &&
+          item.shape === action.payload.shape && // Include shape in comparison
           item.frostingColor === action.payload.frostingColor &&
           JSON.stringify((item.toppings ?? []).sort()) ===
             JSON.stringify((action.payload.toppings ?? []).sort())
