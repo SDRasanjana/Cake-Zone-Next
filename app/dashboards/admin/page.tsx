@@ -187,7 +187,7 @@ export default function AdminDashboard() {
               />
             )}
             {activeTab === "orders" && (
-              <OrdersTab getStatusColor={getStatusColor} />
+              <OrdersTab />
             )}
             {activeTab === "products" && <ProductManagementTab />}
             {activeTab === "notifications" && <NotificationsTab />}
