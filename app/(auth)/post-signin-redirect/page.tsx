@@ -19,7 +19,7 @@ export default function PostSignInRedirect() {
 
     // Get role from Clerk publicMetadata
     const role = user?.publicMetadata?.role;
-    
+
     if (role === "admin") {
       router.replace("/dashboards/admin");
     } else if (role === "owner") {
@@ -32,13 +32,15 @@ export default function PostSignInRedirect() {
         // For the first attempt, check immediately, then use shorter delays
         const delay = attempts === 0 ? 100 : 300;
         setTimeout(() => {
-          setAttempts(prev => prev + 1);
+          setAttempts((prev) => prev + 1);
           // Force user refresh
           user?.reload();
         }, delay);
       } else {
         // After max attempts, assume customer role as fallback for new registrations
-        console.log("Role not found after max attempts, defaulting to customer");
+        console.log(
+          "Role not found after max attempts, defaulting to customer"
+        );
         router.replace("/dashboards/customer");
       }
     }

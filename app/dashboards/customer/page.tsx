@@ -39,9 +39,15 @@ const CustomerDashboardContent = () => {
   // Handle user registration on first dashboard access
   useEffect(() => {
     const registerUserIfNeeded = async () => {
-      if (isLoaded && isSignedIn && user && user.emailAddresses && user.emailAddresses.length > 0) {
+      if (
+        isLoaded &&
+        isSignedIn &&
+        user &&
+        user.emailAddresses &&
+        user.emailAddresses.length > 0
+      ) {
         const email = user.emailAddresses[0].emailAddress;
-        
+
         // Check if user is already registered in MongoDB
         if (!sessionStorage.getItem(`mongo-registered-${email}`)) {
           console.log("🔄 Registering new user in MongoDB:", {
@@ -54,10 +60,13 @@ const CustomerDashboardContent = () => {
           try {
             const registrationData = {
               email,
-              name: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || email.split('@')[0],
-              firstName: user.firstName || '',
-              lastName: user.lastName || '',
-              imageUrl: user.imageUrl || '',
+              name:
+                user.fullName ||
+                `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+                email.split("@")[0],
+              firstName: user.firstName || "",
+              lastName: user.lastName || "",
+              imageUrl: user.imageUrl || "",
               password: "clerk-oauth",
             };
 
@@ -68,7 +77,7 @@ const CustomerDashboardContent = () => {
             });
 
             const result = await response.json();
-            
+
             if (response.ok && result.success) {
               console.log("✅ User successfully registered in MongoDB");
               sessionStorage.setItem(`mongo-registered-${email}`, "true");
