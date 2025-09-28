@@ -1,86 +1,44 @@
 [
   {
-    "ds": "2025-09-29",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
-  },
-  {
     "ds": "2025-09-30",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
+    "yhat": 582.23,
+    "yhat_lower": 535.65,
+    "yhat_upper": 628.81
   },
   {
     "ds": "2025-10-01",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
+    "yhat": 578.13,
+    "yhat_lower": 531.88,
+    "yhat_upper": 624.38
   },
   {
     "ds": "2025-10-02",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
+    "yhat": 510.02,
+    "yhat_lower": 469.22,
+    "yhat_upper": 550.82
   },
   {
     "ds": "2025-10-03",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
+    "yhat": 455.22,
+    "yhat_lower": 418.81,
+    "yhat_upper": 491.64
   },
   {
     "ds": "2025-10-04",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
+    "yhat": 443.73,
+    "yhat_lower": 408.23,
+    "yhat_upper": 479.23
   },
   {
     "ds": "2025-10-05",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
+    "yhat": 459.64,
+    "yhat_lower": 422.87,
+    "yhat_upper": 496.42
   },
   {
     "ds": "2025-10-06",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
-  },
-  {
-    "ds": "2025-10-07",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
-  },
-  {
-    "ds": "2025-10-08",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
-  },
-  {
-    "ds": "2025-10-09",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
-  },
-  {
-    "ds": "2025-10-10",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
-  },
-  {
-    "ds": "2025-10-11",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
-  },
-  {
-    "ds": "2025-10-12",
-    "yhat": 558.77,
-    "yhat_lower": 530.17,
-    "yhat_upper": 586.11
+    "yhat": 468.74,
+    "yhat_lower": 431.25,
+    "yhat_upper": 506.24
   }
 ]
