@@ -322,6 +322,11 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
                               Offer
                             </span>
                           )}
+                          {notification.type === "system_announcement" && (
+                            <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                              New Product
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -374,6 +379,27 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
                       </button>
                     </div>
                   )}
+
+                  {/* System announcement (new product) actions */}
+                  {notification.type === "system_announcement" &&
+                    notification.metadata?.actionUrl && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <button
+                          onClick={() => {
+                            markAsRead(notification._id);
+                            const actionUrl = notification.metadata
+                              ?.actionUrl as string;
+                            if (actionUrl?.includes("menu")) {
+                              window.location.href = "/menu";
+                            }
+                          }}
+                          className="text-sm bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+                        >
+                          {(notification.metadata?.actionText as string) ||
+                            "View Product"}
+                        </button>
+                      </div>
+                    )}
                 </div>
               </div>
             );

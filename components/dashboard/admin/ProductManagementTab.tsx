@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { useUser } from "@clerk/nextjs";
 
 // Product (Cake) management tab for admin dashboard
 // Allows admin to view, add, and update cakes in the shop
@@ -192,6 +193,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 };
 
 const ProductManagementTab: React.FC = () => {
+  const { user } = useUser(); // Get authenticated admin user
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -209,6 +211,60 @@ const ProductManagementTab: React.FC = () => {
     cake: null as Cake | null,
     isLoading: false,
   });
+
+  // Send new product notification to all customers
+  const sendNewProductNotification = async (
+    productName: string,
+    productPrice: number
+  ) => {
+    if (!user?.emailAddresses?.[0]?.emailAddress) {
+      console.warn("⚠️ No admin user email found for notification");
+      return false;
+    }
+
+    try {
+      console.log("📢 Sending new product notification for:", productName);
+
+      const notificationData = {
+        type: "system_announcement",
+        title: "🎂 New Product Added!",
+        message: `Check out our newest addition: ${productName} - Starting from Rs. ${productPrice}. Visit our menu to order now!`,
+        targetAudience: "customers",
+        priority: "medium",
+        createdBy: user.emailAddresses[0].emailAddress,
+        metadata: {
+          productName: productName,
+          productPrice: productPrice,
+          actionText: "View Menu",
+          actionUrl: "/menu",
+        },
+      };
+
+      const response = await fetch("/api/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(notificationData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("✅ New product notification sent successfully:", result);
+        return true;
+      } else {
+        const errorData = await response.json();
+        console.error(
+          "❌ Failed to send new product notification:",
+          errorData.error
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Error sending new product notification:", error);
+      return false;
+    }
+  };
 
   // Fetch all cakes from the API
   const fetchCakes = async () => {
@@ -279,6 +335,17 @@ const ProductManagementTab: React.FC = () => {
 
       const result = await res.json();
       console.log("Success result:", result);
+
+      // Send notification to all customers if this is a new product (not an edit)
+      if (!editId) {
+        const notificationSent = await sendNewProductNotification(
+          form.name,
+          form.price
+        );
+        if (notificationSent) {
+          console.log("🎉 Product added and customers notified successfully!");
+        }
+      }
 
       setShowAdd(false);
       setForm(initialForm);
