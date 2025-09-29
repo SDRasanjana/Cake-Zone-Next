@@ -24,6 +24,15 @@ export async function POST(req) {
     if (!valid) {
       return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 401 });
     }
+    
+    // Check if user account is active
+    if (user.status !== 'Active') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Your account has been deactivated. Please contact the administrator.' 
+      }, { status: 403 });
+    }
+    
     // Return role for frontend to redirect
     return NextResponse.json({ success: true, data: { email, role: user.role } });
   } catch (err) {

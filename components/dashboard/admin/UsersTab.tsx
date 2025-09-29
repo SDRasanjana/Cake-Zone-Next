@@ -22,7 +22,7 @@ interface UsersTabProps {
   ) => Promise<{ success: boolean; error?: string }>;
   onUpdateUser: (
     userId: string,
-    update: Partial<Pick<User, "status" | "role">>
+    update: Partial<Pick<User, "status">>
   ) => Promise<{ success: boolean; error?: string }>;
   currentUserRole: string;
 }
@@ -73,11 +73,6 @@ const UsersTab: React.FC<UsersTabProps> = ({
   // Handle activate/deactivate
   const handleStatus = async (user: User, status: string) => {
     await onUpdateUser(user._id, { status });
-  };
-
-  // Handle role change
-  const handleRole = async (user: User, role: string) => {
-    await onUpdateUser(user._id, { role });
   };
 
   return (
@@ -219,24 +214,9 @@ const UsersTab: React.FC<UsersTabProps> = ({
                       </td>
                       <td className="px-4 py-3 text-gray-500">{user.email}</td>
                       <td className="px-4 py-3">
-                        {currentUserRole === "admin" &&
-                        user.role !== "customer" ? (
-                          <select
-                            className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-                            value={user.role}
-                            onChange={(e) => handleRole(user, e.target.value)}
-                          >
-                            {roleOptions.map((role) => (
-                              <option key={role} value={role}>
-                                {role.charAt(0).toUpperCase() + role.slice(1)}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                            {user.role}
-                          </span>
-                        )}
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium capitalize">
+                          {user.role}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -322,24 +302,9 @@ const UsersTab: React.FC<UsersTabProps> = ({
                       Role
                     </div>
                     <div className="mt-1">
-                      {currentUserRole === "admin" &&
-                      user.role !== "customer" ? (
-                        <select
-                          className="w-full px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-semibold border-0 focus:ring-2 focus:ring-blue-300"
-                          value={user.role}
-                          onChange={(e) => handleRole(user, e.target.value)}
-                        >
-                          {roleOptions.map((role) => (
-                            <option key={role} value={role}>
-                              {role.charAt(0).toUpperCase() + role.slice(1)}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="text-blue-900 text-sm font-semibold capitalize">
-                          {user.role}
-                        </div>
-                      )}
+                      <div className="text-blue-900 text-sm font-semibold capitalize">
+                        {user.role}
+                      </div>
                     </div>
                   </div>
                   <div className="bg-purple-50 border border-purple-200 p-3 rounded-lg">

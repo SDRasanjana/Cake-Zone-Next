@@ -4,7 +4,6 @@ import {
   Package,
   DollarSign,
   Plus,
-  Calendar,
   RefreshCw,
 } from "lucide-react";
 import { DashboardTab } from "@/contexts/DashboardTabContext";
@@ -146,29 +145,18 @@ const OverviewTab: React.FC<{ setActiveTab: (tab: DashboardTab) => void }> = ({
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Quick Actions
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            onClick={() => setActiveTab("customize")}
-            className="flex items-center p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border-2 border-dashed border-pink-200 hover:border-pink-300 transition-colors group"
-          >
-            <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center group-hover:bg-pink-200">
-              <Plus className="w-6 h-6 text-pink-600" />
-            </div>
-            <div className="ml-3">
-              <p className="font-medium text-gray-800">Design New Cake</p>
-              <p className="text-sm text-gray-500">Create custom cake</p>
-            </div>
-          </button>
-          <button className="flex items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors group">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200">
-              <Calendar className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-3">
-              <p className="font-medium text-gray-800">Schedule Order</p>
-              <p className="text-sm text-gray-500">Plan ahead</p>
-            </div>
-          </button>
-        </div>
+        <button
+          onClick={() => setActiveTab("customize")}
+          className="flex items-center p-6 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border-2 border-dashed border-pink-200 hover:border-pink-300 transition-colors group w-full"
+        >
+          <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center group-hover:bg-pink-200">
+            <Plus className="w-6 h-6 text-pink-600" />
+          </div>
+          <div className="ml-3">
+            <p className="font-medium text-gray-800">Design New Cake</p>
+            <p className="text-sm text-gray-500">Create custom cake</p>
+          </div>
+        </button>
       </div>
       {/* Recent Orders */}
       <div className="bg-white rounded-xl shadow-sm border p-6">

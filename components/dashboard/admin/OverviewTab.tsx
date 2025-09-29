@@ -109,14 +109,14 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onTabChange }) => {
         // Calculate monthly growth (placeholder - you can implement actual logic)
         const monthlyGrowth = Math.floor(Math.random() * 20) + 5; // Random 5-25% for demo
 
-        // Active users are users who have placed at least one order
-        const activeUserIds = [
-          ...new Set(allOrders.map((order: Order) => order.userId)),
-        ];
+        // Active users are users with status = 'Active'
+        const activeUsers = allUsers.filter(
+          (user: any) => user.status === "Active"
+        );
 
         setStats({
           totalUsers: allUsers.length,
-          activeUsers: activeUserIds.length,
+          activeUsers: activeUsers.length,
           totalOrders: allOrders.length,
           totalRevenue,
           pendingOrders,

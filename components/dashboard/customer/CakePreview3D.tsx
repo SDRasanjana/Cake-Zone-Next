@@ -649,6 +649,12 @@ const CakePreview3D: React.FC<CakePreview3DProps> = ({
       description: `${cakeConfig.shape} cake with ${cakeConfig.layers} layers`,
       imageUri,
       isCustom: true,
+      // Add individual properties for admin dashboard compatibility
+      flavor: cakeConfig.flavor,
+      shape: cakeConfig.shape,
+      layers: cakeConfig.layers,
+      frostingColor: cakeConfig.frostingColor,
+      toppings: cakeConfig.toppings,
     };
     onAddToCart(cartItem);
     onClose();

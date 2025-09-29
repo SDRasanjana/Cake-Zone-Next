@@ -124,6 +124,46 @@ const formatUserId = (id: string): string => {
   return `CZC${finalId.toString().padStart(3, "0")}`;
 };
 
+// Helper function to convert frosting color codes to readable names
+const getFrostingColorName = (colorClass: string): string => {
+  const colorNames: { [key: string]: string } = {
+    "bg-pink-400": "Pink",
+    "bg-blue-400": "Blue",
+    "bg-green-400": "Green",
+    "bg-yellow-400": "Yellow",
+    "bg-purple-400": "Purple",
+    "bg-white": "White",
+    "bg-orange-900": "Chocolate",
+    "bg-cream-200": "Cream",
+  };
+
+  // Add debugging to see what color class is being passed
+  console.log(
+    `[getFrostingColorName] Input: "${colorClass}", Output: "${
+      colorNames[colorClass] || colorClass || "Unknown"
+    }"`
+  );
+
+  return colorNames[colorClass] || colorClass || "White";
+};
+
+// Helper function to get proper cake name based on flavor and custom status
+const getCakeName = (item: OrderItem): string => {
+  console.log(`[getCakeName] Item:`, {
+    name: item.name,
+    isCustom: item.isCustom,
+    flavor: item.flavor,
+    frostingColor: item.frostingColor,
+  });
+
+  if (item.isCustom && item.flavor) {
+    return `Custom ${
+      item.flavor.charAt(0).toUpperCase() + item.flavor.slice(1)
+    } Cake`;
+  }
+  return item.name || "Custom Cake";
+};
+
 const OrdersTab: React.FC<{
   getStatusColor?: (status: string) => string;
 }> = ({ getStatusColor }) => {
@@ -307,9 +347,11 @@ const OrdersTab: React.FC<{
       let cakeDetailsArr: string[] = [];
       if (item.isCustom) {
         cakeDetailsArr = [
-          `Name: ${item.name || ""}`,
+          `Name: ${getCakeName(item)}`,
           item.layers ? `Layers: ${item.layers}` : null,
-          item.frostingColor ? `Frosting: ${item.frostingColor}` : null,
+          item.frostingColor
+            ? `Frosting: ${getFrostingColorName(item.frostingColor)}`
+            : null,
           item.flavor ? `Flavor: ${item.flavor}` : null,
           item.toppings &&
           Array.isArray(item.toppings) &&
@@ -321,7 +363,7 @@ const OrdersTab: React.FC<{
         ].filter(Boolean) as string[];
       } else {
         cakeDetailsArr = [
-          `Name: ${item.name || ""}`,
+          `Name: ${getCakeName(item)}`,
           item.price ? `Price: Rs. ${item.price}` : null,
           item.quantity ? `Qty: ${item.quantity}` : null,
         ].filter(Boolean) as string[];
@@ -646,7 +688,7 @@ const OrdersTab: React.FC<{
                           </div>
                           <div className="flex-1">
                             <h4 className="font-medium text-gray-900">
-                              {item.name}
+                              {getCakeName(item)}
                             </h4>
                             <p className="text-sm text-gray-700">
                               Rs. {item.price}
@@ -680,7 +722,8 @@ const OrdersTab: React.FC<{
                                 )}
                                 {item.frostingColor && (
                                   <p className="text-gray-700">
-                                    Frosting: {item.frostingColor}
+                                    Frosting:{" "}
+                                    {getFrostingColorName(item.frostingColor)}
                                   </p>
                                 )}
                                 {item.toppings && item.toppings.length > 0 && (
@@ -819,7 +862,7 @@ const OrdersTab: React.FC<{
                         <td className="px-4 py-3 text-gray-800">
                           {(order.items || []).map((item, idx) => (
                             <div key={idx} className="text-gray-900">
-                              {item.name}
+                              {getCakeName(item)}
                             </div>
                           ))}
                         </td>
@@ -830,7 +873,7 @@ const OrdersTab: React.FC<{
                                 <img
                                   key={idx}
                                   src={item.imageUri}
-                                  alt={item.name}
+                                  alt={getCakeName(item)}
                                   className="w-12 h-12 object-cover rounded border"
                                   onError={(
                                     e: React.SyntheticEvent<
@@ -852,7 +895,9 @@ const OrdersTab: React.FC<{
                                 <div
                                   key={idx}
                                   className="w-12 h-12 flex items-center justify-center bg-gray-200 rounded border text-xs text-gray-500"
-                                  title={`${item.name} - No preview available`}
+                                  title={`${getCakeName(
+                                    item
+                                  )} - No preview available`}
                                 >
                                   🎂
                                 </div>
@@ -1031,7 +1076,7 @@ const OrdersTab: React.FC<{
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 text-sm truncate">
-                              {item.name}
+                              {getCakeName(item)}
                             </h4>
                             <p className="text-xs text-gray-700">
                               Rs. {item.price}
@@ -1047,7 +1092,10 @@ const OrdersTab: React.FC<{
                                   <span>Layers: {item.layers} • </span>
                                 )}
                                 {item.frostingColor && (
-                                  <span>Frosting: {item.frostingColor}</span>
+                                  <span>
+                                    Frosting:{" "}
+                                    {getFrostingColorName(item.frostingColor)}
+                                  </span>
                                 )}
                               </div>
                             )}
