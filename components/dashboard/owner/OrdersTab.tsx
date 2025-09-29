@@ -24,14 +24,17 @@ interface Order {
 
 type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
 
-const statusConfig: Record<OrderStatus, {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  bgColor: string;
-  textColor: string;
-  borderColor: string;
-  iconColor: string;
-}> = {
+const statusConfig: Record<
+  OrderStatus,
+  {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    bgColor: string;
+    textColor: string;
+    borderColor: string;
+    iconColor: string;
+  }
+> = {
   pending: {
     label: "Pending",
     icon: Clock,
@@ -68,14 +71,16 @@ const statusConfig: Record<OrderStatus, {
 
 // Helper function to get status config with fallback
 const getStatusConfig = (status: string) => {
-  return statusConfig[status as OrderStatus] || {
-    label: "Unknown",
-    icon: Package,
-    bgColor: "bg-gray-100",
-    textColor: "text-gray-900",
-    borderColor: "border-gray-300",
-    iconColor: "text-gray-700",
-  };
+  return (
+    statusConfig[status as OrderStatus] || {
+      label: "Unknown",
+      icon: Package,
+      bgColor: "bg-gray-100",
+      textColor: "text-gray-900",
+      borderColor: "border-gray-300",
+      iconColor: "text-gray-700",
+    }
+  );
 };
 
 export default function OwnerOrdersTab() {
@@ -84,7 +89,6 @@ export default function OwnerOrdersTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-
 
   // Fetch orders from database
   const fetchOrders = useCallback(async () => {
@@ -164,8 +168,6 @@ export default function OwnerOrdersTab() {
     return `CZO${finalId.toString().padStart(3, "0")}`;
   };
 
-
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -181,7 +183,9 @@ export default function OwnerOrdersTab() {
         <div className="text-red-600 mb-4">
           <XCircle className="w-12 h-12" />
         </div>
-        <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Orders</h3>
+        <h3 className="text-lg font-semibold text-red-800 mb-2">
+          Error Loading Orders
+        </h3>
         <p className="text-red-600 text-center mb-4">{error}</p>
         <button
           onClick={fetchOrders}
@@ -199,7 +203,9 @@ export default function OwnerOrdersTab() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Order Monitoring</h2>
-          <p className="text-base text-gray-700 font-medium">Monitor customer orders and their status</p>
+          <p className="text-base text-gray-700 font-medium">
+            Monitor customer orders and their status
+          </p>
         </div>
         <button
           onClick={fetchOrders}
@@ -218,14 +224,24 @@ export default function OwnerOrdersTab() {
       <div className="bg-white rounded-lg border-2 border-gray-300 p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-6">
           <Filter className="w-6 h-6 text-gray-700" />
-          <span className="text-lg font-semibold text-gray-900">Filter by Status:</span>
+          <span className="text-lg font-semibold text-gray-900">
+            Filter by Status:
+          </span>
         </div>
         <div className="flex flex-wrap gap-3">
           {[
             { key: "all", label: "All Orders", count: orderCounts.all },
             { key: "pending", label: "Pending", count: orderCounts.pending },
-            { key: "processing", label: "Processing", count: orderCounts.processing },
-            { key: "completed", label: "Completed", count: orderCounts.completed },
+            {
+              key: "processing",
+              label: "Processing",
+              count: orderCounts.processing,
+            },
+            {
+              key: "completed",
+              label: "Completed",
+              count: orderCounts.completed,
+            },
           ].map((filter) => (
             <button
               key={filter.key}
@@ -247,7 +263,9 @@ export default function OwnerOrdersTab() {
         {filteredOrders.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-lg border-2 border-gray-300 shadow-sm">
             <Package className="w-16 h-16 text-gray-500 mx-auto mb-6" />
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">No orders found</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              No orders found
+            </h3>
             <p className="text-lg text-gray-700">
               {activeFilter === "all"
                 ? "No orders have been placed yet."
@@ -259,52 +277,58 @@ export default function OwnerOrdersTab() {
             .map((order) => {
               // Safety checks for order properties
               if (!order || !order.id) return null;
-              
+
               const config = getStatusConfig(order.status);
               const IconComponent = config.icon;
 
-            return (
-              <div
-                key={order.id}
-                className={`border-2 rounded-lg transition-all duration-200 hover:shadow-md ${config.borderColor} ${config.bgColor}`}
-              >
-                <div className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <IconComponent className={`w-6 h-6 ${config.iconColor}`} />
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-bold text-gray-900 text-lg">
-                            {formatOrderId(order.id)}
-                          </h3>
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-semibold ${config.textColor} ${config.bgColor} border ${config.borderColor}`}
-                          >
-                            {config.label}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-6 text-base">
-                          <div>
-                            <span className="text-gray-700 font-medium">Date: </span>
-                            <span className="text-gray-900 font-semibold">
-                              {formatDate(order.orderDate)}
+              return (
+                <div
+                  key={order.id}
+                  className={`border-2 rounded-lg transition-all duration-200 hover:shadow-md ${config.borderColor} ${config.bgColor}`}
+                >
+                  <div className="p-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <IconComponent
+                          className={`w-6 h-6 ${config.iconColor}`}
+                        />
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-3">
+                            <h3 className="font-bold text-gray-900 text-lg">
+                              {formatOrderId(order.id)}
+                            </h3>
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-semibold ${config.textColor} ${config.bgColor} border ${config.borderColor}`}
+                            >
+                              {config.label}
                             </span>
                           </div>
-                          <div>
-                            <span className="text-gray-700 font-medium">Amount: </span>
-                            <span className="text-green-700 font-bold text-lg">
-                              Rs. {order.amount || 0}.00
-                            </span>
+                          <div className="flex items-center gap-6 text-base">
+                            <div>
+                              <span className="text-gray-700 font-medium">
+                                Date:{" "}
+                              </span>
+                              <span className="text-gray-900 font-semibold">
+                                {formatDate(order.orderDate)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-700 font-medium">
+                                Amount:{" "}
+                              </span>
+                              <span className="text-green-700 font-bold text-lg">
+                                Rs. {order.amount || 0}.00
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-          .filter(Boolean) // Remove null values
+              );
+            })
+            .filter(Boolean) // Remove null values
         )}
       </div>
 
@@ -314,19 +338,34 @@ export default function OwnerOrdersTab() {
           <h3 className="text-xl font-bold text-gray-900 mb-6">Summary</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
-              <p className="text-gray-700 font-semibold text-lg">Total Orders</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{filteredOrders.length}</p>
+              <p className="text-gray-700 font-semibold text-lg">
+                Total Orders
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {filteredOrders.length}
+              </p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg border-2 border-green-200">
-              <p className="text-green-800 font-semibold text-lg">Total Revenue</p>
+              <p className="text-green-800 font-semibold text-lg">
+                Total Revenue
+              </p>
               <p className="text-3xl font-bold text-green-700 mt-2">
-                Rs. {filteredOrders.reduce((sum, order) => sum + (order?.amount || 0), 0).toLocaleString()}.00
+                Rs.{" "}
+                {filteredOrders
+                  .reduce((sum, order) => sum + (order?.amount || 0), 0)
+                  .toLocaleString()}
+                .00
               </p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-              <p className="text-blue-800 font-semibold text-lg">Completed Orders</p>
+              <p className="text-blue-800 font-semibold text-lg">
+                Completed Orders
+              </p>
               <p className="text-3xl font-bold text-blue-700 mt-2">
-                {filteredOrders.filter((o) => o && o.status === "completed").length}
+                {
+                  filteredOrders.filter((o) => o && o.status === "completed")
+                    .length
+                }
               </p>
             </div>
           </div>
