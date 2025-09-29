@@ -7,7 +7,10 @@ type PeriodType = "daily" | "weekly" | "monthly";
 
 interface Order {
   _id: string;
-  total: number;
+  id?: string;
+  amount: number;
+  total?: number;
+  orderDate?: string;
   createdAt: string;
   [key: string]: unknown;
 }
@@ -67,8 +70,8 @@ export default function Reports() {
       // Fetch orders summary by calling our existing orders API to get count
       try {
         // We'll make a simple fetch to get summary data
-        // Since we need all orders, we'll call the PDF endpoint with a HEAD request to get the data
-        const ordersResponse = await fetch(`/api/orders`);
+        // Since we need all orders, we'll call the orders API with admin=true
+        const ordersResponse = await fetch(`/api/orders?admin=true`);
         const expensesResponse = await fetch(`/api/expenses`);
         const ingredientsResponse = await fetch(`/api/ingredients`);
 
@@ -86,23 +89,48 @@ export default function Reports() {
 
         if (ordersResponse.ok) {
           const ordersData = await ordersResponse.json();
-          // Handle both direct array and wrapped response
-          const orders = Array.isArray(ordersData)
-            ? ordersData
-            : ordersData.success && ordersData.data
-            ? ordersData.data
-            : [];
-          // Filter orders by date range
-          const filteredOrders = orders.filter((order: Order) => {
-            const orderDate = new Date(order.createdAt);
-            const { start, end } = getPeriodRange(period, selectedDate);
-            return orderDate >= start && orderDate <= end;
-          });
+          console.log("Orders API response:", ordersData);
 
-          orderCount = filteredOrders.length;
-          orderTotal = filteredOrders.reduce(
-            (sum: number, order: Order) => sum + (order.total || 0),
-            0
+          // Handle wrapped response format from admin endpoint
+          const orders =
+            ordersData.orders || ordersData.data || ordersData || [];
+
+          if (Array.isArray(orders)) {
+            // Filter orders by date range
+            const filteredOrders = orders.filter((order: Order) => {
+              const orderDate = new Date(order.orderDate || order.createdAt);
+              const { start, end } = getPeriodRange(period, selectedDate);
+              return orderDate >= start && orderDate <= end;
+            });
+
+            orderCount = filteredOrders.length;
+            orderTotal = filteredOrders.reduce(
+              (sum: number, order: Order) =>
+                sum + (order.amount || order.total || 0),
+              0
+            );
+
+            console.log(
+              "Filtered orders:",
+              filteredOrders.length,
+              "Total amount:",
+              orderTotal
+            );
+          } else {
+            console.error("Orders data is not an array:", orders);
+            // Still show some info even if format is unexpected
+            setOrderSummary(
+              "Error: Unexpected order data format\nCheck console for details"
+            );
+          }
+        } else {
+          console.error(
+            "Orders API failed:",
+            ordersResponse.status,
+            ordersResponse.statusText
+          );
+          setOrderSummary(
+            `Error loading orders: ${ordersResponse.status}\nCheck console for details`
           );
         }
 
@@ -159,17 +187,23 @@ export default function Reports() {
         setIngredientsSummary(
           `Total Ingredients: ${ingredientCount}\nTotal Value: Rs. ${totalIngredientValue.toLocaleString()}`
         );
+
+        console.log("Summary data updated:", {
+          orderCount,
+          orderTotal,
+          expenseTotal,
+          ingredientCount,
+          totalIngredientValue,
+        });
       } catch (apiError) {
         console.error("Error fetching from API:", apiError);
-        // Fallback to showing basic info
-        setOrderSummary(
-          "Click 'View' or 'Download' to generate report\nReal database data will be shown in PDF"
-        );
+        // Try to show some useful information instead of generic fallback
+        setOrderSummary("Unable to load order data\nCheck console for details");
         setExpensesSummary(
-          "Click 'View' or 'Download' to generate report\nReal database data will be shown in PDF"
+          "Unable to load expense data\nCheck console for details"
         );
         setIngredientsSummary(
-          "Click 'View' or 'Download' to generate report\nReal database data will be shown in PDF"
+          "Unable to load ingredient data\nCheck console for details"
         );
       }
     } catch (error) {
