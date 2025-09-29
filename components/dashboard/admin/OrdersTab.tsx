@@ -3,6 +3,7 @@
 // because Next.js Image component doesn't optimize data URIs and they cause issues
 
 import React, { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 // For PDF export
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -167,6 +168,7 @@ const getCakeName = (item: OrderItem): string => {
 const OrdersTab: React.FC<{
   getStatusColor?: (status: string) => string;
 }> = ({ getStatusColor }) => {
+  const { user } = useUser(); // Get authenticated admin user
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -197,6 +199,9 @@ const OrdersTab: React.FC<{
     }
   };
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [notificationStatus, setNotificationStatus] = useState<{
+    [orderId: string]: "sending" | "success" | "failed" | null;
+  }>({});
 
   useEffect(() => {
     // Fetch all orders for admin dashboard
@@ -398,9 +403,184 @@ const OrdersTab: React.FC<{
     );
   };
 
+  // Helper function to send notification to customer
+  const sendOrderNotification = async (
+    order: Order,
+    newStatus: string,
+    oldStatus: string
+  ) => {
+    const orderId = order._id || order.id || "";
+
+    try {
+      // Set notification status to sending
+      setNotificationStatus((prev) => ({ ...prev, [orderId]: "sending" }));
+
+      // Check if admin user is authenticated
+      if (!user?.emailAddresses?.[0]?.emailAddress) {
+        console.warn(
+          "❌ Admin user not authenticated - cannot send notification"
+        );
+        setNotificationStatus((prev) => ({ ...prev, [orderId]: "failed" }));
+        return false;
+      }
+
+      // Get customer identification (email or userId)
+      const targetUserId =
+        order.shipping?.email || order.customerEmail || order.userId;
+
+      if (!targetUserId) {
+        console.warn("❌ No customer email/userId found for order:", orderId);
+        setNotificationStatus((prev) => ({ ...prev, [orderId]: "failed" }));
+        return false;
+      }
+
+      // Generate notification content based on status change
+      let title = "";
+      let message = "";
+      let priority: "low" | "medium" | "high" = "medium";
+
+      const orderRef = formatOrderId(order._id || order.id || "unknown");
+      const orderItems = (order.items || [])
+        .map((item) => item.name || "Unknown item")
+        .join(", ");
+
+      switch (newStatus.toLowerCase()) {
+        case "confirmed":
+          title = "✅ Order Confirmed!";
+          message = `Great news! We've confirmed your order ${orderRef} and it's now in our system.\n\nItems: ${orderItems}\n\nWe'll start preparing your delicious cakes soon. You'll receive another notification when we begin processing.`;
+          priority = "medium";
+          break;
+
+        case "processing":
+          title = "🔄 Your Order is Being Prepared";
+          message = `Exciting! Your order ${orderRef} is now being carefully prepared by our skilled bakers.\n\nItems: ${orderItems}\n\nWe're working hard to create your perfect cakes. We'll notify you once they're ready!`;
+          priority = "medium";
+          break;
+
+        case "ready":
+          title = "🎉 Your Cakes are Ready!";
+          message = `Wonderful! Your order ${orderRef} is now complete and ready for pickup.\n\nItems: ${orderItems}\n\nPlease visit us at your earliest convenience to collect your delicious treats!`;
+          priority = "high";
+          break;
+
+        case "completed":
+          title = "✅ Order Successfully Completed";
+          message = `Perfect! Your order ${orderRef} has been successfully completed.\n\nItems: ${orderItems}\n\nThank you for choosing CakeZone! We hope you absolutely love your cakes.`;
+          priority = "high";
+          break;
+
+        case "delivered":
+          title = "🚚 Order Delivered Successfully";
+          message = `Your order ${orderRef} has been successfully delivered to your location!\n\nItems: ${orderItems}\n\nWe hope you enjoy every bite! Please consider leaving us a review to help other customers.`;
+          priority = "medium";
+          break;
+
+        case "cancelled":
+          title = "❌ Order Cancelled";
+          message = `We regret to inform you that your order ${orderRef} has been cancelled.\n\nItems: ${orderItems}\n\nIf you have any questions or concerns, please don't hesitate to contact our support team. We're here to help!`;
+          priority = "high";
+          break;
+
+        case "failed":
+          title = "⚠️ Issue with Your Order";
+          message = `We encountered an issue while processing your order ${orderRef}.\n\nItems: ${orderItems}\n\nOur team is aware of this and will contact you shortly to resolve the matter. Thank you for your patience.`;
+          priority = "high";
+          break;
+
+        default:
+          title = `📋 Order Status Update: ${
+            newStatus.charAt(0).toUpperCase() + newStatus.slice(1)
+          }`;
+          message = `Your order ${orderRef} status has been updated.\n\nNew Status: ${
+            newStatus.charAt(0).toUpperCase() + newStatus.slice(1)
+          }\nItems: ${orderItems}\n\nWe'll keep you informed of any further updates. Thank you for choosing CakeZone!`;
+          priority = "medium";
+      }
+
+      console.log(
+        `📢 Sending notification to ${targetUserId} for order ${orderRef}`
+      );
+
+      // Send notification via API using authenticated admin user
+      const notificationResponse = await fetch("/api/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "order_update",
+          title: title,
+          message: message,
+          targetAudience: "specific_user",
+          targetUserId: targetUserId,
+          priority: priority,
+          createdBy: user.emailAddresses[0].emailAddress, // Use authenticated admin email
+          metadata: {
+            orderId: order._id || order.id,
+            oldStatus: oldStatus,
+            newStatus: newStatus,
+            orderReference: orderRef,
+            adminUser: user.emailAddresses[0].emailAddress,
+          },
+        }),
+      });
+
+      const notificationResult = await notificationResponse.json();
+
+      if (notificationResult.success) {
+        console.log(`✅ Notification sent successfully to: ${targetUserId}`);
+        setNotificationStatus((prev) => ({ ...prev, [orderId]: "success" }));
+        // Clear success status after 3 seconds
+        setTimeout(() => {
+          setNotificationStatus((prev) => ({ ...prev, [orderId]: null }));
+        }, 3000);
+        return true;
+      } else {
+        console.error(
+          `❌ Failed to send notification:`,
+          notificationResult.error
+        );
+        setNotificationStatus((prev) => ({ ...prev, [orderId]: "failed" }));
+        // Clear failed status after 5 seconds
+        setTimeout(() => {
+          setNotificationStatus((prev) => ({ ...prev, [orderId]: null }));
+        }, 5000);
+        // If it's an auth error, provide more helpful feedback
+        if (notificationResult.error?.includes("Unauthorized")) {
+          console.error(
+            `🔐 Authorization issue: Make sure the admin user has proper permissions`
+          );
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error("🚨 Error sending notification:", error);
+      setNotificationStatus((prev) => ({ ...prev, [orderId]: "failed" }));
+      // Clear failed status after 5 seconds
+      setTimeout(() => {
+        setNotificationStatus((prev) => ({ ...prev, [orderId]: null }));
+      }, 5000);
+      return false;
+    }
+  };
+
   // Handle status change
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId);
+
+    // Get the current order to access customer info and old status
+    const currentOrder = orders.find(
+      (order) => (order._id || order.id) === orderId
+    );
+    if (!currentOrder) {
+      alert("Order not found");
+      setUpdatingStatus(null);
+      return;
+    }
+
+    const oldStatus =
+      currentOrder.paymentStatus || currentOrder.status || "pending";
+
     try {
       const response = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
@@ -425,6 +605,43 @@ const OrdersTab: React.FC<{
             : order
         )
       );
+
+      // Send notification to customer (only if status actually changed)
+      if (oldStatus !== newStatus) {
+        console.log(
+          `📢 Sending notification for order ${orderId}: ${oldStatus} → ${newStatus}`
+        );
+        const notificationSent = await sendOrderNotification(
+          currentOrder,
+          newStatus,
+          oldStatus
+        );
+
+        if (notificationSent) {
+          // Show success message to admin
+          const orderRef = formatOrderId(orderId);
+          console.log(
+            `✅ Customer notification sent successfully for order ${orderRef}`
+          );
+
+          // You could show a toast notification here if you have a toast system
+          // For now, we'll just log it
+        } else {
+          console.warn(`⚠️ Could not send notification for order ${orderId}`);
+
+          // Optional: Show a non-blocking warning to admin
+          // This won't interrupt the flow since the order status was still updated successfully
+          if (!user?.emailAddresses?.[0]?.emailAddress) {
+            console.warn(
+              "📧 Admin authentication required for sending notifications"
+            );
+          } else {
+            console.warn(
+              "📧 Notification sending failed - order status updated but customer not notified"
+            );
+          }
+        }
+      }
     } catch (error) {
       console.error("Error updating order status:", error);
       alert("Failed to update order status. Please try again.");
@@ -800,8 +1017,12 @@ const OrdersTab: React.FC<{
             >
               <option>All Orders</option>
               <option>pending</option>
+              <option>confirmed</option>
               <option>processing</option>
+              <option>ready</option>
               <option>completed</option>
+              <option>delivered</option>
+              <option>cancelled</option>
             </select>
           </div>
         </div>
@@ -1139,13 +1360,47 @@ const OrdersTab: React.FC<{
                         <option value="pending" className="text-gray-900">
                           Pending
                         </option>
+                        <option value="confirmed" className="text-gray-900">
+                          Confirmed
+                        </option>
                         <option value="processing" className="text-gray-900">
                           Processing
+                        </option>
+                        <option value="ready" className="text-gray-900">
+                          Ready for Pickup
                         </option>
                         <option value="completed" className="text-gray-900">
                           Completed
                         </option>
+                        <option value="delivered" className="text-gray-900">
+                          Delivered
+                        </option>
+                        <option value="cancelled" className="text-gray-900">
+                          Cancelled
+                        </option>
                       </select>
+                      {/* Show notification indicator when updating */}
+                      {updatingStatus === (order._id || order.id) && (
+                        <div className="flex items-center text-xs text-blue-600 mt-1">
+                          <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin mr-1"></div>
+                          <span>Updating & notifying customer...</span>
+                        </div>
+                      )}
+                      {/* Show notification status feedback */}
+                      {notificationStatus[order._id || order.id || ""] ===
+                        "success" && (
+                        <div className="flex items-center text-xs text-green-600 mt-1">
+                          <div className="w-3 h-3 text-green-600 mr-1">✓</div>
+                          <span>Customer notified successfully!</span>
+                        </div>
+                      )}
+                      {notificationStatus[order._id || order.id || ""] ===
+                        "failed" && (
+                        <div className="flex items-center text-xs text-red-600 mt-1">
+                          <div className="w-3 h-3 text-red-600 mr-1">⚠</div>
+                          <span>Notification failed - check console</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Action Buttons Grid */}

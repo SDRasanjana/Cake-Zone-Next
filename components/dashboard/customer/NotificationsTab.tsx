@@ -35,15 +35,25 @@ interface Notification {
 
 interface NotificationsTabProps {
   setActiveTab?: (tab: DashboardTab) => void;
+  onUnreadCountChange?: (count: number) => void; // Callback to notify parent about count changes
 }
 
 const NotificationsTab: React.FC<NotificationsTabProps> = ({
   setActiveTab,
+  onUnreadCountChange,
 }) => {
   const { user } = useUser();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Calculate unread count
+  const unreadCount = notifications.filter((notification) => {
+    const isRead = user?.id ? notification.readBy.includes(user.id) : false;
+    const isExpired =
+      notification.expiresAt && new Date(notification.expiresAt) < new Date();
+    return !isRead && !isExpired;
+  }).length;
 
   // Fetch notifications for current user
   const fetchNotifications = useCallback(async () => {
@@ -73,6 +83,13 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
+
+  // Notify parent component when unread count changes
+  useEffect(() => {
+    if (onUnreadCountChange) {
+      onUnreadCountChange(unreadCount);
+    }
+  }, [unreadCount, onUnreadCountChange]);
 
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {
@@ -196,11 +213,37 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+          {unreadCount > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="relative px-3 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full shadow-lg">
+                {unreadCount} new
+                {unreadCount > 5 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></span>
+                )}
+              </span>
+              <Bell className="w-4 h-4 text-red-500 animate-bounce" />
+            </div>
+          )}
+        </div>
         <button
           onClick={fetchNotifications}
-          className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+          className="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
         >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
           Refresh
         </button>
       </div>
@@ -219,6 +262,14 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
             <p className="text-gray-500">No notifications yet</p>
             <p className="text-sm text-gray-400">
               You&apos;ll see updates about your orders and special offers here
+            </p>
+          </div>
+        ) : unreadCount === 0 && notifications.length > 0 ? (
+          <div className="text-center py-8">
+            <CheckCircle className="w-12 h-12 mx-auto text-green-500 mb-4" />
+            <p className="text-green-600 font-medium">All caught up!</p>
+            <p className="text-sm text-gray-400">
+              You&apos;ve read all {notifications.length} notifications
             </p>
           </div>
         ) : (
@@ -332,11 +383,62 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
 
       {/* Show notification count summary */}
       {notifications.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-200 text-center">
-          <p className="text-sm text-gray-500">
-            {notifications.filter((n) => !isNotificationRead(n)).length} unread
-            of {notifications.length} notifications
-          </p>
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {unreadCount > 0 ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-semibold text-red-600">
+                    {unreadCount} unread notification
+                    {unreadCount !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span className="text-sm font-medium text-green-600">
+                    All notifications read
+                  </span>
+                </div>
+              )}
+              <span className="text-sm text-gray-500">
+                {notifications.length} total
+              </span>
+            </div>
+            {unreadCount > 0 && (
+              <button
+                onClick={async () => {
+                  // Mark all as read efficiently
+                  const unreadNotifications = notifications.filter(
+                    (notification) => !isNotificationRead(notification)
+                  );
+
+                  // Update UI immediately for better UX
+                  setNotifications((prev) =>
+                    prev.map((notif) =>
+                      unreadNotifications.some(
+                        (unread) => unread._id === notif._id
+                      )
+                        ? {
+                            ...notif,
+                            readBy: [...notif.readBy, user?.id || ""],
+                          }
+                        : notif
+                    )
+                  );
+
+                  // Send API requests for all unread notifications
+                  unreadNotifications.forEach((notification) => {
+                    markAsRead(notification._id);
+                  });
+                }}
+                className="text-xs text-blue-600 hover:text-blue-800 transition-colors px-3 py-1 border border-blue-200 rounded-full hover:bg-blue-50 font-medium"
+              >
+                Mark all as read ({unreadCount})
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
