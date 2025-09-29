@@ -179,6 +179,50 @@ export async function POST(req) {
 
         const client = await clientPromise;
         const db = client.db('cakezone');
+
+        // Additional validation for order-specific notifications
+        if (type === 'order_update' && targetAudience === 'specific_user') {
+            if (!targetUserId) {
+                return NextResponse.json({
+                    success: false,
+                    error: 'targetUserId is required for order-specific notifications'
+                }, { status: 400 });
+            }
+
+            // Verify that the order exists and belongs to the specified customer
+            if (metadata?.orderId) {
+                console.log(`🔍 Validating order ownership - Order: ${metadata.orderId}, Customer: ${targetUserId}`);
+
+                const orders = db.collection('orders');
+                try {
+                    const order = await orders.findOne({
+                        _id: new ObjectId(metadata.orderId)
+                    });
+
+                    if (order) {
+                        // Check if the order belongs to the target customer
+                        const orderCustomer = order.shipping?.email || order.customerEmail || order.userId;
+
+                        if (orderCustomer !== targetUserId) {
+                            console.warn(`⚠️ ORDER OWNERSHIP MISMATCH! Order ${metadata.orderId} belongs to ${orderCustomer}, but notification targeted to ${targetUserId}`);
+                            return NextResponse.json({
+                                success: false,
+                                error: 'Notification target does not match order owner'
+                            }, { status: 400 });
+                        } else {
+                            console.log(`✅ Order ownership verified - Customer ${targetUserId} owns order ${metadata.orderId}`);
+                        }
+                    } else {
+                        console.warn(`⚠️ Order ${metadata.orderId} not found in database`);
+                        // Don't block notification if order not found (might be archived)
+                    }
+                } catch (error) {
+                    console.error('Error validating order ownership:', error);
+                    // Don't block notification on database error
+                }
+            }
+        }
+
         const notifications = getNotificationModel(db);
 
         // Create notification document

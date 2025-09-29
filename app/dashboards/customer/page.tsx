@@ -1,23 +1,13 @@
 "use client";
-import React, { useState, Suspense, useEffect } from "react";
+import React, { useState, Suspense, useEffect, useCallback } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
-import CakePreview3D from "@/components/dashboard/customer/CakePreview3D";
 import SidebarNavigation from "@/components/dashboard/customer/SidebarNavigation";
 import MobileNavigation from "@/components/dashboard/customer/MobileNavigation";
 import OverviewTab from "@/components/dashboard/customer/OverviewTab";
 import CustomizeTab from "@/components/dashboard/customer/CustomizeTab";
 import OrdersTab from "@/components/dashboard/customer/OrdersTab";
 import NotificationsTab from "@/components/dashboard/customer/NotificationsTab";
-import {
-  ShoppingCart,
-  Package,
-  Heart,
-  Plus,
-  Calendar,
-  DollarSign,
-  Bell,
-  ChefHat,
-} from "lucide-react";
+import { ShoppingCart, Package, Bell, ChefHat } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import {
   useDashboardTab,
@@ -33,7 +23,41 @@ const CustomerDashboardContent = () => {
   const { signOut } = useClerk();
   const [selectedCake, setSelectedCake] = useState<number | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<BudgetKey>("1500");
-  const [notifications] = useState(3);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+
+  // Dynamic notification count fetcher
+  const fetchUnreadNotificationCount = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const response = await fetch(
+        `/api/notifications?userId=${user.id}&userRole=customer&unreadOnly=true`
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        setUnreadNotificationCount(data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching unread notification count:", error);
+      setUnreadNotificationCount(0);
+    }
+  }, [user?.id]);
+
+  // Fetch unread count when user is loaded
+  useEffect(() => {
+    if (isLoaded && isSignedIn && user?.id) {
+      fetchUnreadNotificationCount();
+      // Set up periodic refresh every 30 seconds
+      const interval = setInterval(fetchUnreadNotificationCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isLoaded, isSignedIn, user?.id, fetchUnreadNotificationCount]);
+
+  // Callback to update count when notifications are read
+  const handleUnreadCountChange = (newCount: number) => {
+    setUnreadNotificationCount(newCount);
+  };
 
   // Handle user registration on first dashboard access
   useEffect(() => {
@@ -128,10 +152,8 @@ const CustomerDashboardContent = () => {
     };
 
     checkUserStatus();
-  }, [isLoaded, isSignedIn, user]);
+  }, [isLoaded, isSignedIn, user, signOut]);
 
-  //preview
-  const [showPreview, setShowPreview] = useState(false);
   const { addToCart } = useCart(); // Use global cart context
   const [customCakeConfig, setCustomCakeConfig] = useState<{
     shape: "round" | "square";
@@ -167,97 +189,31 @@ const CustomerDashboardContent = () => {
     router.replace(`/dashboards/customer?tab=${tab}`);
   };
 
-  const sidebarItems = [
+  const sidebarItems: Array<{
+    id: DashboardTab;
+    label: string;
+    icon: React.ElementType;
+  }> = [
     { id: "overview", label: "Overview", icon: Package },
     { id: "customize", label: "Customize Cake", icon: ChefHat },
     { id: "orders", label: "My Orders", icon: ShoppingCart },
     { id: "notifications", label: "Notifications", icon: Bell },
-  ] as const;
-
-  const budgetSuggestions = {
-    "1500": [
-      {
-        id: 1,
-        name: "Classic Chocolate",
-        layers: 1,
-        price: 1200,
-        image: "🍫",
-        description: "Simple chocolate cake with buttercream",
-      },
-      {
-        id: 2,
-        name: "Vanilla Delight",
-        layers: 2,
-        price: 1350,
-        image: "🍰",
-        description: "Basic vanilla sponge with cream filling",
-      },
-      {
-        id: 3,
-        name: "Strawberry Simple",
-        layers: 1,
-        price: 1450,
-        image: "🍓",
-        description: "Fresh strawberry cake with berry topping",
-      },
-    ],
-    "2000": [
-      {
-        id: 4,
-        name: "Premium Chocolate",
-        layers: 2,
-        price: 1800,
-        image: "🍫",
-        description: "Rich chocolate cake with ganache and decorations",
-      },
-      {
-        id: 5,
-        name: "Deluxe Vanilla",
-        layers: 3,
-        price: 1900,
-        image: "🍰",
-        description: "Multi-layer vanilla with premium frosting",
-      },
-      {
-        id: 6,
-        name: "Berry Supreme",
-        layers: 2,
-        price: 1950,
-        image: "🍓",
-        description: "Mixed berry cake with cream cheese frosting",
-      },
-    ],
-    "2000+": [
-      {
-        id: 7,
-        name: "Luxury Chocolate Tower",
-        layers: 4,
-        price: 2800,
-        image: "🍫",
-        description: "Premium chocolate with gold decorations",
-      },
-      {
-        id: 8,
-        name: "Wedding Special",
-        layers: 3,
-        price: 2500,
-        image: "🍰",
-        description: "Elegant multi-tier with royal icing",
-      },
-      {
-        id: 9,
-        name: "Designer Fruit Cake",
-        layers: 3,
-        price: 2200,
-        image: "🍓",
-        description: "Artisan fruit cake with handcrafted decorations",
-      },
-    ],
-  };
+  ];
 
   // Updated handler to add custom cake to global cart
   // Add custom cake to global cart, using imageUri if present (from 3D snapshot)
-  const handleAddToCart = (cake: any) => {
+  interface CakeToAdd {
+    name: string;
+    price: number;
+    layers?: number;
+    flavor?: string;
+    toppings?: string[];
+    frostingColor?: string;
+    imageUri?: string;
+    [key: string]: unknown;
+  }
+
+  const handleAddToCart = (cake: CakeToAdd) => {
     console.log("[Dashboard] handleAddToCart called with:", cake);
     // Extra debug: log all keys and values
     Object.keys(cake).forEach((key) => {
@@ -315,7 +271,12 @@ const CustomerDashboardContent = () => {
       case "orders":
         return <OrdersTab setActiveTab={handleTabChange} />;
       case "notifications":
-        return <NotificationsTab setActiveTab={handleTabChange} />;
+        return (
+          <NotificationsTab
+            setActiveTab={handleTabChange}
+            onUnreadCountChange={handleUnreadCountChange}
+          />
+        );
       default:
         return (
           <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -331,18 +292,19 @@ const CustomerDashboardContent = () => {
         {/* Sidebar - only visible on large screens */}
         <div className="hidden lg:block">
           <SidebarNavigation
-            items={sidebarItems as any}
+            items={sidebarItems}
             activeTab={activeTab}
             setActiveTab={handleTabChange}
-            notifications={notifications}
+            notifications={unreadNotificationCount}
           />
         </div>
         {/* Mobile Navigation - only visible on small/medium screens */}
         <div className="block lg:hidden w-full">
           <MobileNavigation
-            items={sidebarItems as any}
+            items={sidebarItems}
             activeTab={activeTab}
             setActiveTab={handleTabChange}
+            notifications={unreadNotificationCount}
           />
         </div>
         {/* Main Content */}

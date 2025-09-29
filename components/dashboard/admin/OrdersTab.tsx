@@ -424,12 +424,25 @@ const OrdersTab: React.FC<{
         return false;
       }
 
-      // Get customer identification (email or userId)
+      // Get customer identification (email or userId) - Enhanced logic
+      // Priority order: shipping email, customer email, userId
       const targetUserId =
         order.shipping?.email || order.customerEmail || order.userId;
 
       if (!targetUserId) {
         console.warn("❌ No customer email/userId found for order:", orderId);
+        console.warn("Order data structure:", {
+          shipping: order.shipping,
+          customerEmail: order.customerEmail,
+          userId: order.userId,
+        });
+        setNotificationStatus((prev) => ({ ...prev, [orderId]: "failed" }));
+        return false;
+      }
+
+      // Validate that targetUserId is not empty or null
+      if (!targetUserId.trim || targetUserId.trim().length === 0) {
+        console.warn("❌ Empty targetUserId found for order:", orderId);
         setNotificationStatus((prev) => ({ ...prev, [orderId]: "failed" }));
         return false;
       }
@@ -498,10 +511,17 @@ const OrdersTab: React.FC<{
       }
 
       console.log(
-        `📢 Sending notification to ${targetUserId} for order ${orderRef}`
+        `📢 Sending ORDER-SPECIFIC notification to customer: ${targetUserId} for order ${orderRef}`
+      );
+      console.log(
+        `🎯 Notification targeting: SPECIFIC_USER only (not broadcast to all customers)`
+      );
+      console.log(
+        `📝 Order belongs to userId: ${order.userId}, targeting: ${targetUserId}`
       );
 
-      // Send notification via API using authenticated admin user
+      // CRITICAL: This notification will ONLY be sent to the specific customer who owns this order
+      // The targetAudience "specific_user" ensures no other customers receive this notification
       const notificationResponse = await fetch("/api/notifications", {
         method: "POST",
         headers: {
@@ -511,8 +531,8 @@ const OrdersTab: React.FC<{
           type: "order_update",
           title: title,
           message: message,
-          targetAudience: "specific_user",
-          targetUserId: targetUserId,
+          targetAudience: "specific_user", // ENSURES ONLY THIS SPECIFIC USER GETS THE NOTIFICATION
+          targetUserId: targetUserId, // THE SPECIFIC CUSTOMER ID/EMAIL
           priority: priority,
           createdBy: user.emailAddresses[0].emailAddress, // Use authenticated admin email
           metadata: {
@@ -521,6 +541,7 @@ const OrdersTab: React.FC<{
             newStatus: newStatus,
             orderReference: orderRef,
             adminUser: user.emailAddresses[0].emailAddress,
+            originalOrderUserId: order.userId, // Store original order userId for verification
           },
         }),
       });
@@ -528,7 +549,13 @@ const OrdersTab: React.FC<{
       const notificationResult = await notificationResponse.json();
 
       if (notificationResult.success) {
-        console.log(`✅ Notification sent successfully to: ${targetUserId}`);
+        console.log(`✅ ORDER-SPECIFIC notification sent successfully!`);
+        console.log(`🎯 Target customer: ${targetUserId}`);
+        console.log(`📦 Order reference: ${orderRef}`);
+        console.log(`🔄 Status change: ${oldStatus} → ${newStatus}`);
+        console.log(
+          `🚫 This notification was NOT sent to other customers - only to the order owner`
+        );
         setNotificationStatus((prev) => ({ ...prev, [orderId]: "success" }));
         // Clear success status after 3 seconds
         setTimeout(() => {
@@ -537,9 +564,11 @@ const OrdersTab: React.FC<{
         return true;
       } else {
         console.error(
-          `❌ Failed to send notification:`,
+          `❌ Failed to send order-specific notification:`,
           notificationResult.error
         );
+        console.error(`🎯 Attempted target: ${targetUserId}`);
+        console.error(`📦 Order reference: ${orderRef}`);
         setNotificationStatus((prev) => ({ ...prev, [orderId]: "failed" }));
         // Clear failed status after 5 seconds
         setTimeout(() => {
