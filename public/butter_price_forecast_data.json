@@ -1,5 +1,6 @@
 [
   {
+<<<<<<< HEAD
     "ds": "2025-08-05",
     "yhat": 415.6877433617882,
     "yhat_lower": 384.5061514376876,
@@ -53,6 +54,61 @@
     "yhat_lower": 384.5061514376876,
     "yhat_upper": 447.3691562260253,
     "date_formatted": "Monday, August 11, 2025",
+=======
+    "ds": "2025-09-30",
+    "yhat": 634.51,
+    "yhat_lower": 558.37,
+    "yhat_upper": 710.65,
+    "date_formatted": "Tuesday, September 30, 2025",
+    "days_from_now": 1
+  },
+  {
+    "ds": "2025-10-01",
+    "yhat": 645.54,
+    "yhat_lower": 568.08,
+    "yhat_upper": 723.01,
+    "date_formatted": "Wednesday, October 01, 2025",
+    "days_from_now": 2
+  },
+  {
+    "ds": "2025-10-02",
+    "yhat": 566.8,
+    "yhat_lower": 498.79,
+    "yhat_upper": 634.82,
+    "date_formatted": "Thursday, October 02, 2025",
+    "days_from_now": 3
+  },
+  {
+    "ds": "2025-10-03",
+    "yhat": 456.6,
+    "yhat_lower": 401.81,
+    "yhat_upper": 511.39,
+    "date_formatted": "Friday, October 03, 2025",
+    "days_from_now": 4
+  },
+  {
+    "ds": "2025-10-04",
+    "yhat": 444.64,
+    "yhat_lower": 391.29,
+    "yhat_upper": 498.0,
+    "date_formatted": "Saturday, October 04, 2025",
+    "days_from_now": 5
+  },
+  {
+    "ds": "2025-10-05",
+    "yhat": 483.22,
+    "yhat_lower": 425.24,
+    "yhat_upper": 541.21,
+    "date_formatted": "Sunday, October 05, 2025",
+    "days_from_now": 6
+  },
+  {
+    "ds": "2025-10-06",
+    "yhat": 471.69,
+    "yhat_lower": 415.09,
+    "yhat_upper": 528.29,
+    "date_formatted": "Monday, October 06, 2025",
+>>>>>>> 500a4d91d141af37116544db5e5c36a84865d7b5
     "days_from_now": 7
   }
 ]
