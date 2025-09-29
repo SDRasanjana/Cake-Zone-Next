@@ -88,16 +88,16 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({
           const orderResponse = await fetch("/api/checkout/complete", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               sessionId: orderId, // orderId is actually sessionId
-              paymentIntentId: paymentIntent.id 
+              paymentIntentId: paymentIntent.id,
             }),
           });
-          
+
           if (!orderResponse.ok) {
             throw new Error("Failed to create order");
           }
-          
+
           const orderData = await orderResponse.json();
           console.log("Order created:", orderData.orderId);
         } catch (err) {
