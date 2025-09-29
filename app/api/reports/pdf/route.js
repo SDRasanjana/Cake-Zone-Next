@@ -38,9 +38,9 @@ export async function GET(request) {
 
         const currentDate = selectedDate || new Date().toISOString().slice(0, 10);
 
-        if (!type || (type !== 'orders' && type !== 'expenses')) {
+        if (!type || (type !== 'orders' && type !== 'expenses' && type !== 'ingredients')) {
             console.log('Invalid type parameter:', type);
-            return new Response(JSON.stringify({ message: 'Invalid report type. Use "orders" or "expenses"' }), {
+            return new Response(JSON.stringify({ message: 'Invalid report type. Use "orders", "expenses", or "ingredients"' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -89,7 +89,7 @@ export async function GET(request) {
             headers = ['Order ID', 'Date', 'Customer', 'Amount'];
             totalAmount = orders.reduce((sum, order) => sum + (order.total || 0), 0);
 
-        } else {
+        } else if (type === 'expenses') {
             console.log('Fetching expenses from database...');
 
             // First, let's check if there are any expenses at all
@@ -120,13 +120,43 @@ export async function GET(request) {
             title = 'Expenses Report';
             headers = ['Expense ID', 'Date', 'Category', 'Amount'];
             totalAmount = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+
+        } else {
+            console.log('Fetching ingredients from database...');
+
+            // First, let's check if there are any ingredients at all
+            const ingredientsCollection = db.collection("ingredients");
+            const allIngredients = await ingredientsCollection.find({}).limit(5).toArray();
+            console.log('Sample ingredients in database:', allIngredients.length > 0 ? allIngredients[0] : 'No ingredients found');
+
+            // Fetch all ingredients (ingredients don't have date filtering like orders/expenses)
+            const ingredients = await ingredientsCollection.find({}).sort({ name: 1 }).toArray();
+
+            console.log(`Found ${ingredients.length} ingredients in database`);
+            if (ingredients.length > 0) {
+                console.log('First ingredient:', ingredients[0]);
+            }
+
+            data = ingredients.map(ingredient => [
+                ingredient.name || 'Unknown',
+                ingredient.category || 'Other',
+                `${ingredient.quantity || 0} ${ingredient.unit || 'kg'}`,
+                `Rs. ${(ingredient.currentPrice || 0).toLocaleString()}`,
+                `Rs. ${((ingredient.currentPrice || 0) * (ingredient.quantity || 0)).toLocaleString()}`
+            ]);
+
+            title = 'Ingredients Inventory Report';
+            headers = ['Ingredient Name', 'Category', 'Quantity', 'Unit Price', 'Total Value'];
+            totalAmount = ingredients.reduce((sum, ingredient) => sum + ((ingredient.currentPrice || 0) * (ingredient.quantity || 0)), 0);
         }
 
         console.log('Starting PDF generation...');
 
         // Create PDF
         const pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage([600, 800]);
+        // Use wider page for ingredients report to accommodate 5 columns
+        const pageWidth = type === 'ingredients' ? 700 : 600;
+        const page = pdfDoc.addPage([pageWidth, 800]);
         const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
         const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
@@ -159,7 +189,17 @@ export async function GET(request) {
         // Table setup
         const startY = 680;
         const rowHeight = 25;
-        const colWidths = [120, 120, 160, 100];
+        
+        // Different column widths for different report types
+        let colWidths;
+        if (type === 'ingredients') {
+            // 5 columns for ingredients: Name, Category, Quantity, Unit Price, Total Value
+            colWidths = [150, 100, 100, 100, 100]; // Total: 550px (fits in 700px page width with margins)
+        } else {
+            // 4 columns for orders and expenses
+            colWidths = [120, 120, 160, 100];
+        }
+        
         const tableWidth = colWidths.reduce((sum, width) => sum + width, 0);
         const startX = 50;
 
@@ -235,7 +275,16 @@ export async function GET(request) {
                 // Draw cell content
                 let x = startX + 10;
                 row.forEach((cell, colIndex) => {
-                    page.drawText(cell.toString(), {
+                    let cellText = cell.toString();
+                    
+                    // Truncate text if it's too long for the column
+                    // Using font size 10, approximately 7 pixels per character
+                    const maxChars = Math.floor((colWidths[colIndex] - 20) / 7); // Account for padding
+                    if (cellText.length > maxChars && maxChars > 3) {
+                        cellText = cellText.substring(0, maxChars - 3) + '...';
+                    }
+                    
+                    page.drawText(cellText, {
                         x,
                         y: y + rowHeight / 3,
                         size: 10,
@@ -257,7 +306,10 @@ export async function GET(request) {
                 color: rgb(0.2, 0.2, 0.2),
             });
 
-            page.drawText(`Total ${type === "orders" ? "Orders" : "Expenses"}: ${data.length}`, {
+            const summaryLabel = type === "orders" ? "Orders" : 
+                                 type === "expenses" ? "Expenses" : "Ingredients";
+            
+            page.drawText(`Total ${summaryLabel}: ${data.length}`, {
                 x: startX,
                 y: summaryY - 25,
                 size: 12,
@@ -265,7 +317,8 @@ export async function GET(request) {
                 color: rgb(0.2, 0.2, 0.2),
             });
 
-            page.drawText(`Total Amount: Rs. ${totalAmount.toLocaleString()}`, {
+            const amountLabel = type === "ingredients" ? "Total Value" : "Total Amount";
+            page.drawText(`${amountLabel}: Rs. ${totalAmount.toLocaleString()}`, {
                 x: startX,
                 y: summaryY - 45,
                 size: 12,

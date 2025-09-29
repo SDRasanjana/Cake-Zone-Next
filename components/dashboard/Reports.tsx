@@ -20,8 +20,18 @@ interface Expense {
   [key: string]: unknown;
 }
 
+interface Ingredient {
+  _id: string;
+  name: string;
+  currentPrice: number;
+  quantity: number;
+  category: string;
+  unit: string;
+  [key: string]: unknown;
+}
+
 export default function Reports() {
-  const [activeCard, setActiveCard] = useState<"orders" | "expenses" | null>(
+  const [activeCard, setActiveCard] = useState<"orders" | "expenses" | "ingredients" | null>(
     null
   );
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -45,12 +55,14 @@ export default function Reports() {
   });
   const [orderSummary, setOrderSummary] = useState("Loading...");
   const [expensesSummary, setExpensesSummary] = useState("Loading...");
+  const [ingredientsSummary, setIngredientsSummary] = useState("Loading...");
 
   // Fetch summary data from database
   const fetchSummaryData = useCallback(async () => {
     try {
       setOrderSummary("Loading orders...");
       setExpensesSummary("Loading expenses...");
+      setIngredientsSummary("Loading ingredients...");
 
       // Fetch orders summary by calling our existing orders API to get count
       try {
@@ -58,15 +70,26 @@ export default function Reports() {
         // Since we need all orders, we'll call the PDF endpoint with a HEAD request to get the data
         const ordersResponse = await fetch(`/api/orders`);
         const expensesResponse = await fetch(`/api/expenses`);
+        const ingredientsResponse = await fetch(`/api/ingredients`);
+        
+        console.log('API Response Status:', {
+          orders: ordersResponse.status,
+          expenses: expensesResponse.status,
+          ingredients: ingredientsResponse.status
+        });
 
         let orderCount = 0;
         let orderTotal = 0;
         let expenseTotal = 0;
+        let ingredientCount = 0;
+        let totalIngredientValue = 0;
 
         if (ordersResponse.ok) {
-          const ordersData: Order[] = await ordersResponse.json();
+          const ordersData = await ordersResponse.json();
+          // Handle both direct array and wrapped response
+          const orders = Array.isArray(ordersData) ? ordersData : (ordersData.success && ordersData.data ? ordersData.data : []);
           // Filter orders by date range
-          const filteredOrders = ordersData.filter((order: Order) => {
+          const filteredOrders = orders.filter((order: Order) => {
             const orderDate = new Date(order.createdAt);
             const { start, end } = getPeriodRange(period, selectedDate);
             return orderDate >= start && orderDate <= end;
@@ -80,20 +103,38 @@ export default function Reports() {
         }
 
         if (expensesResponse.ok) {
-          const expensesData: Expense[] = await expensesResponse.json();
-          // Filter expenses by date range
-          const filteredExpenses = expensesData.filter((expense: Expense) => {
-            const expenseDate = new Date(
-              expense.date || expense.createdAt || ""
-            );
-            const { start, end } = getPeriodRange(period, selectedDate);
-            return expenseDate >= start && expenseDate <= end;
-          });
+          const expensesData = await expensesResponse.json();
+          if (expensesData.success && expensesData.data && Array.isArray(expensesData.data)) {
+            const expenses = expensesData.data;
+            // Filter expenses by date range
+            const filteredExpenses = expenses.filter((expense: Expense) => {
+              const expenseDate = new Date(
+                expense.date || expense.createdAt || ""
+              );
+              const { start, end } = getPeriodRange(period, selectedDate);
+              return expenseDate >= start && expenseDate <= end;
+            });
 
-          expenseTotal = filteredExpenses.reduce(
-            (sum: number, expense: Expense) => sum + (expense.amount || 0),
-            0
-          );
+            expenseTotal = filteredExpenses.reduce(
+              (sum: number, expense: Expense) => sum + (expense.amount || 0),
+              0
+            );
+          }
+        }
+
+        if (ingredientsResponse.ok) {
+          const ingredientsData = await ingredientsResponse.json();
+          if (ingredientsData.success && ingredientsData.data && Array.isArray(ingredientsData.data)) {
+            const ingredients = ingredientsData.data;
+            ingredientCount = ingredients.length;
+            totalIngredientValue = ingredients.reduce(
+              (sum: number, ingredient: Ingredient) => {
+                const value = (ingredient.currentPrice || 0) * (ingredient.quantity || 0);
+                return sum + value;
+              },
+              0
+            );
+          }
         }
 
         setOrderSummary(
@@ -101,6 +142,9 @@ export default function Reports() {
         );
         setExpensesSummary(
           `Total Expenses: Rs. ${expenseTotal.toLocaleString()}`
+        );
+        setIngredientsSummary(
+          `Total Ingredients: ${ingredientCount}\nTotal Value: Rs. ${totalIngredientValue.toLocaleString()}`
         );
       } catch (apiError) {
         console.error("Error fetching from API:", apiError);
@@ -111,11 +155,15 @@ export default function Reports() {
         setExpensesSummary(
           "Click 'View' or 'Download' to generate report\nReal database data will be shown in PDF"
         );
+        setIngredientsSummary(
+          "Click 'View' or 'Download' to generate report\nReal database data will be shown in PDF"
+        );
       }
     } catch (error) {
       console.error("Error fetching summary data:", error);
       setOrderSummary("Error loading data");
       setExpensesSummary("Error loading data");
+      setIngredientsSummary("Error loading data");
     }
   }, [period, selectedDate]);
 
@@ -197,6 +245,30 @@ export default function Reports() {
     }
   };
 
+  const handleIngredientsDownload = async () => {
+    try {
+      const response = await fetch(
+        `/api/reports/pdf?type=ingredients&period=${period}&date=${selectedDate}`
+      );
+      if (!response.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ingredients-report-${selectedDate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (error) {
+      console.error("Error downloading ingredients report:", error);
+      alert("Failed to download ingredients report. Please try again.");
+    }
+  };
+
   const handleOrderView = async () => {
     try {
       console.log('Fetching order PDF...');
@@ -267,6 +339,41 @@ export default function Reports() {
     }
   };
 
+  const handleIngredientsView = async () => {
+    try {
+      console.log('Fetching ingredients PDF...');
+      const response = await fetch(
+        `/api/reports/pdf?type=ingredients&period=${period}&date=${selectedDate}`
+      );
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        throw new Error(`Failed to generate PDF: ${response.status} - ${errorText}`);
+      }
+
+      const blob = await response.blob();
+      console.log('Blob size:', blob.size);
+      console.log('Blob type:', blob.type);
+      
+      if (blob.size === 0) {
+        throw new Error('Generated PDF is empty');
+      }
+      
+      const url = URL.createObjectURL(blob);
+      console.log('PDF URL created:', url);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+      console.error("Error viewing ingredients report:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`Failed to view ingredients report: ${errorMessage}`);
+    }
+  };
+
   const closeModal = () => {
     setShowModal(false);
     if (pdfUrl) URL.revokeObjectURL(pdfUrl);
@@ -285,7 +392,7 @@ export default function Reports() {
         setPeriod={setPeriod}
         setSelectedDate={setSelectedDate}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div
           className={`bg-white border border-orange-200 rounded-lg shadow p-6 flex items-center space-x-4 transition cursor-pointer ${
             activeCard === "orders"
@@ -348,6 +455,37 @@ export default function Reports() {
             </div>
           </div>
         </div>
+        <div
+          className={`bg-white border border-orange-200 rounded-lg shadow p-6 flex items-center space-x-4 transition cursor-pointer ${
+            activeCard === "ingredients"
+              ? "ring-2 ring-orange-500"
+              : "hover:shadow-lg hover:border-orange-400"
+          }`}
+          onClick={() => setActiveCard("ingredients")}
+        >
+          <span className="bg-orange-100 p-3 rounded-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-orange-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+          </span>
+          <div>
+            <div className="font-semibold text-gray-800 text-lg">Ingredients</div>
+            <div className="text-sm text-gray-500">
+              View and analyze ingredients inventory
+            </div>
+          </div>
+        </div>
       </div>
       {/* Show summary and download/view for selected card */}
       {activeCard === "orders" && (
@@ -364,6 +502,14 @@ export default function Reports() {
           summary={expensesSummary}
           onDownload={handleExpensesDownload}
           onView={handleExpensesView}
+        />
+      )}
+      {activeCard === "ingredients" && (
+        <ReportCard
+          title="Ingredients Summary"
+          summary={ingredientsSummary}
+          onDownload={handleIngredientsDownload}
+          onView={handleIngredientsView}
         />
       )}
       {/* PDF Viewer Modal */}
