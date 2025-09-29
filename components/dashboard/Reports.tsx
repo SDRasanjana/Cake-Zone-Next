@@ -31,9 +31,9 @@ interface Ingredient {
 }
 
 export default function Reports() {
-  const [activeCard, setActiveCard] = useState<"orders" | "expenses" | "ingredients" | null>(
-    null
-  );
+  const [activeCard, setActiveCard] = useState<
+    "orders" | "expenses" | "ingredients" | null
+  >(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [defaultLayout, setDefaultLayout] = useState<(() => unknown) | null>(
@@ -71,11 +71,11 @@ export default function Reports() {
         const ordersResponse = await fetch(`/api/orders`);
         const expensesResponse = await fetch(`/api/expenses`);
         const ingredientsResponse = await fetch(`/api/ingredients`);
-        
-        console.log('API Response Status:', {
+
+        console.log("API Response Status:", {
           orders: ordersResponse.status,
           expenses: expensesResponse.status,
-          ingredients: ingredientsResponse.status
+          ingredients: ingredientsResponse.status,
         });
 
         let orderCount = 0;
@@ -87,7 +87,11 @@ export default function Reports() {
         if (ordersResponse.ok) {
           const ordersData = await ordersResponse.json();
           // Handle both direct array and wrapped response
-          const orders = Array.isArray(ordersData) ? ordersData : (ordersData.success && ordersData.data ? ordersData.data : []);
+          const orders = Array.isArray(ordersData)
+            ? ordersData
+            : ordersData.success && ordersData.data
+            ? ordersData.data
+            : [];
           // Filter orders by date range
           const filteredOrders = orders.filter((order: Order) => {
             const orderDate = new Date(order.createdAt);
@@ -104,7 +108,11 @@ export default function Reports() {
 
         if (expensesResponse.ok) {
           const expensesData = await expensesResponse.json();
-          if (expensesData.success && expensesData.data && Array.isArray(expensesData.data)) {
+          if (
+            expensesData.success &&
+            expensesData.data &&
+            Array.isArray(expensesData.data)
+          ) {
             const expenses = expensesData.data;
             // Filter expenses by date range
             const filteredExpenses = expenses.filter((expense: Expense) => {
@@ -124,12 +132,17 @@ export default function Reports() {
 
         if (ingredientsResponse.ok) {
           const ingredientsData = await ingredientsResponse.json();
-          if (ingredientsData.success && ingredientsData.data && Array.isArray(ingredientsData.data)) {
+          if (
+            ingredientsData.success &&
+            ingredientsData.data &&
+            Array.isArray(ingredientsData.data)
+          ) {
             const ingredients = ingredientsData.data;
             ingredientCount = ingredients.length;
             totalIngredientValue = ingredients.reduce(
               (sum: number, ingredient: Ingredient) => {
-                const value = (ingredient.currentPrice || 0) * (ingredient.quantity || 0);
+                const value =
+                  (ingredient.currentPrice || 0) * (ingredient.quantity || 0);
                 return sum + value;
               },
               0
@@ -271,105 +284,114 @@ export default function Reports() {
 
   const handleOrderView = async () => {
     try {
-      console.log('Fetching order PDF...');
+      console.log("Fetching order PDF...");
       const response = await fetch(
         `/api/reports/pdf?type=orders&period=${period}&date=${selectedDate}`
       );
-      
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
+
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error:', errorText);
-        throw new Error(`Failed to generate PDF: ${response.status} - ${errorText}`);
+        console.error("API Error:", errorText);
+        throw new Error(
+          `Failed to generate PDF: ${response.status} - ${errorText}`
+        );
       }
 
       const blob = await response.blob();
-      console.log('Blob size:', blob.size);
-      console.log('Blob type:', blob.type);
-      
+      console.log("Blob size:", blob.size);
+      console.log("Blob type:", blob.type);
+
       if (blob.size === 0) {
-        throw new Error('Generated PDF is empty');
+        throw new Error("Generated PDF is empty");
       }
-      
+
       const url = URL.createObjectURL(blob);
-      console.log('PDF URL created:', url);
+      console.log("PDF URL created:", url);
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (error) {
       console.error("Error viewing order report:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       alert(`Failed to view order report: ${errorMessage}`);
     }
   };
 
   const handleExpensesView = async () => {
     try {
-      console.log('Fetching expenses PDF...');
+      console.log("Fetching expenses PDF...");
       const response = await fetch(
         `/api/reports/pdf?type=expenses&period=${period}&date=${selectedDate}`
       );
-      
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
+
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error:', errorText);
-        throw new Error(`Failed to generate PDF: ${response.status} - ${errorText}`);
+        console.error("API Error:", errorText);
+        throw new Error(
+          `Failed to generate PDF: ${response.status} - ${errorText}`
+        );
       }
 
       const blob = await response.blob();
-      console.log('Blob size:', blob.size);
-      console.log('Blob type:', blob.type);
-      
+      console.log("Blob size:", blob.size);
+      console.log("Blob type:", blob.type);
+
       if (blob.size === 0) {
-        throw new Error('Generated PDF is empty');
+        throw new Error("Generated PDF is empty");
       }
-      
+
       const url = URL.createObjectURL(blob);
-      console.log('PDF URL created:', url);
+      console.log("PDF URL created:", url);
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (error) {
       console.error("Error viewing expenses report:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       alert(`Failed to view expenses report: ${errorMessage}`);
     }
   };
 
   const handleIngredientsView = async () => {
     try {
-      console.log('Fetching ingredients PDF...');
+      console.log("Fetching ingredients PDF...");
       const response = await fetch(
         `/api/reports/pdf?type=ingredients&period=${period}&date=${selectedDate}`
       );
-      
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
+
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error:', errorText);
-        throw new Error(`Failed to generate PDF: ${response.status} - ${errorText}`);
+        console.error("API Error:", errorText);
+        throw new Error(
+          `Failed to generate PDF: ${response.status} - ${errorText}`
+        );
       }
 
       const blob = await response.blob();
-      console.log('Blob size:', blob.size);
-      console.log('Blob type:', blob.type);
-      
+      console.log("Blob size:", blob.size);
+      console.log("Blob type:", blob.type);
+
       if (blob.size === 0) {
-        throw new Error('Generated PDF is empty');
+        throw new Error("Generated PDF is empty");
       }
-      
+
       const url = URL.createObjectURL(blob);
-      console.log('PDF URL created:', url);
+      console.log("PDF URL created:", url);
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (error) {
       console.error("Error viewing ingredients report:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       alert(`Failed to view ingredients report: ${errorMessage}`);
     }
   };
@@ -480,7 +502,9 @@ export default function Reports() {
             </svg>
           </span>
           <div>
-            <div className="font-semibold text-gray-800 text-lg">Ingredients</div>
+            <div className="font-semibold text-gray-800 text-lg">
+              Ingredients
+            </div>
             <div className="text-sm text-gray-500">
               View and analyze ingredients inventory
             </div>

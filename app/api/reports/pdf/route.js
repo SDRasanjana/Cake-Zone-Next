@@ -189,7 +189,7 @@ export async function GET(request) {
         // Table setup
         const startY = 680;
         const rowHeight = 25;
-        
+
         // Different column widths for different report types
         let colWidths;
         if (type === 'ingredients') {
@@ -199,7 +199,7 @@ export async function GET(request) {
             // 4 columns for orders and expenses
             colWidths = [120, 120, 160, 100];
         }
-        
+
         const tableWidth = colWidths.reduce((sum, width) => sum + width, 0);
         const startX = 50;
 
@@ -276,14 +276,14 @@ export async function GET(request) {
                 let x = startX + 10;
                 row.forEach((cell, colIndex) => {
                     let cellText = cell.toString();
-                    
+
                     // Truncate text if it's too long for the column
                     // Using font size 10, approximately 7 pixels per character
                     const maxChars = Math.floor((colWidths[colIndex] - 20) / 7); // Account for padding
                     if (cellText.length > maxChars && maxChars > 3) {
                         cellText = cellText.substring(0, maxChars - 3) + '...';
                     }
-                    
+
                     page.drawText(cellText, {
                         x,
                         y: y + rowHeight / 3,
@@ -306,9 +306,9 @@ export async function GET(request) {
                 color: rgb(0.2, 0.2, 0.2),
             });
 
-            const summaryLabel = type === "orders" ? "Orders" : 
-                                 type === "expenses" ? "Expenses" : "Ingredients";
-            
+            const summaryLabel = type === "orders" ? "Orders" :
+                type === "expenses" ? "Expenses" : "Ingredients";
+
             page.drawText(`Total ${summaryLabel}: ${data.length}`, {
                 x: startX,
                 y: summaryY - 25,
