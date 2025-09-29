@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import OverviewTab from "@/components/dashboard/admin/OverviewTab";
 import UsersTab from "@/components/dashboard/admin/UsersTab";
@@ -24,6 +24,7 @@ import type { User as AdminUserType } from "@/components/dashboard/admin/UsersTa
 
 export default function AdminDashboard() {
   const { isLoaded, isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("overview");
@@ -54,9 +55,44 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isLoaded && (!isSignedIn || user?.publicMetadata?.role !== "admin")) {
       router.replace("/unauthorized");
+      return;
     }
+
     if (isLoaded && isSignedIn && user?.publicMetadata?.role === "admin") {
-      fetchUsers();
+      // Check user status before allowing access
+      const checkUserStatus = async () => {
+        try {
+          const response = await fetch("/api/auth/check-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user?.emailAddresses?.[0]?.emailAddress,
+              userId: user?.id,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success && data.data.status !== "Active") {
+            alert(
+              "Your account has been deactivated. Please contact the administrator."
+            );
+            // Sign out and redirect
+            await signOut();
+            router.replace("/");
+            return;
+          }
+
+          // If status is active, proceed with fetching users
+          fetchUsers();
+        } catch (error) {
+          console.error("Error checking user status:", error);
+          // On error, proceed with normal flow as fallback
+          fetchUsers();
+        }
+      };
+
+      checkUserStatus();
     }
   }, [isLoaded, isSignedIn, user, router, fetchUsers]);
 
@@ -105,10 +141,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Handler to update user status or role (activate/deactivate/change role)
+  // Handler to update user status (activate/deactivate)
   const handleUpdateUser = async (
     userId: string,
-    update: Partial<Pick<AdminUserType, "status" | "role">>
+    update: Partial<Pick<AdminUserType, "status">>
   ) => {
     try {
       const res = await fetch("/api/auth/users", {
@@ -186,9 +222,7 @@ export default function AdminDashboard() {
                 currentUserRole={String(user?.publicMetadata?.role || "")}
               />
             )}
-            {activeTab === "orders" && (
-              <OrdersTab />
-            )}
+            {activeTab === "orders" && <OrdersTab />}
             {activeTab === "products" && <ProductManagementTab />}
             {activeTab === "notifications" && <NotificationsTab />}
             {activeTab === "reports" && <ReportsTab />}

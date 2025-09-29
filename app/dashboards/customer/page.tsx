@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, Suspense, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import CakePreview3D from "@/components/dashboard/customer/CakePreview3D";
 import SidebarNavigation from "@/components/dashboard/customer/SidebarNavigation";
 import MobileNavigation from "@/components/dashboard/customer/MobileNavigation";
@@ -16,8 +16,6 @@ import {
   Calendar,
   DollarSign,
   Bell,
-  User,
-  Settings,
   ChefHat,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -32,6 +30,7 @@ type BudgetKey = "1500" | "2000" | "2000+";
 
 const CustomerDashboardContent = () => {
   const { isLoaded, isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
   const [selectedCake, setSelectedCake] = useState<number | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<BudgetKey>("1500");
   const [notifications] = useState(3);
@@ -96,6 +95,41 @@ const CustomerDashboardContent = () => {
     registerUserIfNeeded();
   }, [isLoaded, isSignedIn, user]);
 
+  // Check user status on component mount
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      if (isLoaded && isSignedIn && user?.emailAddresses?.[0]?.emailAddress) {
+        try {
+          const response = await fetch("/api/auth/check-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user.emailAddresses[0].emailAddress,
+              userId: user.id,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success && data.data.status !== "Active") {
+            alert(
+              "Your account has been deactivated. Please contact the administrator."
+            );
+            // Sign out and redirect
+            await signOut();
+            window.location.href = "/";
+            return;
+          }
+        } catch (error) {
+          console.error("Error checking user status:", error);
+          // On error, proceed with normal flow as fallback
+        }
+      }
+    };
+
+    checkUserStatus();
+  }, [isLoaded, isSignedIn, user]);
+
   //preview
   const [showPreview, setShowPreview] = useState(false);
   const { addToCart } = useCart(); // Use global cart context
@@ -138,8 +172,6 @@ const CustomerDashboardContent = () => {
     { id: "customize", label: "Customize Cake", icon: ChefHat },
     { id: "orders", label: "My Orders", icon: ShoppingCart },
     { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "profile", label: "Profile", icon: User },
-    { id: "settings", label: "Settings", icon: Settings },
   ] as const;
 
   const budgetSuggestions = {
