@@ -110,7 +110,11 @@ export default function Navbar() {
               >
                 <Link
                   href={dashboardHref}
-                  className="hover:text-orange-400 transition-colors duration-200 px-3 py-2 rounded-md"
+                  className={`transition-colors duration-200 px-3 py-2 rounded-md ${
+                    pathname.startsWith("/dashboards")
+                      ? "text-orange-400 font-bold"
+                      : "hover:text-orange-400"
+                  }`}
                 >
                   Dashboard
                 </Link>
@@ -125,7 +129,11 @@ export default function Navbar() {
         >
           <Link
             href="/"
-            className="hover:text-orange-400 transition-colors duration-200 px-3 py-2 rounded-md"
+            className={`transition-colors duration-200 px-3 py-2 rounded-md ${
+              pathname === "/"
+                ? "text-orange-400 font-bold"
+                : "hover:text-orange-400"
+            }`}
           >
             Home
           </Link>
@@ -138,7 +146,11 @@ export default function Navbar() {
         >
           <Link
             href="/about"
-            className="hover:text-orange-400 transition-colors duration-200 px-3 py-2 rounded-md"
+            className={`transition-colors duration-200 px-3 py-2 rounded-md ${
+              pathname === "/about"
+                ? "text-orange-400 font-bold"
+                : "hover:text-orange-400"
+            }`}
           >
             About Us
           </Link>
@@ -151,7 +163,11 @@ export default function Navbar() {
         >
           <Link
             href="/contact"
-            className="hover:text-orange-400 transition-colors duration-200 px-3 py-2 rounded-md"
+            className={`transition-colors duration-200 px-3 py-2 rounded-md ${
+              pathname === "/contact"
+                ? "text-orange-400 font-bold"
+                : "hover:text-orange-400"
+            }`}
           >
             Contact Us
           </Link>
@@ -164,7 +180,11 @@ export default function Navbar() {
         >
           <Link
             href="/menu"
-            className="hover:text-orange-400 transition-colors duration-200 px-3 py-2 rounded-md"
+            className={`transition-colors duration-200 px-3 py-2 rounded-md ${
+              pathname === "/menu"
+                ? "text-orange-400 font-bold"
+                : "hover:text-orange-400"
+            }`}
           >
             Menu
           </Link>
