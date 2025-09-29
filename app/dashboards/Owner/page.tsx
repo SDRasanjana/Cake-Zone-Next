@@ -10,7 +10,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 // Static imports as fallback (recommended approach)
 import Overview from "@/components/dashboard/Overview";
-import Orders from "@/components/dashboard/Orders";
+import OwnerOrdersTab from "@/components/dashboard/owner/OrdersTab";
 import Inventory from "@/components/dashboard/Inventory";
 import CakePricing from "@/components/dashboard/CakePricing";
 import Forecast from "@/components/dashboard/Forecast";
@@ -81,7 +81,7 @@ export default function OwnerDashboard() {
         case "Overview":
           return <Overview />;
         case "Orders":
-          return <Orders />;
+          return <OwnerOrdersTab />;
         case "Inventory":
           return <Inventory />;
         case "Cake Pricing":
