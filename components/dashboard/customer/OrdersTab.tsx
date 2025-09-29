@@ -128,7 +128,16 @@ const OrdersTab: React.FC<{
         }
         const data = await res.json();
         console.log("Customer Orders: API response data:", data);
-        setOrders(data.orders || []);
+        
+        // Filter out orders that haven't been paid for (abandoned checkouts)
+        const paidOrders = (data.orders || []).filter((order: any) => {
+          // Only show orders that have been paid for or are in processing/delivered state
+          // This prevents showing abandoned checkout sessions that became orders
+          return order.paymentStatus === "paid" || 
+                 ["paid", "processing", "ready", "completed", "delivered"].includes(order.status);
+        });
+        
+        setOrders(paidOrders);
         setError("");
       } catch (err) {
         console.error("Customer Orders: Error fetching orders:", err);
@@ -288,7 +297,13 @@ const OrdersTab: React.FC<{
                             order.paymentStatus || order.status || "pending"
                           )
                         : order.paymentStatus === "paid" ||
-                          order.status === "delivered"
+                          (order.status &&
+                            [
+                              "ready",
+                              "completed",
+                              "delivered",
+                              "paid",
+                            ].includes(order.status))
                         ? "bg-green-100 text-green-800"
                         : order.paymentStatus === "pending" ||
                           order.status === "processing"

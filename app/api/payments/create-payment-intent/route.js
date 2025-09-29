@@ -11,7 +11,7 @@ const stripe = new Stripe(stripeConfig.secretKey, {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { orderId, cartItems, userId, deliveryDate } = body;
+    const { sessionId, cartItems, userId, deliveryDate } = body;
 
     if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
       return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
@@ -34,7 +34,7 @@ export async function POST(req) {
       amount: Math.round(amount * 100), // Stripe expects amount in cents
       currency: "usd", // Change to your currency
       metadata: {
-        orderId: orderId || "N/A",
+        sessionId: sessionId || "N/A",
         userId: userId || "guest",
         deliveryDate: deliveryDate || "",
         items: JSON.stringify(cartItems.map(item => ({

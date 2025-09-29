@@ -83,16 +83,26 @@ const CheckoutForm: React.FC<{ orderId: string; clientSecret: string }> = ({
         setProcessing(false);
         console.log("Payment Succeeded:", paymentIntent);
 
-        // Call backend to confirm order update after payment
+        // Create actual order after successful payment
         try {
-          await fetch(`/api/orders/${orderId}/confirm-payment`, {
+          const orderResponse = await fetch("/api/checkout/complete", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
+            body: JSON.stringify({ 
+              sessionId: orderId, // orderId is actually sessionId
+              paymentIntentId: paymentIntent.id 
+            }),
           });
+          
+          if (!orderResponse.ok) {
+            throw new Error("Failed to create order");
+          }
+          
+          const orderData = await orderResponse.json();
+          console.log("Order created:", orderData.orderId);
         } catch (err) {
-          // Optionally handle error, but don't block user
-          console.error("Order payment confirmation failed:", err);
+          // Log error but don't block user since payment succeeded
+          console.error("Order creation failed:", err);
         }
 
         clearCart(); // Clear the cart on successful payment
@@ -237,14 +247,14 @@ const CheckoutPage: React.FC = () => {
     localStorage.setItem("checkout_deliveryDate", deliveryDate);
   }, [deliveryDate]);
 
-  // Create order in DB after shipping step
+  // Create checkout session in DB after shipping step
   const handleShippingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoadingIntent(true);
     setLoadingError(null);
     try {
-      // Create order in DB
-      const res = await fetch("/api/orders", {
+      // Create checkout session (not permanent order)
+      const res = await fetch("/api/checkout/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -261,11 +271,11 @@ const CheckoutPage: React.FC = () => {
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(
-          errorData.error || `Failed to create order: ${res.status}`
+          errorData.error || `Failed to create checkout session: ${res.status}`
         );
       }
       const data = await res.json();
-      setOrderId(data.orderId);
+      setOrderId(data.sessionId); // Store sessionId as orderId for now
       setStep(2);
     } catch (err: any) {
       setLoadingError(
@@ -276,7 +286,7 @@ const CheckoutPage: React.FC = () => {
     }
   };
 
-  // Create payment intent after order is created and step is 3
+  // Create payment intent after checkout session is created and step is 3
   useEffect(() => {
     if (step !== 3 || !orderId) return;
     setIsLoadingIntent(true);
@@ -285,7 +295,7 @@ const CheckoutPage: React.FC = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        orderId,
+        sessionId: orderId, // orderId is actually sessionId now
         cartItems: cartState.items,
         deliveryDate, // Pass delivery date to payment intent
       }),
