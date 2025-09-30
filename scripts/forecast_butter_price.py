@@ -44,10 +44,6 @@ try:
     df = pd.read_csv(data_path)
     print(f"Successfully loaded CSV with {len(df)} rows")
     
-    # Parse date column properly
-    df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%Y')
-    print(f"Date range in data: {df['Date'].min()} to {df['Date'].max()}")
-    
 except FileNotFoundError:
     print(f"ERROR: File not found at {data_path}")
     # Create sample data for testing if file not found with enhanced variation
@@ -95,8 +91,9 @@ butter_df = df[df['Ingredient'] == 'Butter'][['Date', 'Price_LKR']].copy()
 # Rename columns to Prophet format
 butter_df.rename(columns={'Date': 'ds', 'Price_LKR': 'y'}, inplace=True)
 
-# Ensure ds is datetime
-butter_df['ds'] = pd.to_datetime(butter_df['ds'])
+# Parse dates after filtering for the specific ingredient
+butter_df['ds'] = pd.to_datetime(butter_df['ds'], format='%m/%d/%Y', errors='coerce')
+print(f"Date range in butter data: {butter_df['ds'].min()} to {butter_df['ds'].max()}")
 
 # Sort by date
 butter_df = butter_df.sort_values('ds').reset_index(drop=True)

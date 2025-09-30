@@ -1,27 +1,27 @@
 {
   "forecast_period": {
-    "start_date": "2025-09-30",
-    "end_date": "2025-10-20",
-    "days": 21
+    "start_date": "2025-10-02",
+    "end_date": "2025-10-15",
+    "days": 14
   },
   "price_analysis": {
-    "current_trend": "decreasing",
-    "trend_strength": "significant",
-    "price_change_lkr": -42.39,
-    "percentage_change": -14.2,
-    "highest_price": 336.25,
-    "lowest_price": 200.45,
-    "average_price": 256.62,
-    "volatility": 41.38
+    "current_trend": "increasing",
+    "trend_strength": "moderate",
+    "price_change_lkr": 13.49,
+    "percentage_change": 4.7,
+    "highest_price": 300.23,
+    "lowest_price": 197.19,
+    "average_price": 255.46,
+    "volatility": 33.21
   },
   "recommendations": {
-    "buy_timing": "immediate",
+    "buy_timing": "early",
     "price_stability": "low",
     "confidence_level": "high"
   },
   "metadata": {
-    "generated_at": "2025-09-28T13:17:16.763683",
-    "forecast_date": "2025-09-29",
+    "generated_at": "2025-09-30T07:58:36.503979",
+    "forecast_date": "2025-10-01",
     "model_type": "Facebook Prophet",
     "confidence_interval": "95%",
     "ingredient": "Sugar"

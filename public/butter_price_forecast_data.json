@@ -1,58 +1,242 @@
 [
   {
-    "ds": "2025-09-30",
-    "yhat": 634.51,
-    "yhat_lower": 558.37,
-    "yhat_upper": 710.65,
-    "date_formatted": "Tuesday, September 30, 2025",
+    "ds": "2025-10-02",
+    "yhat": 561.74,
+    "yhat_lower": 494.33,
+    "yhat_upper": 629.15,
+    "date_formatted": "Thursday, October 02, 2025",
     "days_from_now": 1
   },
   {
-    "ds": "2025-10-01",
-    "yhat": 645.54,
-    "yhat_lower": 568.08,
-    "yhat_upper": 723.01,
-    "date_formatted": "Wednesday, October 01, 2025",
+    "ds": "2025-10-03",
+    "yhat": 485.15,
+    "yhat_lower": 426.93,
+    "yhat_upper": 543.37,
+    "date_formatted": "Friday, October 03, 2025",
     "days_from_now": 2
   },
   {
-    "ds": "2025-10-02",
-    "yhat": 566.8,
-    "yhat_lower": 498.79,
-    "yhat_upper": 634.82,
-    "date_formatted": "Thursday, October 02, 2025",
+    "ds": "2025-10-04",
+    "yhat": 418.26,
+    "yhat_lower": 368.07,
+    "yhat_upper": 468.45,
+    "date_formatted": "Saturday, October 04, 2025",
     "days_from_now": 3
   },
   {
-    "ds": "2025-10-03",
-    "yhat": 456.6,
-    "yhat_lower": 401.81,
-    "yhat_upper": 511.39,
-    "date_formatted": "Friday, October 03, 2025",
+    "ds": "2025-10-05",
+    "yhat": 449.97,
+    "yhat_lower": 395.97,
+    "yhat_upper": 503.96,
+    "date_formatted": "Sunday, October 05, 2025",
     "days_from_now": 4
   },
   {
-    "ds": "2025-10-04",
-    "yhat": 444.64,
-    "yhat_lower": 391.29,
-    "yhat_upper": 498.0,
-    "date_formatted": "Saturday, October 04, 2025",
+    "ds": "2025-10-06",
+    "yhat": 487.63,
+    "yhat_lower": 429.11,
+    "yhat_upper": 546.14,
+    "date_formatted": "Monday, October 06, 2025",
     "days_from_now": 5
   },
   {
-    "ds": "2025-10-05",
-    "yhat": 483.22,
-    "yhat_lower": 425.24,
-    "yhat_upper": 541.21,
-    "date_formatted": "Sunday, October 05, 2025",
+    "ds": "2025-10-07",
+    "yhat": 544.98,
+    "yhat_lower": 479.59,
+    "yhat_upper": 610.38,
+    "date_formatted": "Tuesday, October 07, 2025",
     "days_from_now": 6
   },
   {
-    "ds": "2025-10-06",
-    "yhat": 471.69,
-    "yhat_lower": 415.09,
-    "yhat_upper": 528.29,
-    "date_formatted": "Monday, October 06, 2025",
+    "ds": "2025-10-08",
+    "yhat": 543.2,
+    "yhat_lower": 478.02,
+    "yhat_upper": 608.39,
+    "date_formatted": "Wednesday, October 08, 2025",
     "days_from_now": 7
+  },
+  {
+    "ds": "2025-10-09",
+    "yhat": 468.34,
+    "yhat_lower": 412.14,
+    "yhat_upper": 524.54,
+    "date_formatted": "Thursday, October 09, 2025",
+    "days_from_now": 8
+  },
+  {
+    "ds": "2025-10-10",
+    "yhat": 372.78,
+    "yhat_lower": 328.05,
+    "yhat_upper": 417.51,
+    "date_formatted": "Friday, October 10, 2025",
+    "days_from_now": 9
+  },
+  {
+    "ds": "2025-10-11",
+    "yhat": 333.11,
+    "yhat_lower": 293.14,
+    "yhat_upper": 373.08,
+    "date_formatted": "Saturday, October 11, 2025",
+    "days_from_now": 10
+  },
+  {
+    "ds": "2025-10-12",
+    "yhat": 359.2,
+    "yhat_lower": 316.1,
+    "yhat_upper": 402.3,
+    "date_formatted": "Sunday, October 12, 2025",
+    "days_from_now": 11
+  },
+  {
+    "ds": "2025-10-13",
+    "yhat": 461.71,
+    "yhat_lower": 406.31,
+    "yhat_upper": 517.12,
+    "date_formatted": "Monday, October 13, 2025",
+    "days_from_now": 12
+  },
+  {
+    "ds": "2025-10-14",
+    "yhat": 536.23,
+    "yhat_lower": 471.89,
+    "yhat_upper": 600.58,
+    "date_formatted": "Tuesday, October 14, 2025",
+    "days_from_now": 13
+  },
+  {
+    "ds": "2025-10-15",
+    "yhat": 547.42,
+    "yhat_lower": 481.73,
+    "yhat_upper": 613.11,
+    "date_formatted": "Wednesday, October 15, 2025",
+    "days_from_now": 14
+  },
+  {
+    "ds": "2025-10-16",
+    "yhat": 463.43,
+    "yhat_lower": 407.82,
+    "yhat_upper": 519.04,
+    "date_formatted": "Thursday, October 16, 2025",
+    "days_from_now": 15
+  },
+  {
+    "ds": "2025-10-17",
+    "yhat": 433.73,
+    "yhat_lower": 381.68,
+    "yhat_upper": 485.78,
+    "date_formatted": "Friday, October 17, 2025",
+    "days_from_now": 16
+  },
+  {
+    "ds": "2025-10-18",
+    "yhat": 433.61,
+    "yhat_lower": 381.58,
+    "yhat_upper": 485.64,
+    "date_formatted": "Saturday, October 18, 2025",
+    "days_from_now": 17
+  },
+  {
+    "ds": "2025-10-19",
+    "yhat": 467.62,
+    "yhat_lower": 411.51,
+    "yhat_upper": 523.74,
+    "date_formatted": "Sunday, October 19, 2025",
+    "days_from_now": 18
+  },
+  {
+    "ds": "2025-10-20",
+    "yhat": 482.97,
+    "yhat_lower": 425.02,
+    "yhat_upper": 540.93,
+    "date_formatted": "Monday, October 20, 2025",
+    "days_from_now": 19
+  },
+  {
+    "ds": "2025-10-21",
+    "yhat": 514.01,
+    "yhat_lower": 452.33,
+    "yhat_upper": 575.69,
+    "date_formatted": "Tuesday, October 21, 2025",
+    "days_from_now": 20
+  },
+  {
+    "ds": "2025-10-22",
+    "yhat": 485.54,
+    "yhat_lower": 427.28,
+    "yhat_upper": 543.81,
+    "date_formatted": "Wednesday, October 22, 2025",
+    "days_from_now": 21
+  },
+  {
+    "ds": "2025-10-23",
+    "yhat": 429.84,
+    "yhat_lower": 378.26,
+    "yhat_upper": 481.42,
+    "date_formatted": "Thursday, October 23, 2025",
+    "days_from_now": 22
+  },
+  {
+    "ds": "2025-10-24",
+    "yhat": 401.41,
+    "yhat_lower": 353.24,
+    "yhat_upper": 449.58,
+    "date_formatted": "Friday, October 24, 2025",
+    "days_from_now": 23
+  },
+  {
+    "ds": "2025-10-25",
+    "yhat": 392.0,
+    "yhat_lower": 344.96,
+    "yhat_upper": 439.04,
+    "date_formatted": "Saturday, October 25, 2025",
+    "days_from_now": 24
+  },
+  {
+    "ds": "2025-10-26",
+    "yhat": 429.27,
+    "yhat_lower": 377.76,
+    "yhat_upper": 480.79,
+    "date_formatted": "Sunday, October 26, 2025",
+    "days_from_now": 25
+  },
+  {
+    "ds": "2025-10-27",
+    "yhat": 448.73,
+    "yhat_lower": 394.89,
+    "yhat_upper": 502.58,
+    "date_formatted": "Monday, October 27, 2025",
+    "days_from_now": 26
+  },
+  {
+    "ds": "2025-10-28",
+    "yhat": 461.26,
+    "yhat_lower": 405.91,
+    "yhat_upper": 516.62,
+    "date_formatted": "Tuesday, October 28, 2025",
+    "days_from_now": 27
+  },
+  {
+    "ds": "2025-10-29",
+    "yhat": 444.46,
+    "yhat_lower": 391.13,
+    "yhat_upper": 497.8,
+    "date_formatted": "Wednesday, October 29, 2025",
+    "days_from_now": 28
+  },
+  {
+    "ds": "2025-10-30",
+    "yhat": 519.98,
+    "yhat_lower": 457.58,
+    "yhat_upper": 582.37,
+    "date_formatted": "Thursday, October 30, 2025",
+    "days_from_now": 29
+  },
+  {
+    "ds": "2025-10-31",
+    "yhat": 488.89,
+    "yhat_lower": 430.22,
+    "yhat_upper": 547.55,
+    "date_formatted": "Friday, October 31, 2025",
+    "days_from_now": 30
   }
 ]
