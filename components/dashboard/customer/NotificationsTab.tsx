@@ -49,7 +49,16 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
 
   // Calculate unread count
   const unreadCount = notifications.filter((notification) => {
-    const isRead = user?.id ? notification.readBy.includes(user.id) : false;
+    // Use Clerk user ID as primary identifier
+    const userId = user?.id;
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+
+    // Check if user has read this notification using either Clerk ID or email
+    const isRead =
+      userId &&
+      (notification.readBy.includes(userId) ||
+        (userEmail && notification.readBy.includes(userEmail)));
+
     const isExpired =
       notification.expiresAt && new Date(notification.expiresAt) < new Date();
     return !isRead && !isExpired;
@@ -61,16 +70,28 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
 
     try {
       setLoading(true);
+      // Use Clerk user ID as primary identifier - our enhanced system will handle the email lookup
+      const userId = user.id;
+
+      console.log(`📬 Fetching notifications for Clerk user: ${userId}`);
+      console.log(`📧 User email: ${user.emailAddresses?.[0]?.emailAddress}`);
+
       const response = await fetch(
-        `/api/notifications?userId=${user.id}&userRole=customer`
+        `/api/notifications?userId=${encodeURIComponent(
+          userId
+        )}&userRole=customer`
       );
       const data = await response.json();
 
       if (data.success) {
         setNotifications(data.notifications || []);
         setError("");
+        console.log(
+          `✅ Found ${data.notifications?.length || 0} notifications for user`
+        );
       } else {
         setError(data.error || "Failed to fetch notifications");
+        console.error("❌ Failed to fetch notifications:", data.error);
       }
     } catch (err) {
       console.error("Error fetching notifications:", err);
@@ -96,12 +117,15 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
     if (!user?.id) return;
 
     try {
+      // Use Clerk user ID as primary identifier
+      const userId = user.id;
+
       const response = await fetch("/api/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notificationId,
-          userId: user.id,
+          userId: userId,
           action: "markAsRead",
         }),
       });
@@ -113,7 +137,7 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
         setNotifications((prev) =>
           prev.map((notif) =>
             notif._id === notificationId
-              ? { ...notif, readBy: [...notif.readBy, user.id] }
+              ? { ...notif, readBy: [...notif.readBy, userId] }
               : notif
           )
         );
@@ -169,8 +193,17 @@ const NotificationsTab: React.FC<NotificationsTabProps> = ({
   };
 
   // Check if notification is read by current user
-  const isNotificationRead = (notification: Notification) => {
-    return user?.id ? notification.readBy.includes(user.id) : false;
+  const isNotificationRead = (notification: Notification): boolean => {
+    // Use Clerk user ID as primary identifier
+    const userId = user?.id;
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+
+    // Check if user has read this notification using either Clerk ID or email
+    return Boolean(
+      userId &&
+        (notification.readBy.includes(userId) ||
+          (userEmail && notification.readBy.includes(userEmail)))
+    );
   };
 
   // Get time ago string

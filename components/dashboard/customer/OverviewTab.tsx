@@ -45,7 +45,20 @@ const OverviewTab: React.FC<{ setActiveTab: (tab: DashboardTab) => void }> = ({
         }
         const data = await res.json();
         console.log("Customer Overview: API response data:", data);
-        setOrders(data.orders || []);
+
+        // Filter out orders that haven't been paid for (abandoned checkouts)
+        const paidOrders = (data.orders || []).filter((order: any) => {
+          // Only show orders that have been paid for or are in processing/delivered state
+          // This prevents showing abandoned checkout sessions that became orders
+          return (
+            order.paymentStatus === "paid" ||
+            ["paid", "processing", "ready", "completed", "delivered"].includes(
+              order.status
+            )
+          );
+        });
+
+        setOrders(paidOrders);
         setError("");
       } catch (err) {
         console.error("Customer Overview: Error fetching orders:", err);
@@ -85,9 +98,20 @@ const OverviewTab: React.FC<{ setActiveTab: (tab: DashboardTab) => void }> = ({
   };
 
   // Compute stats from orders
-  const completedCount = orders.filter(
-    (o) => o.paymentStatus === "paid" || o.status === "delivered"
-  ).length;
+  const completedCount = orders.filter((order) => {
+    // Consider multiple statuses as "completed" from customer perspective
+    const status = order.status?.toLowerCase();
+    const paymentStatus = order.paymentStatus?.toLowerCase();
+
+    return (
+      paymentStatus === "paid" ||
+      status === "ready" ||
+      status === "completed" ||
+      status === "delivered" ||
+      status === "paid" // Also check main status field for "paid"
+    );
+  }).length;
+
   const totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0);
 
   return (
@@ -252,7 +276,9 @@ const OverviewTab: React.FC<{ setActiveTab: (tab: DashboardTab) => void }> = ({
                   <span
                     className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                       order.paymentStatus === "paid" ||
-                      order.status === "delivered"
+                      ["ready", "completed", "delivered", "paid"].includes(
+                        order.status
+                      )
                         ? "bg-green-100 text-green-800"
                         : order.paymentStatus === "pending" ||
                           order.status === "processing"
