@@ -44,10 +44,6 @@ try:
     df = pd.read_csv(data_path)
     print(f"Successfully loaded CSV with {len(df)} rows")
     
-    # Parse date column properly
-    df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%Y')
-    print(f"Date range in data: {df['Date'].min()} to {df['Date'].max()}")
-    
 except FileNotFoundError:
     print(f"ERROR: File not found at {data_path}")
     # Create sample data for testing if file not found
@@ -83,8 +79,9 @@ sugar_df = df[df['Ingredient'] == 'Sugar'][['Date', 'Price_LKR']].copy()
 # Rename columns to Prophet format
 sugar_df.rename(columns={'Date': 'ds', 'Price_LKR': 'y'}, inplace=True)
 
-# Ensure ds is datetime
-sugar_df['ds'] = pd.to_datetime(sugar_df['ds'])
+# Parse dates after filtering for the specific ingredient
+sugar_df['ds'] = pd.to_datetime(sugar_df['ds'], format='%m/%d/%Y', errors='coerce')
+print(f"Date range in sugar data: {sugar_df['ds'].min()} to {sugar_df['ds'].max()}")
 
 # Sort by date
 sugar_df = sugar_df.sort_values('ds').reset_index(drop=True)
