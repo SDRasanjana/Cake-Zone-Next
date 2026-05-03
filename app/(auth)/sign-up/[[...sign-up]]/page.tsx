@@ -14,4 +14,4 @@ const SignUpPage = () => {
     </main>
   );
 };
-export default SignUpPage;
+export default SignUpPage; //just renders Clerk’s SignUp component, so account creation itself is fully handled by Clerk.

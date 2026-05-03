@@ -23,7 +23,7 @@ export async function POST(req) {
     const hashedPassword = password === 'clerk-oauth' ? 'clerk-managed' : await bcrypt.hash(password, 10);
     
     const now = new Date();
-    const user = {
+    const user = { //Registration API creates MongoDB user with role customer and status Active in
       email,
       password: hashedPassword,
       name: name || email.split('@')[0], // Use name or fallback to email username

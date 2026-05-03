@@ -7,6 +7,7 @@ export async function POST(req) {
   try {
     const event = await req.json();
     console.log('Clerk Webhook Event:', JSON.stringify(event, null, 2));
+    //webhook-based sync for user.deleted
     if (event.type === 'user.deleted') {
       const email = event.data.email_addresses?.[0]?.email_address;
       console.log('User deleted event received for email:', email);
@@ -18,6 +19,7 @@ export async function POST(req) {
         console.log('User deleted from MongoDB:', email);
         return NextResponse.json({ success: true, message: 'User deleted from MongoDB' });
       }
+      //There is also webhook-based sync for user.created 
     } else if (event.type === 'user.created') {
       const email = event.data.email_addresses?.[0]?.email_address;
       const firstName = event.data.first_name || '';
